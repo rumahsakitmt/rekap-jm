@@ -3,6 +3,8 @@ import { db } from "../db";
 import { dokter } from "../db/schema/dokter";
 import { sql } from "drizzle-orm";
 import { rawatJalanRouter } from "./rawat-jalan";
+import { bridgingSepRouter } from "./bridging-sep";
+import { regPeriksaRouter } from "./reg-periksa";
 
 export const appRouter = router({
   healthCheck: publicProcedure.query(async () => {
@@ -21,5 +23,7 @@ export const appRouter = router({
     return db.select().from(dokter);
   }),
   rawatJalan: rawatJalanRouter,
+  bridgingSep: bridgingSepRouter,
+  regPeriksa: regPeriksaRouter,
 });
 export type AppRouter = typeof appRouter;

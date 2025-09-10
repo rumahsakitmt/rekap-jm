@@ -14,7 +14,7 @@ export const reg_periksa = m.mysqlTable("reg_periksa", {
   biaya_reg: m.double("biaya_reg"),
   stts: m.varchar("stts", { length: 10 }),
   stts_daftar: m.varchar("stts_daftar", { length: 10 }),
-  stts_lanjut: m.varchar("stts_lanjut", { length: 10 }),
+  status_lanjut: m.varchar("status_lanjut", { length: 10 }),
   kd_pj: m.varchar("kd_pj", { length: 20 }),
   umurdaftar: m.varchar("umurdaftar", { length: 20 }),
   sttsumur: m.varchar("sttsumur", { length: 10 }),
