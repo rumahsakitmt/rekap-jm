@@ -114,29 +114,55 @@ export const regPeriksaRouter = router({
         ? await baseQuery.limit(input.limit)
         : await baseQuery;
 
-      return result.map((row) => ({
-        ...row,
-        jns_perawatan: (
-          JSON.parse(row.jns_perawatan || "[]") as {
-            kd_jenis_prw: string;
-            nm_perawatan: string;
-          }[]
-        ).filter((item) => item !== null),
-      }));
+      return result.map((row) => {
+        const tarif = row.biaya_rawat || 0;
+        const alokasi = tarif * 0.2;
+        const laboratorium = (row.total_permintaan_lab || 0) * 10000;
+        const radiologi = (row.total_permintaan_radiologi || 0) * 15000;
+        const dpjp_utama = alokasi - laboratorium - radiologi;
+        const yang_terbagi = dpjp_utama + radiologi + laboratorium;
+        const percent_dari_klaim =
+          tarif > 0 ? Math.floor((yang_terbagi / tarif) * 100) : 0;
+
+        return {
+          ...row,
+          jns_perawatan: (
+            JSON.parse(row.jns_perawatan || "[]") as {
+              kd_jenis_prw: string;
+              nm_perawatan: string;
+            }[]
+          ).filter((item) => item !== null),
+          alokasi,
+          laboratorium,
+          radiologi,
+          dpjp_utama,
+          yang_terbagi,
+          percent_dari_klaim,
+        };
+      });
     }),
 
   importCsv: publicProcedure
     .input(
       z.object({
-        noSepList: z.array(z.string()).min(1).max(10000),
+        csvData: z
+          .array(
+            z.object({
+              no_sep: z.string(),
+              tarif: z.number(),
+            })
+          )
+          .min(1)
+          .max(10000),
         dateFrom: z.coerce.date().optional(),
         dateTo: z.coerce.date().optional(),
       })
     )
     .mutation(async ({ input }) => {
       const conditions = [];
+      const noSepList = input.csvData.map((item) => item.no_sep);
 
-      conditions.push(inArray(bridging_sep.no_sep, input.noSepList));
+      conditions.push(inArray(bridging_sep.no_sep, noSepList));
 
       if (input.dateFrom) {
         conditions.push(gte(reg_periksa.tgl_registrasi, input.dateFrom));
@@ -211,28 +237,51 @@ export const regPeriksaRouter = router({
         .groupBy(reg_periksa.no_rawat, bridging_sep.no_sep)
         .orderBy(asc(reg_periksa.tgl_registrasi));
 
-      const processedResult = result.map((row) => ({
-        ...row,
-        jns_perawatan: (
-          JSON.parse(row.jns_perawatan || "[]") as {
-            kd_jenis_prw: string;
-            nm_perawatan: string;
-          }[]
-        ).filter((item) => item !== null),
-      }));
+      // Create a map of no_sep to tarif from CSV data
+      const csvTarifMap = new Map(
+        input.csvData.map((item) => [item.no_sep, item.tarif])
+      );
 
-      // Get the no_sep values that were found in the database
+      const processedResult = result.map((row) => {
+        const tarifFromCsv = csvTarifMap.get(row.no_sep || "") || 0;
+        const alokasi = tarifFromCsv * 0.2;
+        const laboratorium = (row.total_permintaan_lab || 0) * 10000;
+        const radiologi = (row.total_permintaan_radiologi || 0) * 15000;
+        const dpjp_utama = alokasi - laboratorium - radiologi;
+        const yang_terbagi = dpjp_utama + radiologi + laboratorium;
+        const percent_dari_klaim =
+          tarifFromCsv > 0
+            ? Math.floor((yang_terbagi / tarifFromCsv) * 100)
+            : 0;
+
+        return {
+          ...row,
+          jns_perawatan: (
+            JSON.parse(row.jns_perawatan || "[]") as {
+              kd_jenis_prw: string;
+              nm_perawatan: string;
+            }[]
+          ).filter((item) => item !== null),
+          tarif_from_csv: tarifFromCsv,
+          alokasi,
+          laboratorium,
+          radiologi,
+          dpjp_utama,
+          yang_terbagi,
+          percent_dari_klaim,
+        };
+      });
+
       const foundNoSepValues = processedResult.map((row) => row.no_sep);
 
-      // Find the no_sep values that were not found
-      const notFoundNoSepValues = input.noSepList.filter(
+      const notFoundNoSepValues = noSepList.filter(
         (noSep) => !foundNoSepValues.includes(noSep)
       );
 
       return {
         data: processedResult,
         statistics: {
-          totalRequested: input.noSepList.length,
+          totalRequested: input.csvData.length,
           found: foundNoSepValues.length,
           notFound: notFoundNoSepValues.length,
           notFoundValues: notFoundNoSepValues,

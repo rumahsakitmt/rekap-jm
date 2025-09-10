@@ -7,20 +7,23 @@ import { Upload, FileText, X, CheckCircle, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface CsvUploadProps {
-  onImport: (noSepList: string[]) => void;
+  onImport: (csvData: { no_sep: string; tarif: number }[]) => void;
   isLoading?: boolean;
 }
 
 export function CsvUpload({ onImport, isLoading = false }: CsvUploadProps) {
   const [file, setFile] = useState<File | null>(null);
-  const [noSepList, setNoSepList] = useState<string[]>([]);
+  const [csvData, setCsvData] = useState<{ no_sep: string; tarif: number }[]>(
+    []
+  );
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const parseCsv = (csvText: string): string[] => {
+  const parseCsv = (csvText: string): { no_sep: string; tarif: number }[] => {
     const lines = csvText.split("\n");
-    const noSepValues: string[] = [];
+    const csvData: { no_sep: string; tarif: number }[] = [];
+    let hasHeader = false;
 
     for (const line of lines) {
       const trimmedLine = line.trim();
@@ -30,20 +33,23 @@ export function CsvUpload({ onImport, isLoading = false }: CsvUploadProps) {
           trimmedLine.toLowerCase().includes("no_sep") ||
           trimmedLine.toLowerCase().includes("sep")
         ) {
+          hasHeader = true;
           continue;
         }
 
-        // Split by comma and take the first column (assuming no_sep is first column)
+        // Split by comma and extract no_sep and tarif
         const columns = trimmedLine.split(",");
         const noSep = columns[0]?.trim();
+        const tarifStr = columns[1]?.trim();
 
         if (noSep && noSep.length > 0) {
-          noSepValues.push(noSep);
+          const tarif = tarifStr ? parseFloat(tarifStr) || 0 : 0;
+          csvData.push({ no_sep: noSep, tarif });
         }
       }
     }
 
-    return noSepValues;
+    return csvData;
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,16 +69,16 @@ export function CsvUpload({ onImport, isLoading = false }: CsvUploadProps) {
     reader.onload = (e) => {
       try {
         const csvText = e.target?.result as string;
-        const parsedNoSepList = parseCsv(csvText);
+        const parsedCsvData = parseCsv(csvText);
 
-        if (parsedNoSepList.length === 0) {
+        if (parsedCsvData.length === 0) {
           setError("No valid no_sep values found in the CSV file");
           return;
         }
 
-        setNoSepList(parsedNoSepList);
+        setCsvData(parsedCsvData);
         setSuccess(
-          `Successfully parsed ${parsedNoSepList.length} no_sep values from CSV`
+          `Successfully parsed ${parsedCsvData.length} records from CSV`
         );
       } catch (err) {
         setError("Error parsing CSV file");
@@ -83,17 +89,17 @@ export function CsvUpload({ onImport, isLoading = false }: CsvUploadProps) {
   };
 
   const handleImport = () => {
-    if (noSepList.length === 0) {
-      setError("No no_sep values to import");
+    if (csvData.length === 0) {
+      setError("No data to import");
       return;
     }
 
-    onImport(noSepList);
+    onImport(csvData);
   };
 
   const handleClear = () => {
     setFile(null);
-    setNoSepList([]);
+    setCsvData([]);
     setError("");
     setSuccess("");
     if (fileInputRef.current) {
@@ -137,7 +143,7 @@ export function CsvUpload({ onImport, isLoading = false }: CsvUploadProps) {
               <FileText className="h-4 w-4" />
               <span className="text-sm font-medium">{file.name}</span>
               <span className="text-xs text-muted-foreground">
-                ({noSepList.length} no_sep values)
+                ({csvData.length} records)
               </span>
             </div>
             <Button
@@ -165,22 +171,24 @@ export function CsvUpload({ onImport, isLoading = false }: CsvUploadProps) {
           </Alert>
         )}
 
-        {noSepList.length > 0 && (
+        {csvData.length > 0 && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Preview (first 5 values):</Label>
+              <Label>Preview (first 5 records):</Label>
               <span className="text-sm text-muted-foreground">
-                Total: {noSepList.length}
+                Total: {csvData.length}
               </span>
             </div>
             <div className="p-3 bg-muted rounded-lg max-h-32 overflow-y-auto">
               <div className="text-sm font-mono space-y-1">
-                {noSepList.slice(0, 5).map((noSep, index) => (
-                  <div key={index}>{noSep}</div>
+                {csvData.slice(0, 5).map((record, index) => (
+                  <div key={index}>
+                    {record.no_sep} - {record.tarif}
+                  </div>
                 ))}
-                {noSepList.length > 5 && (
+                {csvData.length > 5 && (
                   <div className="text-muted-foreground">
-                    ... and {noSepList.length - 5} more
+                    ... and {csvData.length - 5} more
                   </div>
                 )}
               </div>
@@ -190,10 +198,10 @@ export function CsvUpload({ onImport, isLoading = false }: CsvUploadProps) {
 
         <Button
           onClick={handleImport}
-          disabled={noSepList.length === 0 || isLoading}
+          disabled={csvData.length === 0 || isLoading}
           className="w-full"
         >
-          {isLoading ? "Importing..." : `Import ${noSepList.length} Records`}
+          {isLoading ? "Importing..." : `Import ${csvData.length} Records`}
         </Button>
       </CardContent>
     </Card>

@@ -94,11 +94,13 @@ function HomeComponent() {
     },
   });
 
-  const handleCsvImport = async (noSepList: string[]) => {
+  const handleCsvImport = async (
+    csvData: { no_sep: string; tarif: number }[]
+  ) => {
     setIsImporting(true);
     try {
       mutation.mutateAsync({
-        noSepList,
+        csvData,
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
       });
@@ -115,6 +117,49 @@ function HomeComponent() {
   };
 
   const displayData = isCsvMode ? csvData : rawatJalan.data;
+
+  // Calculate totals and averages
+  const totals = displayData?.reduce(
+    (acc, row) => {
+      const tarif = isCsvMode ? row.tarif_from_csv || 0 : row.biaya_rawat || 0;
+      return {
+        totalTarif: acc.totalTarif + Number(tarif),
+        totalAlokasi: acc.totalAlokasi + Number(row.alokasi || 0),
+        totalDpjpUtama: acc.totalDpjpUtama + Number(row.dpjp_utama || 0),
+        totalLaboratorium:
+          acc.totalLaboratorium + Number(row.laboratorium || 0),
+        totalRadiologi: acc.totalRadiologi + Number(row.radiologi || 0),
+        totalYangTerbagi: acc.totalYangTerbagi + Number(row.yang_terbagi || 0),
+        totalPercentDariKlaim:
+          acc.totalPercentDariKlaim + Number(row.percent_dari_klaim || 0),
+        count: acc.count + 1,
+      };
+    },
+    {
+      totalTarif: 0,
+      totalAlokasi: 0,
+      totalDpjpUtama: 0,
+      totalLaboratorium: 0,
+      totalRadiologi: 0,
+      totalYangTerbagi: 0,
+      totalPercentDariKlaim: 0,
+      count: 0,
+    }
+  ) || {
+    totalTarif: 0,
+    totalAlokasi: 0,
+    totalDpjpUtama: 0,
+    totalLaboratorium: 0,
+    totalRadiologi: 0,
+    totalYangTerbagi: 0,
+    totalPercentDariKlaim: 0,
+    count: 0,
+  };
+
+  const averagePercentDariKlaim =
+    totals.count > 0
+      ? Math.round(totals.totalPercentDariKlaim / totals.count)
+      : 0;
 
   return (
     <div className="container mx-auto px-4 py-2">
@@ -221,6 +266,15 @@ function HomeComponent() {
             <TableHead className="text-center">Permintaan Lab</TableHead>
             <TableHead className="text-center">Konsul</TableHead>
             <TableHead>Konsul Dokter</TableHead>
+            {isCsvMode && (
+              <TableHead className="text-right">Total Tarif</TableHead>
+            )}
+            <TableHead className="text-right">Alokasi</TableHead>
+            <TableHead className="text-right">DPJP Utama</TableHead>
+            <TableHead className="text-right">Laboratorium</TableHead>
+            <TableHead className="text-right">Radiologi</TableHead>
+            <TableHead className="text-right">Yang Terbagi</TableHead>
+            <TableHead className="text-center">% Dari Klaim</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -315,8 +369,143 @@ function HomeComponent() {
               <TableCell>
                 <PerawatanList perawatanList={rawatJalan.jns_perawatan || []} />
               </TableCell>
+
+              {isCsvMode && (
+                <TableCell className="text-right font-mono">
+                  {rawatJalan.tarif_from_csv
+                    ? new Intl.NumberFormat("id-ID", {
+                        style: "currency",
+                        currency: "IDR",
+                        minimumFractionDigits: 0,
+                      }).format(rawatJalan.tarif_from_csv)
+                    : "-"}
+                </TableCell>
+              )}
+              <TableCell className="text-right font-mono">
+                {rawatJalan.alokasi
+                  ? new Intl.NumberFormat("id-ID", {
+                      style: "currency",
+                      currency: "IDR",
+                      minimumFractionDigits: 0,
+                    }).format(rawatJalan.alokasi)
+                  : "-"}
+              </TableCell>
+              <TableCell className="text-right font-mono">
+                {rawatJalan.dpjp_utama
+                  ? new Intl.NumberFormat("id-ID", {
+                      style: "currency",
+                      currency: "IDR",
+                      minimumFractionDigits: 0,
+                    }).format(rawatJalan.dpjp_utama)
+                  : "-"}
+              </TableCell>
+              <TableCell className="text-right font-mono">
+                {rawatJalan.laboratorium
+                  ? new Intl.NumberFormat("id-ID", {
+                      style: "currency",
+                      currency: "IDR",
+                      minimumFractionDigits: 0,
+                    }).format(rawatJalan.laboratorium)
+                  : "-"}
+              </TableCell>
+              <TableCell className="text-right font-mono">
+                {rawatJalan.radiologi
+                  ? new Intl.NumberFormat("id-ID", {
+                      style: "currency",
+                      currency: "IDR",
+                      minimumFractionDigits: 0,
+                    }).format(rawatJalan.radiologi)
+                  : "-"}
+              </TableCell>
+              <TableCell className="text-right font-mono">
+                {rawatJalan.yang_terbagi
+                  ? new Intl.NumberFormat("id-ID", {
+                      style: "currency",
+                      currency: "IDR",
+                      minimumFractionDigits: 0,
+                    }).format(rawatJalan.yang_terbagi)
+                  : "-"}
+              </TableCell>
+              <TableCell className="text-center font-mono">
+                {rawatJalan.percent_dari_klaim !== undefined
+                  ? `${rawatJalan.percent_dari_klaim}%`
+                  : "-"}
+              </TableCell>
             </TableRow>
           ))}
+          {/* Totals Row */}
+          <TableRow className="bg-muted font-semibold">
+            <TableCell colSpan={6} className="text-right font-bold">
+              TOTAL
+            </TableCell>
+            <TableCell className="text-center font-mono">
+              {displayData?.reduce(
+                (sum, row) => sum + Number(row.total_permintaan_radiologi || 0),
+                0
+              )}
+            </TableCell>
+            <TableCell className="text-center font-mono">
+              {displayData?.reduce(
+                (sum, row) => sum + Number(row.total_permintaan_lab || 0),
+                0
+              )}
+            </TableCell>
+            <TableCell className="text-center font-mono">
+              {displayData?.reduce(
+                (sum, row) => sum + Number(row.konsul_count || 0),
+                0
+              )}
+            </TableCell>
+            <TableCell></TableCell>
+            {isCsvMode && (
+              <TableCell className="text-right font-mono">
+                {new Intl.NumberFormat("id-ID", {
+                  style: "currency",
+                  currency: "IDR",
+                  minimumFractionDigits: 0,
+                }).format(totals.totalTarif)}
+              </TableCell>
+            )}
+            <TableCell className="text-right font-mono">
+              {new Intl.NumberFormat("id-ID", {
+                style: "currency",
+                currency: "IDR",
+                minimumFractionDigits: 0,
+              }).format(totals.totalAlokasi)}
+            </TableCell>
+            <TableCell className="text-right font-mono">
+              {new Intl.NumberFormat("id-ID", {
+                style: "currency",
+                currency: "IDR",
+                minimumFractionDigits: 0,
+              }).format(totals.totalDpjpUtama)}
+            </TableCell>
+            <TableCell className="text-right font-mono">
+              {new Intl.NumberFormat("id-ID", {
+                style: "currency",
+                currency: "IDR",
+                minimumFractionDigits: 0,
+              }).format(totals.totalLaboratorium)}
+            </TableCell>
+            <TableCell className="text-right font-mono">
+              {new Intl.NumberFormat("id-ID", {
+                style: "currency",
+                currency: "IDR",
+                minimumFractionDigits: 0,
+              }).format(totals.totalRadiologi)}
+            </TableCell>
+
+            <TableCell className="text-right font-mono">
+              {new Intl.NumberFormat("id-ID", {
+                style: "currency",
+                currency: "IDR",
+                minimumFractionDigits: 0,
+              }).format(totals.totalYangTerbagi)}
+            </TableCell>
+            <TableCell className="text-center font-mono">
+              {averagePercentDariKlaim}%
+            </TableCell>
+          </TableRow>
         </TableBody>
       </Table>
     </div>
