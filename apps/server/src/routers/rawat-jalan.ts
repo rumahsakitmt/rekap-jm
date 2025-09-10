@@ -5,11 +5,12 @@ import { rawat_jl_drpr } from "../db/schema/rawat_jl_drpr";
 import { bridging_sep } from "../db/schema/bridging_sep";
 import { permintaan_radiologi } from "../db/schema/permintaan_radiologi";
 import { permintaan_lab } from "../db/schema/permintaan_lab";
-import { desc, eq, sql, and, gte, lte } from "drizzle-orm";
+import { desc, eq, sql, and, gte, lte, asc } from "drizzle-orm";
 import { dokter } from "@/db/schema/dokter";
 import { jns_perawatan } from "@/db/schema/jns_perawatan";
 import { pasien } from "@/db/schema/pasien";
 import { reg_periksa } from "@/db/schema/reg_periksa";
+import { poliklinik } from "@/db/schema/poliklinik";
 import { z } from "zod";
 
 export const rawatJalanRouter = router({
@@ -46,6 +47,8 @@ export const rawatJalanRouter = router({
           jns_perawatan: sql<string>`JSON_ARRAYAGG(
           CASE 
             WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' 
+            AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%'
+            AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%'
             THEN JSON_OBJECT(
               'kd_jenis_prw', ${jns_perawatan.kd_jenis_prw},
               'nm_perawatan', ${jns_perawatan.nm_perawatan}
@@ -53,7 +56,7 @@ export const rawatJalanRouter = router({
             ELSE NULL
           END
         )`,
-          konsul_count: sql<number>`SUM(CASE WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' THEN 1 ELSE 0 END)`,
+          konsul_count: sql<number>`SUM(CASE WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%' THEN 1 ELSE 0 END)`,
           kd_dokter: rawat_jl_drpr.kd_dokter,
           nip: rawat_jl_drpr.nip,
           tgl_perawatan: rawat_jl_drpr.tgl_perawatan,
@@ -83,6 +86,7 @@ export const rawatJalanRouter = router({
           jk: pasien.jk,
           tgl_lahir: pasien.tgl_lahir,
           alamat: pasien.alamat,
+          nm_poli: poliklinik.nm_poli,
         })
         .from(rawat_jl_drpr)
         .leftJoin(dokter, eq(rawat_jl_drpr.kd_dokter, dokter.kd_dokter))
@@ -96,9 +100,10 @@ export const rawatJalanRouter = router({
         )
         .leftJoin(reg_periksa, eq(rawat_jl_drpr.no_rawat, reg_periksa.no_rawat))
         .leftJoin(pasien, eq(reg_periksa.no_rkm_medis, pasien.no_rkm_medis))
+        .leftJoin(poliklinik, eq(reg_periksa.kd_poli, poliklinik.kd_poli))
         .where(conditions.length > 0 ? and(...conditions) : undefined)
         .groupBy(rawat_jl_drpr.no_rawat)
-        .orderBy(desc(rawat_jl_drpr.no_rawat));
+        .orderBy(asc(rawat_jl_drpr.tgl_perawatan));
 
       const result = input.limit
         ? await baseQuery.limit(input.limit)

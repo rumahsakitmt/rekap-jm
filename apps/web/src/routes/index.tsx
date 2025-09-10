@@ -140,6 +140,7 @@ function HomeComponent() {
             <TableHead>No Rawat / No Sep</TableHead>
             <TableHead>Nama Pasien</TableHead>
             <TableHead>Dokter</TableHead>
+            <TableHead>Poli</TableHead>
             <TableHead className="text-center">Permintaan Radiologi</TableHead>
             <TableHead className="text-center">Permintaan Lab</TableHead>
             <TableHead className="text-center">Konsul</TableHead>
@@ -155,7 +156,7 @@ function HomeComponent() {
               <TableCell>
                 {format(
                   new Date(rawatJalan.tgl_perawatan as string),
-                  "dd/MM/yyyy"
+                  "dd MMM yyyy"
                 )}
               </TableCell>
               <TableCell>
@@ -225,6 +226,7 @@ function HomeComponent() {
                   <p className="font-sm">{rawatJalan.nm_dokter}</p>
                 </div>
               </TableCell>
+              <TableCell className="uppercase">{rawatJalan.nm_poli}</TableCell>
               <TableCell className="text-center">
                 {rawatJalan.total_permintaan_radiologi}
               </TableCell>
