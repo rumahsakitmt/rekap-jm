@@ -23,7 +23,7 @@ export function DatePicker({
           <Button
             variant="outline"
             data-empty={!date}
-            className="data-[empty=true]:text-muted-foreground w-[280px] justify-start text-left font-normal"
+            className="data-[empty=true]:text-muted-foreground w-full justify-start text-left font-normal"
           >
             <CalendarIcon />
             {date ? (

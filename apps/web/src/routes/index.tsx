@@ -24,6 +24,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/calendar";
+import { PerawatanList } from "@/components/perawatan-list";
+import { Copy, Check } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   component: HomeComponent,
@@ -31,18 +35,35 @@ export const Route = createFileRoute("/")({
 
 function HomeComponent() {
   const [search, setSearch] = useState("");
-  const [limit, setLimit] = useState(50);
+  const [limit, setLimit] = useState<number | undefined>(50);
   const [dateFrom, setDateFrom] = useState<Date | undefined>(() =>
     startOfMonth(new Date())
   );
   const [dateTo, setDateTo] = useState<Date | undefined>(() =>
     endOfMonth(new Date())
   );
+  const [copiedItems, setCopiedItems] = useState<Set<string>>(new Set());
+
+  const handleCopy = async (text: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedItems((prev) => new Set(prev).add(id));
+      setTimeout(() => {
+        setCopiedItems((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(id);
+          return newSet;
+        });
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to copy: ", err);
+    }
+  };
 
   const rawatJalan = useQuery(
     trpc.rawatJalan.getRawatJalan.queryOptions({
       search: search || undefined,
-      limit,
+      ...(limit && { limit }),
       dateFrom: dateFrom || undefined,
       dateTo: dateTo || undefined,
     })
@@ -50,24 +71,20 @@ function HomeComponent() {
 
   return (
     <div className="container mx-auto px-4 py-2">
-      <h2 className="mb-4 font-medium">Rawat Jalan</h2>
-
       <Card className="mb-4">
         <CardHeader>
           <CardTitle>Filter & Search</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">Search (No Rawat/SEP)</label>
+            <Input
+              placeholder="Search by no_rawat or no_sep..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label className="text-sm font-medium">
-                Search (No Rawat/SEP)
-              </label>
-              <Input
-                placeholder="Search by no_rawat or no_sep..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
             <div>
               <label className="text-sm font-medium">Date From</label>
               <DatePicker date={dateFrom} setDate={setDateFrom} />
@@ -79,8 +96,10 @@ function HomeComponent() {
             <div>
               <label className="text-sm font-medium">Limit</label>
               <Select
-                value={limit.toString()}
-                onValueChange={(value) => setLimit(Number(value))}
+                value={limit?.toString() || "no-limit"}
+                onValueChange={(value) =>
+                  setLimit(value === "no-limit" ? undefined : Number(value))
+                }
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Limit" />
@@ -91,75 +110,132 @@ function HomeComponent() {
                   <SelectItem value="100">100</SelectItem>
                   <SelectItem value="250">250</SelectItem>
                   <SelectItem value="500">500</SelectItem>
+                  <SelectItem value="no-limit">No Limit</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            <Button
+              className="self-end"
+              onClick={() => {
+                setSearch("");
+                setLimit(50);
+                setDateFrom(startOfMonth(new Date()));
+                setDateTo(endOfMonth(new Date()));
+              }}
+              variant="outline"
+            >
+              Clear Filters
+            </Button>
           </div>
-          <Button
-            onClick={() => {
-              setSearch("");
-              setLimit(50);
-              const now = new Date();
-              setDateFrom(new Date(now.getFullYear(), now.getMonth(), 1));
-              setDateTo(new Date(now.getFullYear(), now.getMonth() + 1, 0));
-            }}
-            variant="outline"
-          >
-            Clear Filters
-          </Button>
         </CardContent>
       </Card>
 
+      <p className="text-end py-4">Total data: {rawatJalan.data?.length}</p>
       <Table>
         <TableCaption>Rekap Rawat Jalan</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[100px]">No Rawat/Sep</TableHead>
-            <TableHead>Dokter</TableHead>
             <TableHead>Tanggal Perawatan</TableHead>
-            <TableHead>Permintaan Radiologi</TableHead>
-            <TableHead>Permintaan Lab</TableHead>
-            <TableHead>Perawatan</TableHead>
+            <TableHead>No RM</TableHead>
+            <TableHead>No Rawat / No Sep</TableHead>
+            <TableHead>Nama Pasien</TableHead>
+            <TableHead>Dokter</TableHead>
+            <TableHead className="text-center">Permintaan Radiologi</TableHead>
+            <TableHead className="text-center">Permintaan Lab</TableHead>
+            <TableHead className="text-center">Konsul</TableHead>
+            <TableHead>Konsul Dokter</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rawatJalan.data?.map((rawatJalan) => (
-            <TableRow key={rawatJalan.no_rawat}>
-              <TableCell className="font-medium">
-                <div>
-                  <div className="text-xs text-muted-foreground">
-                    {rawatJalan.no_rawat}
-                  </div>
-                  {rawatJalan.no_sep}
-                </div>
-              </TableCell>
-              <TableCell>
-                <div>
-                  <p className="text-xs text-muted-foreground">
-                    {rawatJalan.kd_dokter}
-                  </p>
-                  <p>{rawatJalan.nm_dokter}</p>
-                </div>
-              </TableCell>
+          {rawatJalan.data?.map((rawatJalan, i) => (
+            <TableRow
+              key={rawatJalan.no_rawat}
+              className={cn(i % 2 !== 0 && "bg-muted")}
+            >
               <TableCell>
                 {format(
                   new Date(rawatJalan.tgl_perawatan as string),
                   "dd/MM/yyyy"
                 )}
               </TableCell>
-              <TableCell>{rawatJalan.total_permintaan_radiologi}</TableCell>
-              <TableCell>{rawatJalan.total_permintaan_lab}</TableCell>
               <TableCell>
-                <div className="space-y-2">
-                  {rawatJalan.jns_perawatan?.map((perawatan) => (
-                    <div key={perawatan.kd_jenis_prw}>
-                      <span className="text-xs text-muted-foreground">
-                        {perawatan.kd_jenis_prw}
-                      </span>
-                      <div>{perawatan.nm_perawatan}</div>
-                    </div>
-                  ))}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    handleCopy(
+                      rawatJalan.no_rekam_medis as string,
+                      `rekam-medis-${rawatJalan.no_rekam_medis}`
+                    );
+                  }}
+                >
+                  {rawatJalan.no_rekam_medis}
+                  {copiedItems.has(
+                    `rekam-medis-${rawatJalan.no_rekam_medis}`
+                  ) ? (
+                    <Check size={8} className="ml-1 " />
+                  ) : (
+                    <Copy size={8} className="ml-1" />
+                  )}
+                </Button>
+              </TableCell>
+              <TableCell className="font-medium">
+                <div className="space-y-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground"
+                    onClick={() =>
+                      handleCopy(
+                        rawatJalan.no_rawat,
+                        `rawat-${rawatJalan.no_rawat}`
+                      )
+                    }
+                  >
+                    {rawatJalan.no_rawat}
+                    {copiedItems.has(`rawat-${rawatJalan.no_rawat}`) ? (
+                      <Check size={8} className="ml-1 " />
+                    ) : (
+                      <Copy size={8} className="ml-1" />
+                    )}
+                  </Button>
+                  <Separator />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      handleCopy(rawatJalan.no_sep, `sep-${rawatJalan.no_sep}`)
+                    }
+                  >
+                    {rawatJalan.no_sep}
+                    {copiedItems.has(`sep-${rawatJalan.no_sep}`) ? (
+                      <Check size={8} className="ml-1 " />
+                    ) : (
+                      <Copy size={8} className="ml-1" />
+                    )}
+                  </Button>
                 </div>
+              </TableCell>
+              <TableCell>{rawatJalan.nm_pasien}</TableCell>
+              <TableCell>
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    {rawatJalan.kd_dokter}
+                  </p>
+                  <p className="font-sm">{rawatJalan.nm_dokter}</p>
+                </div>
+              </TableCell>
+              <TableCell className="text-center">
+                {rawatJalan.total_permintaan_radiologi}
+              </TableCell>
+              <TableCell className="text-center">
+                {rawatJalan.total_permintaan_lab}
+              </TableCell>
+              <TableCell className="text-center">
+                {rawatJalan.konsul_count}
+              </TableCell>
+              <TableCell>
+                <PerawatanList perawatanList={rawatJalan.jns_perawatan || []} />
               </TableCell>
             </TableRow>
           ))}
