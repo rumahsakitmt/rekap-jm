@@ -509,7 +509,24 @@ function HomeComponent() {
               </TableCell>
               <TableCell className="uppercase">{rawatJalan.nm_poli}</TableCell>
               <TableCell className="text-center">
-                {rawatJalan.total_permintaan_radiologi}
+                {rawatJalan.total_permintaan_radiologi > 0 ? (
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger>
+                      <Button variant="ghost" size="sm">
+                        {rawatJalan.total_permintaan_radiologi}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {rawatJalan.jns_perawatan_radiologi.map((item: any) => (
+                        <p key={item.kd_jenis_prw}>{item.nm_perawatan}</p>
+                      ))}
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Button variant="ghost" size="sm">
+                    {rawatJalan.total_permintaan_radiologi}
+                  </Button>
+                )}
               </TableCell>
               <TableCell className="text-center">
                 {rawatJalan.total_permintaan_lab}

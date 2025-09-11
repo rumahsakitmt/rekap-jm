@@ -12,6 +12,8 @@ import { jns_perawatan } from "@/db/schema/jns_perawatan";
 import { pasien } from "@/db/schema/pasien";
 import { poliklinik } from "@/db/schema/poliklinik";
 import { z } from "zod";
+import { jns_perawatan_radiologi } from "@/db/schema/jns_perawatan_radiologi";
+import { permintaan_pemeriksaan_radiologi } from "@/db/schema/permintaan_pemeriksaan_radiologi";
 
 export const regPeriksaRouter = router({
   getRegPeriksa: publicProcedure
@@ -63,6 +65,18 @@ export const regPeriksaRouter = router({
             ELSE NULL
           END
         )`,
+          jns_perawatan_radiologi: sql<string>`(
+            SELECT JSON_ARRAYAGG(
+              JSON_OBJECT(
+                'kd_jenis_prw', jpr.kd_jenis_prw,
+                'nm_perawatan', jpr.nm_perawatan
+              )
+            )
+            FROM ${permintaan_radiologi} pr
+            JOIN ${permintaan_pemeriksaan_radiologi} ppr ON pr.noorder = ppr.noorder
+            JOIN ${jns_perawatan_radiologi} jpr ON ppr.kd_jenis_prw = jpr.kd_jenis_prw
+            WHERE pr.no_rawat = ${reg_periksa.no_rawat}
+          )`,
           konsul_count: sql<number>`SUM(CASE WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%' THEN 1 ELSE 0 END)`,
           kd_dokter: reg_periksa.kd_dokter,
           nip: rawat_jl_drpr.nip,
@@ -109,6 +123,24 @@ export const regPeriksaRouter = router({
           bridging_sep,
           eq(reg_periksa.no_rawat, bridging_sep.no_rawat)
         )
+        .leftJoin(
+          permintaan_radiologi,
+          eq(reg_periksa.no_rawat, permintaan_radiologi.no_rawat)
+        )
+        .leftJoin(
+          permintaan_pemeriksaan_radiologi,
+          eq(
+            permintaan_radiologi.noorder,
+            permintaan_pemeriksaan_radiologi.noorder
+          )
+        )
+        .leftJoin(
+          jns_perawatan_radiologi,
+          eq(
+            permintaan_pemeriksaan_radiologi.kd_jenis_prw,
+            jns_perawatan_radiologi.kd_jenis_prw
+          )
+        )
         .leftJoin(pasien, eq(reg_periksa.no_rkm_medis, pasien.no_rkm_medis))
         .leftJoin(poliklinik, eq(reg_periksa.kd_poli, poliklinik.kd_poli))
         .where(conditions.length > 0 ? and(...conditions) : undefined)
@@ -123,7 +155,24 @@ export const regPeriksaRouter = router({
         const tarif = row.biaya_rawat || 0;
         const alokasi = tarif * 0.2;
         const laboratorium = (row.total_permintaan_lab || 0) * 10000;
-        const radiologi = (row.total_permintaan_radiologi || 0) * 15000;
+
+        const jnsPerawatanRadiologi = JSON.parse(
+          row.jns_perawatan_radiologi || "[]"
+        ) as {
+          kd_jenis_prw: string;
+          nm_perawatan: string;
+        }[];
+
+        const usgCount = jnsPerawatanRadiologi.filter(
+          (item) =>
+            item.nm_perawatan && item.nm_perawatan.toLowerCase().includes("usg")
+        ).length;
+        const nonUsgCount = (row.total_permintaan_radiologi || 0) - usgCount;
+
+        const radiologi =
+          usgCount > 0
+            ? Math.max(0, tarif - 185000) * usgCount + nonUsgCount * 15000
+            : (row.total_permintaan_radiologi || 0) * 15000;
         const dpjp_utama = alokasi - laboratorium - radiologi;
         const yang_terbagi = dpjp_utama + radiologi + laboratorium;
         const percent_dari_klaim =
@@ -133,6 +182,12 @@ export const regPeriksaRouter = router({
           ...row,
           jns_perawatan: (
             JSON.parse(row.jns_perawatan || "[]") as {
+              kd_jenis_prw: string;
+              nm_perawatan: string;
+            }[]
+          ).filter((item) => item !== null),
+          jns_perawatan_radiologi: (
+            JSON.parse(row.jns_perawatan_radiologi || "[]") as {
               kd_jenis_prw: string;
               nm_perawatan: string;
             }[]
@@ -195,6 +250,18 @@ export const regPeriksaRouter = router({
               ELSE NULL
             END
           )`,
+          jns_perawatan_radiologi: sql<string>`(
+            SELECT JSON_ARRAYAGG(
+              JSON_OBJECT(
+                'kd_jenis_prw', jpr.kd_jenis_prw,
+                'nm_perawatan', jpr.nm_perawatan
+              )
+            )
+            FROM ${permintaan_radiologi} pr
+            JOIN ${permintaan_pemeriksaan_radiologi} ppr ON pr.noorder = ppr.noorder
+            JOIN ${jns_perawatan_radiologi} jpr ON ppr.kd_jenis_prw = jpr.kd_jenis_prw
+            WHERE pr.no_rawat = ${reg_periksa.no_rawat}
+          )`,
           konsul_count: sql<number>`SUM(CASE WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%' THEN 1 ELSE 0 END)`,
           kd_dokter: reg_periksa.kd_dokter,
           nip: rawat_jl_drpr.nip,
@@ -255,7 +322,24 @@ export const regPeriksaRouter = router({
         const tarifFromCsv = csvTarifMap.get(row.no_sep || "") || 0;
         const alokasi = tarifFromCsv * 0.2;
         const laboratorium = (row.total_permintaan_lab || 0) * 10000;
-        const radiologi = (row.total_permintaan_radiologi || 0) * 15000;
+
+        const jnsPerawatanRadiologi = JSON.parse(
+          row.jns_perawatan_radiologi || "[]"
+        ) as {
+          kd_jenis_prw: string;
+          nm_perawatan: string;
+        }[];
+
+        const usgCount = jnsPerawatanRadiologi.filter(
+          (item) =>
+            item.nm_perawatan && item.nm_perawatan.toLowerCase().includes("usg")
+        ).length;
+        const nonUsgCount = (row.total_permintaan_radiologi || 0) - usgCount;
+
+        const radiologi =
+          usgCount > 0
+            ? Math.max(0, tarifFromCsv - 185000) + nonUsgCount * 15000
+            : (row.total_permintaan_radiologi || 0) * 15000;
         const dpjp_utama = alokasi - laboratorium - radiologi;
         const konsul =
           row.konsul_count && row.konsul_count > 1
@@ -271,6 +355,12 @@ export const regPeriksaRouter = router({
           ...row,
           jns_perawatan: (
             JSON.parse(row.jns_perawatan || "[]") as {
+              kd_jenis_prw: string;
+              nm_perawatan: string;
+            }[]
+          ).filter((item) => item !== null),
+          jns_perawatan_radiologi: (
+            JSON.parse(row.jns_perawatan_radiologi || "[]") as {
               kd_jenis_prw: string;
               nm_perawatan: string;
             }[]
