@@ -54,6 +54,8 @@ export const regPeriksaRouter = router({
             WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' 
             AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%'
             AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%'
+            AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%'
+            AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%'
             THEN JSON_OBJECT(
               'kd_jenis_prw', ${jns_perawatan.kd_jenis_prw},
               'nm_perawatan', ${jns_perawatan.nm_perawatan}
@@ -61,7 +63,7 @@ export const regPeriksaRouter = router({
             ELSE NULL
           END
         )`,
-          konsul_count: sql<number>`SUM(CASE WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%' THEN 1 ELSE 0 END)`,
+          konsul_count: sql<number>`SUM(CASE WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%' THEN 1 ELSE 0 END)`,
           kd_dokter: reg_periksa.kd_dokter,
           nip: rawat_jl_drpr.nip,
           tgl_perawatan: reg_periksa.tgl_registrasi,
@@ -81,7 +83,7 @@ export const regPeriksaRouter = router({
           WHERE ${permintaan_radiologi.no_rawat} = ${reg_periksa.no_rawat}
         )`,
           total_permintaan_lab: sql<number>`(
-          SELECT COUNT(*) 
+          SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
           FROM ${permintaan_lab} 
           WHERE ${permintaan_lab.no_rawat} = ${reg_periksa.no_rawat}
         )`,
@@ -103,7 +105,10 @@ export const regPeriksaRouter = router({
           jns_perawatan,
           eq(rawat_jl_drpr.kd_jenis_prw, jns_perawatan.kd_jenis_prw)
         )
-        .leftJoin(bridging_sep, eq(reg_periksa.no_rawat, bridging_sep.no_rawat))
+        .innerJoin(
+          bridging_sep,
+          eq(reg_periksa.no_rawat, bridging_sep.no_rawat)
+        )
         .leftJoin(pasien, eq(reg_periksa.no_rkm_medis, pasien.no_rkm_medis))
         .leftJoin(poliklinik, eq(reg_periksa.kd_poli, poliklinik.kd_poli))
         .where(conditions.length > 0 ? and(...conditions) : undefined)
@@ -177,18 +182,20 @@ export const regPeriksaRouter = router({
           no_rawat: reg_periksa.no_rawat,
           no_rekam_medis: reg_periksa.no_rkm_medis,
           jns_perawatan: sql<string>`JSON_ARRAYAGG(
-          CASE 
-            WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' 
-            AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%'
-            AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%'
-            THEN JSON_OBJECT(
-              'kd_jenis_prw', ${jns_perawatan.kd_jenis_prw},
-              'nm_perawatan', ${jns_perawatan.nm_perawatan}
-            )
-            ELSE NULL
-          END
-        )`,
-          konsul_count: sql<number>`SUM(CASE WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%' THEN 1 ELSE 0 END)`,
+            CASE 
+              WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' 
+              AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%'
+              AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%'
+              AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%'
+              AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%'
+              THEN JSON_OBJECT(
+                'kd_jenis_prw', ${jns_perawatan.kd_jenis_prw},
+                'nm_perawatan', ${jns_perawatan.nm_perawatan}
+              )
+              ELSE NULL
+            END
+          )`,
+          konsul_count: sql<number>`SUM(CASE WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%' THEN 1 ELSE 0 END)`,
           kd_dokter: reg_periksa.kd_dokter,
           nip: rawat_jl_drpr.nip,
           tgl_perawatan: reg_periksa.tgl_registrasi,
@@ -208,7 +215,7 @@ export const regPeriksaRouter = router({
           WHERE ${permintaan_radiologi.no_rawat} = ${reg_periksa.no_rawat}
         )`,
           total_permintaan_lab: sql<number>`(
-          SELECT COUNT(*) 
+          SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
           FROM ${permintaan_lab} 
           WHERE ${permintaan_lab.no_rawat} = ${reg_periksa.no_rawat}
         )`,
@@ -230,14 +237,16 @@ export const regPeriksaRouter = router({
           jns_perawatan,
           eq(rawat_jl_drpr.kd_jenis_prw, jns_perawatan.kd_jenis_prw)
         )
-        .leftJoin(bridging_sep, eq(reg_periksa.no_rawat, bridging_sep.no_rawat))
+        .innerJoin(
+          bridging_sep,
+          eq(reg_periksa.no_rawat, bridging_sep.no_rawat)
+        )
         .leftJoin(pasien, eq(reg_periksa.no_rkm_medis, pasien.no_rkm_medis))
         .leftJoin(poliklinik, eq(reg_periksa.kd_poli, poliklinik.kd_poli))
         .where(and(...conditions))
         .groupBy(reg_periksa.no_rawat, bridging_sep.no_sep)
         .orderBy(asc(reg_periksa.tgl_registrasi));
 
-      // Create a map of no_sep to tarif from CSV data
       const csvTarifMap = new Map(
         input.csvData.map((item) => [item.no_sep, item.tarif])
       );

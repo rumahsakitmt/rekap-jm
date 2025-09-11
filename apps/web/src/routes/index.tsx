@@ -25,11 +25,16 @@ import {
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/calendar";
 import { PerawatanList } from "@/components/perawatan-list";
-import { CsvUpload } from "@/components/csv-upload";
+import { UploadCSVSheet } from "@/components/upload-csv-sheet";
 import { ImportStatistics } from "@/components/import-statistics";
-import { Copy, Check, ChevronUp, ChevronDown } from "lucide-react";
+import { Copy, Check, ChevronUp, ChevronDown, Download } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export const Route = createFileRoute("/")({
   component: HomeComponent,
@@ -117,6 +122,125 @@ function HomeComponent() {
     setIsCsvMode(false);
   };
 
+  const downloadCsv = () => {
+    if (!displayData || displayData.length === 0) return;
+
+    const headers = [
+      "Tanggal Perawatan",
+      "No RM",
+      "No Rawat",
+      "No SEP",
+      "Nama Pasien",
+      "Kode Dokter",
+      "Nama Dokter",
+      "Poli",
+      "Permintaan Radiologi",
+      "Permintaan Lab",
+      "Konsul",
+      "Konsul Dokter",
+    ];
+
+    if (isCsvMode) {
+      headers.push(
+        "Total Tarif",
+        "Alokasi",
+        "DPJP Utama",
+        "Laboratorium",
+        "Radiologi",
+        "Yang Terbagi",
+        "% Dari Klaim"
+      );
+    }
+
+    const csvContent = [
+      headers.join(","),
+      ...displayData.map((row) => {
+        const baseData = [
+          format(new Date(row.tgl_perawatan as string), "dd/MM/yyyy"),
+          row.no_rekam_medis,
+          row.no_rawat,
+          row.no_sep,
+          `"${row.nm_pasien}"`,
+          row.kd_dokter,
+          `"${row.nm_dokter}"`,
+          `"${row.nm_poli}"`,
+          row.total_permintaan_radiologi || 0,
+          row.total_permintaan_lab || 0,
+          row.konsul_count || 0,
+          `"${(row.jns_perawatan || []).map((p: any) => p.nm_dokter).join(", ")}"`,
+        ];
+
+        if (isCsvMode) {
+          baseData.push(
+            row.tarif_from_csv || 0,
+            row.alokasi || 0,
+            row.dpjp_utama || 0,
+            row.laboratorium || 0,
+            row.radiologi || 0,
+            row.yang_terbagi || 0,
+            row.percent_dari_klaim || 0
+          );
+        }
+
+        return baseData.join(",");
+      }),
+    ];
+
+    if (isCsvMode) {
+      // Add totals row
+      const totalsRow = [
+        "TOTAL",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        displayData.reduce(
+          (sum, row) => sum + Number(row.total_permintaan_radiologi || 0),
+          0
+        ),
+        displayData.reduce(
+          (sum, row) => sum + Number(row.total_permintaan_lab || 0),
+          0
+        ),
+        displayData.reduce(
+          (sum, row) => sum + Number(row.konsul_count || 0),
+          0
+        ),
+        "",
+        totals.totalTarif,
+        totals.totalAlokasi,
+        totals.totalDpjpUtama,
+        totals.totalLaboratorium,
+        totals.totalRadiologi,
+        totals.totalYangTerbagi,
+        averagePercentDariKlaim,
+      ];
+      csvContent.push(totalsRow.join(","));
+    }
+
+    const blob = new Blob([csvContent.join("\n")], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+
+    const dateRange =
+      dateFrom && dateTo
+        ? `_${format(dateFrom, "yyyy-MM-dd")}_to_${format(dateTo, "yyyy-MM-dd")}`
+        : "";
+    const mode = isCsvMode ? "_csv_mode" : "";
+
+    link.setAttribute("download", `rekap_rawat_jalan${mode}${dateRange}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -185,75 +309,66 @@ function HomeComponent() {
 
   return (
     <div className="container mx-auto px-4 py-2">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Filter & Search</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">
-                  Search (No Rawat/SEP)
-                </label>
-                <Input
-                  placeholder="Search by no_rawat or no_sep..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Date From</label>
-                  <DatePicker date={dateFrom} setDate={setDateFrom} />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Date To</label>
-                  <DatePicker date={dateTo} setDate={setDateTo} />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Limit</label>
-                  <Select
-                    value={limit?.toString() || "no-limit"}
-                    onValueChange={(value) =>
-                      setLimit(value === "no-limit" ? undefined : Number(value))
-                    }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Limit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="25">25</SelectItem>
-                      <SelectItem value="50">50</SelectItem>
-                      <SelectItem value="100">100</SelectItem>
-                      <SelectItem value="250">250</SelectItem>
-                      <SelectItem value="500">500</SelectItem>
-                      <SelectItem value="no-limit">No Limit</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button
-                  className="self-end"
-                  onClick={() => {
-                    setSearch("");
-                    setLimit(50);
-                    setDateFrom(startOfMonth(new Date()));
-                    setDateTo(endOfMonth(new Date()));
-                    handleClearCsv();
-                  }}
-                  variant="outline"
-                >
-                  Clear Filters
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div>
-          <CsvUpload onImport={handleCsvImport} isLoading={isImporting} />
-        </div>
-      </div>
+      <Card>
+        <CardHeader className="flex items-center justify-between">
+          <CardTitle>Filter & Search</CardTitle>
+          <UploadCSVSheet onImport={handleCsvImport} isLoading={isImporting} />
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">Search (No Rawat/SEP)</label>
+            <Input
+              placeholder="Search by no_rawat or no_sep..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="text-sm font-medium">Date From</label>
+              <DatePicker date={dateFrom} setDate={setDateFrom} />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Date To</label>
+              <DatePicker date={dateTo} setDate={setDateTo} />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Limit</label>
+              <Select
+                value={limit?.toString() || "no-limit"}
+                onValueChange={(value) =>
+                  setLimit(value === "no-limit" ? undefined : Number(value))
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Limit" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="25">25</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                  <SelectItem value="250">250</SelectItem>
+                  <SelectItem value="500">500</SelectItem>
+                  <SelectItem value="no-limit">No Limit</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              className="self-end"
+              onClick={() => {
+                setSearch("");
+                setLimit(50);
+                setDateFrom(startOfMonth(new Date()));
+                setDateTo(endOfMonth(new Date()));
+                handleClearCsv();
+              }}
+              variant="outline"
+            >
+              Clear Filters
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {isCsvMode && csvStatistics && (
         <ImportStatistics statistics={csvStatistics} />
@@ -272,22 +387,35 @@ function HomeComponent() {
             </div>
           )}
         </div>
-        <p className="text-end">Total data: {displayData?.length || 0}</p>
+        <div className="flex items-center gap-4">
+          <p className="text-end">Total data: {displayData?.length || 0}</p>
+          {displayData && displayData.length > 0 && (
+            <Button
+              onClick={downloadCsv}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Download CSV
+            </Button>
+          )}
+        </div>
       </div>
       <Table>
         <TableCaption>Rekap Rawat Jalan</TableCaption>
         <TableHeader>
           <TableRow>
             <TableHead>Tanggal Perawatan</TableHead>
-            <TableHead>No RM</TableHead>
-            <TableHead>No Rawat / No Sep</TableHead>
+            <TableHead className="text-center">No RM</TableHead>
+            <TableHead className="text-center">No Sep</TableHead>
+            <TableHead className="text-center">No Rawat</TableHead>
             <TableHead>Nama Pasien</TableHead>
             <TableHead>Dokter</TableHead>
-            <TableHead>Poli</TableHead>
+            <TableHead className="text-center">Poli</TableHead>
             <TableHead className="text-center">Permintaan Radiologi</TableHead>
             <TableHead className="text-center">Permintaan Lab</TableHead>
             <TableHead className="text-center">Konsul</TableHead>
-            <TableHead>Konsul Dokter</TableHead>
             {isCsvMode && (
               <>
                 <TableHead className="text-right">Total Tarif</TableHead>
@@ -334,51 +462,44 @@ function HomeComponent() {
                   )}
                 </Button>
               </TableCell>
-              <TableCell className="font-medium">
-                <div className="space-y-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground"
-                    onClick={() =>
-                      handleCopy(
-                        rawatJalan.no_rawat,
-                        `rawat-${rawatJalan.no_rawat}`
-                      )
-                    }
-                  >
-                    {rawatJalan.no_rawat}
-                    {copiedItems.has(`rawat-${rawatJalan.no_rawat}`) ? (
-                      <Check size={8} className="ml-1 " />
-                    ) : (
-                      <Copy size={8} className="ml-1" />
-                    )}
-                  </Button>
-                  <Separator />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      handleCopy(rawatJalan.no_sep, `sep-${rawatJalan.no_sep}`)
-                    }
-                  >
-                    {rawatJalan.no_sep}
-                    {copiedItems.has(`sep-${rawatJalan.no_sep}`) ? (
-                      <Check size={8} className="ml-1 " />
-                    ) : (
-                      <Copy size={8} className="ml-1" />
-                    )}
-                  </Button>
-                </div>
+              <TableCell>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    handleCopy(rawatJalan.no_sep, `sep-${rawatJalan.no_sep}`)
+                  }
+                >
+                  {rawatJalan.no_sep}
+                  {copiedItems.has(`sep-${rawatJalan.no_sep}`) ? (
+                    <Check size={8} className="ml-1 " />
+                  ) : (
+                    <Copy size={8} className="ml-1" />
+                  )}
+                </Button>
+              </TableCell>
+              <TableCell>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    handleCopy(
+                      rawatJalan.no_rawat,
+                      `rawat-${rawatJalan.no_rawat}`
+                    )
+                  }
+                >
+                  {rawatJalan.no_rawat}
+                  {copiedItems.has(`rawat-${rawatJalan.no_rawat}`) ? (
+                    <Check size={8} className="ml-1 " />
+                  ) : (
+                    <Copy size={8} className="ml-1" />
+                  )}
+                </Button>
               </TableCell>
               <TableCell>{rawatJalan.nm_pasien}</TableCell>
               <TableCell>
-                <div>
-                  <p className="text-xs text-muted-foreground">
-                    {rawatJalan.kd_dokter}
-                  </p>
-                  <p className="font-sm">{rawatJalan.nm_dokter}</p>
-                </div>
+                <p className="font-sm">{rawatJalan.nm_dokter}</p>
               </TableCell>
               <TableCell className="uppercase">{rawatJalan.nm_poli}</TableCell>
               <TableCell className="text-center">
@@ -388,10 +509,24 @@ function HomeComponent() {
                 {rawatJalan.total_permintaan_lab}
               </TableCell>
               <TableCell className="text-center">
-                {rawatJalan.konsul_count}
-              </TableCell>
-              <TableCell>
-                <PerawatanList perawatanList={rawatJalan.jns_perawatan || []} />
+                {rawatJalan.konsul_count > 0 ? (
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger>
+                      <Button variant="ghost" size="sm">
+                        {rawatJalan.konsul_count}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <PerawatanList
+                        perawatanList={rawatJalan.jns_perawatan || []}
+                      />
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Button variant="ghost" size="sm">
+                    {rawatJalan.konsul_count}
+                  </Button>
+                )}
               </TableCell>
 
               {isCsvMode && (
@@ -460,8 +595,8 @@ function HomeComponent() {
             </TableRow>
           ))}
           {isCsvMode && (
-            <TableRow className="bg-muted font-semibold">
-              <TableCell colSpan={6} className="text-right font-bold">
+            <TableRow className="bg-emerald-100 dark:bg-emerald-500 hover:bg-emerald-200 dark:hover:bg-emerald-600 font-semibold">
+              <TableCell colSpan={7} className="text-center font-bold">
                 TOTAL
               </TableCell>
               <TableCell className="text-center font-mono">
@@ -483,7 +618,6 @@ function HomeComponent() {
                   0
                 )}
               </TableCell>
-              <TableCell></TableCell>
               <TableCell className="text-right font-mono">
                 {new Intl.NumberFormat("id-ID", {
                   style: "currency",
