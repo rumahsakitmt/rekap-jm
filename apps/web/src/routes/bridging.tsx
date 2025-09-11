@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { trpc, trpcClient } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 import { startOfMonth, endOfMonth } from "date-fns";
+import { formatCurrency } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -70,14 +71,6 @@ function RouteComponent() {
     } catch (err) {
       console.error("Failed to copy: ", err);
     }
-  };
-
-  const formatCurrency = (value: number | null) => {
-    if (value === null || value === undefined) return "-";
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-    }).format(value);
   };
 
   const formatDate = (date: Date | string | null) => {

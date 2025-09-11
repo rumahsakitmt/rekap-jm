@@ -29,7 +29,7 @@ import { UploadCSVSheet } from "@/components/upload-csv-sheet";
 import { ImportStatistics } from "@/components/import-statistics";
 import { Copy, Check, ChevronUp, ChevronDown, Download } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import {
   Tooltip,
   TooltipContent,
@@ -538,67 +538,25 @@ function HomeComponent() {
               {isCsvMode && (
                 <>
                   <TableCell className="text-right font-mono">
-                    {rawatJalan.tarif_from_csv
-                      ? new Intl.NumberFormat("id-ID", {
-                          style: "currency",
-                          currency: "IDR",
-                          minimumFractionDigits: 0,
-                        }).format(rawatJalan.tarif_from_csv)
-                      : "-"}
+                    {formatCurrency(rawatJalan.tarif_from_csv)}
                   </TableCell>
                   <TableCell className="text-right font-mono">
-                    {rawatJalan.alokasi
-                      ? new Intl.NumberFormat("id-ID", {
-                          style: "currency",
-                          currency: "IDR",
-                          minimumFractionDigits: 0,
-                        }).format(rawatJalan.alokasi)
-                      : "-"}
+                    {formatCurrency(rawatJalan.alokasi)}
                   </TableCell>
                   <TableCell className="text-right font-mono">
-                    {rawatJalan.dpjp_utama
-                      ? new Intl.NumberFormat("id-ID", {
-                          style: "currency",
-                          currency: "IDR",
-                          minimumFractionDigits: 0,
-                        }).format(rawatJalan.dpjp_utama)
-                      : "-"}
+                    {formatCurrency(rawatJalan.dpjp_utama)}
                   </TableCell>
                   <TableCell className="text-right font-mono">
-                    {rawatJalan.konsul
-                      ? new Intl.NumberFormat("id-ID", {
-                          style: "currency",
-                          currency: "IDR",
-                          minimumFractionDigits: 0,
-                        }).format(rawatJalan.konsul)
-                      : "-"}
+                    {formatCurrency(rawatJalan.konsul)}
                   </TableCell>
                   <TableCell className="text-right font-mono">
-                    {rawatJalan.laboratorium
-                      ? new Intl.NumberFormat("id-ID", {
-                          style: "currency",
-                          currency: "IDR",
-                          minimumFractionDigits: 0,
-                        }).format(rawatJalan.laboratorium)
-                      : "-"}
+                    {formatCurrency(rawatJalan.laboratorium)}
                   </TableCell>
                   <TableCell className="text-right font-mono">
-                    {rawatJalan.radiologi
-                      ? new Intl.NumberFormat("id-ID", {
-                          style: "currency",
-                          currency: "IDR",
-                          minimumFractionDigits: 0,
-                        }).format(rawatJalan.radiologi)
-                      : "-"}
+                    {formatCurrency(rawatJalan.radiologi)}
                   </TableCell>
                   <TableCell className="text-right font-mono">
-                    {rawatJalan.yang_terbagi
-                      ? new Intl.NumberFormat("id-ID", {
-                          style: "currency",
-                          currency: "IDR",
-                          minimumFractionDigits: 0,
-                        }).format(rawatJalan.yang_terbagi)
-                      : "-"}
+                    {formatCurrency(rawatJalan.yang_terbagi)}
                   </TableCell>
                   <TableCell className="text-center font-mono">
                     {rawatJalan.percent_dari_klaim !== undefined
@@ -634,53 +592,33 @@ function HomeComponent() {
                 )}
               </TableCell>
               <TableCell className="text-right font-mono">
-                {new Intl.NumberFormat("id-ID", {
-                  style: "currency",
-                  currency: "IDR",
-                  minimumFractionDigits: 0,
-                }).format(totals.totalTarif)}
+                {formatCurrency(totals.totalTarif)}
               </TableCell>
               <TableCell className="text-right font-mono">
-                {new Intl.NumberFormat("id-ID", {
-                  style: "currency",
-                  currency: "IDR",
-                  minimumFractionDigits: 0,
-                }).format(totals.totalAlokasi)}
+                {formatCurrency(totals.totalAlokasi)}
               </TableCell>
               <TableCell className="text-right font-mono">
-                {new Intl.NumberFormat("id-ID", {
-                  style: "currency",
-                  currency: "IDR",
-                  minimumFractionDigits: 0,
-                }).format(totals.totalDpjpUtama)}
+                {formatCurrency(totals.totalDpjpUtama)}
               </TableCell>
               <TableCell className="text-right font-mono">
-                {new Intl.NumberFormat("id-ID", {
-                  style: "currency",
-                  currency: "IDR",
-                  minimumFractionDigits: 0,
-                }).format(totals.totalKonsul)}
+                {totals.totalKonsul > 0
+                  ? formatCurrency(totals.totalKonsul)
+                  : "-"}
               </TableCell>
               <TableCell className="text-right font-mono">
-                {new Intl.NumberFormat("id-ID", {
-                  style: "currency",
-                  currency: "IDR",
-                  minimumFractionDigits: 0,
-                }).format(totals.totalLaboratorium)}
+                {totals.totalLaboratorium > 0
+                  ? formatCurrency(totals.totalLaboratorium)
+                  : "-"}
               </TableCell>
               <TableCell className="text-right font-mono">
-                {new Intl.NumberFormat("id-ID", {
-                  style: "currency",
-                  currency: "IDR",
-                  minimumFractionDigits: 0,
-                }).format(totals.totalRadiologi)}
+                {totals.totalRadiologi > 0
+                  ? formatCurrency(totals.totalRadiologi)
+                  : "-"}
               </TableCell>
               <TableCell className="text-right font-mono">
-                {new Intl.NumberFormat("id-ID", {
-                  style: "currency",
-                  currency: "IDR",
-                  minimumFractionDigits: 0,
-                }).format(totals.totalYangTerbagi)}
+                {totals.totalYangTerbagi > 0
+                  ? formatCurrency(totals.totalYangTerbagi)
+                  : "-"}
               </TableCell>
               <TableCell className="text-center font-mono">
                 {averagePercentDariKlaim}%
