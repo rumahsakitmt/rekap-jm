@@ -160,31 +160,6 @@ export function ImportStatistics({ statistics }: ImportStatisticsProps) {
           )}
         </Card>
       )}
-
-      {statistics.notFound > 0 && (
-        <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950/20">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-orange-500 mt-0.5" />
-              <div className="space-y-1">
-                <div className="font-medium text-orange-800 dark:text-orange-200">
-                  Some records were not found
-                </div>
-                <div className="text-sm text-orange-700 dark:text-orange-300">
-                  {statistics.notFound} out of {statistics.totalRequested}{" "}
-                  no_sep values from your CSV were not found in the database.
-                  This could be due to:
-                  <ul className="list-disc list-inside mt-2 space-y-1">
-                    <li>Incorrect no_sep values in the CSV</li>
-                    <li>Records outside the selected date range</li>
-                    <li>Records that don't exist in the database</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

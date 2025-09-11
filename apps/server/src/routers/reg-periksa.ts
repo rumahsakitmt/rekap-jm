@@ -296,7 +296,6 @@ export const regPeriksaRouter = router({
           .max(10000),
         dateFrom: z.coerce.date().optional(),
         dateTo: z.coerce.date().optional(),
-        limit: z.number().min(1).max(10000).optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -504,13 +503,8 @@ export const regPeriksaRouter = router({
           ? Math.floor(totals.totalPercentDariKlaim / totals.count)
           : 0;
 
-      // Apply limit to returned data without affecting calculations
-      const limitedData = input.limit
-        ? processedResult.slice(0, input.limit)
-        : processedResult;
-
       return {
-        data: limitedData,
+        data: processedResult,
         totals: {
           ...totals,
           averagePercentDariKlaim,
