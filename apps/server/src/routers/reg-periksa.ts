@@ -21,9 +21,11 @@ export const regPeriksaRouter = router({
       z.object({
         search: z.string().optional(),
         limit: z.number().min(1).max(1000).optional(),
+        offset: z.number().min(0).optional(),
         dateFrom: z.coerce.date().optional(),
         dateTo: z.coerce.date().optional(),
         noSepList: z.array(z.string()).optional(),
+        includeTotals: z.boolean().optional(),
       })
     )
     .query(async ({ input }) => {
@@ -69,7 +71,8 @@ export const regPeriksaRouter = router({
             SELECT JSON_ARRAYAGG(
               JSON_OBJECT(
                 'kd_jenis_prw', jpr.kd_jenis_prw,
-                'nm_perawatan', jpr.nm_perawatan
+                'nm_perawatan', jpr.nm_perawatan,
+                'noorder', pr.noorder
               )
             )
             FROM ${permintaan_radiologi} pr
@@ -147,11 +150,73 @@ export const regPeriksaRouter = router({
         .groupBy(reg_periksa.no_rawat)
         .orderBy(asc(reg_periksa.tgl_registrasi));
 
-      const result = input.limit
-        ? await baseQuery.limit(input.limit)
-        : await baseQuery;
+      // Calculate totals if requested
+      let totals = null;
+      if (input.includeTotals) {
+        const allResults = await baseQuery;
+        totals = allResults.reduce(
+          (acc, row) => {
+            const tarif = row.biaya_rawat || 0;
+            const alokasi = tarif * 0.2;
+            const laboratorium = (row.total_permintaan_lab || 0) * 10000;
 
-      return result.map((row) => {
+            const jnsPerawatanRadiologi = JSON.parse(
+              row.jns_perawatan_radiologi || "[]"
+            ) as {
+              kd_jenis_prw: string;
+              nm_perawatan: string;
+              noorder: string;
+            }[];
+
+            const usgCount = jnsPerawatanRadiologi.filter(
+              (item) =>
+                item.nm_perawatan &&
+                item.nm_perawatan.toLowerCase().includes("usg")
+            ).length;
+            const nonUsgCount =
+              (row.total_permintaan_radiologi || 0) - usgCount;
+
+            const radiologi =
+              usgCount > 0
+                ? Math.max(0, tarif - 185000) + nonUsgCount * 15000
+                : (row.total_permintaan_radiologi || 0) * 15000;
+
+            const dpjp_utama = alokasi - laboratorium - radiologi;
+            const yang_terbagi = dpjp_utama + radiologi + laboratorium;
+            const percent_dari_klaim =
+              tarif > 0 ? Math.floor((yang_terbagi / tarif) * 100) : 0;
+
+            return {
+              totalTarif: acc.totalTarif + tarif,
+              totalAlokasi: acc.totalAlokasi + alokasi,
+              totalDpjpUtama: acc.totalDpjpUtama + dpjp_utama,
+              totalLaboratorium: acc.totalLaboratorium + laboratorium,
+              totalRadiologi: acc.totalRadiologi + radiologi,
+              totalYangTerbagi: acc.totalYangTerbagi + yang_terbagi,
+              totalPercentDariKlaim:
+                acc.totalPercentDariKlaim + percent_dari_klaim,
+              count: acc.count + 1,
+            };
+          },
+          {
+            totalTarif: 0,
+            totalAlokasi: 0,
+            totalDpjpUtama: 0,
+            totalLaboratorium: 0,
+            totalRadiologi: 0,
+            totalYangTerbagi: 0,
+            totalPercentDariKlaim: 0,
+            count: 0,
+          }
+        );
+      }
+
+      // Apply pagination to get the actual results
+      const result = await baseQuery
+        .offset(input.offset || 0)
+        .limit(input.limit || 1000);
+
+      const processedResult = result.map((row) => {
         const tarif = row.biaya_rawat || 0;
         const alokasi = tarif * 0.2;
         const laboratorium = (row.total_permintaan_lab || 0) * 10000;
@@ -161,6 +226,7 @@ export const regPeriksaRouter = router({
         ) as {
           kd_jenis_prw: string;
           nm_perawatan: string;
+          noorder: string;
         }[];
 
         const usgCount = jnsPerawatanRadiologi.filter(
@@ -190,6 +256,7 @@ export const regPeriksaRouter = router({
             JSON.parse(row.jns_perawatan_radiologi || "[]") as {
               kd_jenis_prw: string;
               nm_perawatan: string;
+              noorder: string;
             }[]
           ).filter((item) => item !== null),
           alokasi,
@@ -200,6 +267,19 @@ export const regPeriksaRouter = router({
           percent_dari_klaim,
         };
       });
+
+      return {
+        data: processedResult,
+        totals: totals
+          ? {
+              ...totals,
+              averagePercentDariKlaim:
+                totals.count > 0
+                  ? Math.round(totals.totalPercentDariKlaim / totals.count)
+                  : 0,
+            }
+          : null,
+      };
     }),
 
   importCsv: publicProcedure
@@ -216,6 +296,7 @@ export const regPeriksaRouter = router({
           .max(10000),
         dateFrom: z.coerce.date().optional(),
         dateTo: z.coerce.date().optional(),
+        limit: z.number().min(1).max(10000).optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -254,7 +335,8 @@ export const regPeriksaRouter = router({
             SELECT JSON_ARRAYAGG(
               JSON_OBJECT(
                 'kd_jenis_prw', jpr.kd_jenis_prw,
-                'nm_perawatan', jpr.nm_perawatan
+                'nm_perawatan', jpr.nm_perawatan,
+                'noorder', pr.noorder
               )
             )
             FROM ${permintaan_radiologi} pr
@@ -328,6 +410,7 @@ export const regPeriksaRouter = router({
         ) as {
           kd_jenis_prw: string;
           nm_perawatan: string;
+          noorder: string;
         }[];
 
         const usgCount = jnsPerawatanRadiologi.filter(
@@ -363,6 +446,7 @@ export const regPeriksaRouter = router({
             JSON.parse(row.jns_perawatan_radiologi || "[]") as {
               kd_jenis_prw: string;
               nm_perawatan: string;
+              noorder: string;
             }[]
           ).filter((item) => item !== null),
           tarif_from_csv: tarifFromCsv,
@@ -382,8 +466,55 @@ export const regPeriksaRouter = router({
         (noSep) => !foundNoSepValues.includes(noSep)
       );
 
+      // Calculate totals from all processed data (before limiting)
+      const totals = processedResult.reduce(
+        (acc, row) => {
+          const tarif = row.tarif_from_csv || 0;
+          return {
+            totalTarif: acc.totalTarif + Number(tarif),
+            totalAlokasi: acc.totalAlokasi + Number(row.alokasi || 0),
+            totalDpjpUtama: acc.totalDpjpUtama + Number(row.dpjp_utama || 0),
+            totalKonsul: acc.totalKonsul + Number(row.konsul || 0),
+            totalLaboratorium:
+              acc.totalLaboratorium + Number(row.laboratorium || 0),
+            totalRadiologi: acc.totalRadiologi + Number(row.radiologi || 0),
+            totalYangTerbagi:
+              acc.totalYangTerbagi + Number(row.yang_terbagi || 0),
+            totalPercentDariKlaim:
+              acc.totalPercentDariKlaim + Number(row.percent_dari_klaim || 0),
+            count: acc.count + 1,
+          };
+        },
+        {
+          totalTarif: 0,
+          totalAlokasi: 0,
+          totalDpjpUtama: 0,
+          totalKonsul: 0,
+          totalLaboratorium: 0,
+          totalRadiologi: 0,
+          totalYangTerbagi: 0,
+          totalPercentDariKlaim: 0,
+          count: 0,
+        }
+      );
+
+      // Calculate average percentage
+      const averagePercentDariKlaim =
+        totals.count > 0
+          ? Math.floor(totals.totalPercentDariKlaim / totals.count)
+          : 0;
+
+      // Apply limit to returned data without affecting calculations
+      const limitedData = input.limit
+        ? processedResult.slice(0, input.limit)
+        : processedResult;
+
       return {
-        data: processedResult,
+        data: limitedData,
+        totals: {
+          ...totals,
+          averagePercentDariKlaim,
+        },
         statistics: {
           totalRequested: input.csvData.length,
           found: foundNoSepValues.length,

@@ -43,6 +43,7 @@ export const Route = createFileRoute("/")({
 function HomeComponent() {
   const [search, setSearch] = useState("");
   const [limit, setLimit] = useState<number | undefined>(50);
+  const [offset, setOffset] = useState(0);
   const [dateFrom, setDateFrom] = useState<Date | undefined>(() =>
     startOfMonth(new Date())
   );
@@ -81,8 +82,10 @@ function HomeComponent() {
     trpc.regPeriksa.getRegPeriksa.queryOptions({
       search: search || undefined,
       ...(limit && { limit }),
+      ...(offset > 0 && { offset }),
       dateFrom: dateFrom || undefined,
       dateTo: dateTo || undefined,
+      includeTotals: true,
     })
   );
 
@@ -109,6 +112,7 @@ function HomeComponent() {
         csvData,
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
+        limit: limit || undefined,
       });
     } catch (error) {
       console.error("Import failed:", error);
@@ -188,7 +192,6 @@ function HomeComponent() {
     ];
 
     if (isCsvMode) {
-      // Add totals row
       const totalsRow = [
         "TOTAL",
         "",
@@ -265,52 +268,12 @@ function HomeComponent() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const displayData = isCsvMode ? csvData : rawatJalan.data;
+  const displayData = isCsvMode ? mutation.data?.data : rawatJalan.data?.data;
+  const serverTotals = rawatJalan.data?.totals;
+  const csvServerTotals = mutation.data?.totals;
 
-  const totals = displayData?.reduce(
-    (acc, row) => {
-      const tarif = isCsvMode ? row.tarif_from_csv || 0 : row.biaya_rawat || 0;
-      return {
-        totalTarif: acc.totalTarif + Number(tarif),
-        totalAlokasi: acc.totalAlokasi + Number(row.alokasi || 0),
-        totalDpjpUtama: acc.totalDpjpUtama + Number(row.dpjp_utama || 0),
-        totalKonsul: acc.totalKonsul + Number(row.konsul || 0),
-        totalLaboratorium:
-          acc.totalLaboratorium + Number(row.laboratorium || 0),
-        totalRadiologi: acc.totalRadiologi + Number(row.radiologi || 0),
-        totalYangTerbagi: acc.totalYangTerbagi + Number(row.yang_terbagi || 0),
-        totalPercentDariKlaim:
-          acc.totalPercentDariKlaim + Number(row.percent_dari_klaim || 0),
-        count: acc.count + 1,
-      };
-    },
-    {
-      totalTarif: 0,
-      totalAlokasi: 0,
-      totalDpjpUtama: 0,
-      totalKonsul: 0,
-      totalLaboratorium: 0,
-      totalRadiologi: 0,
-      totalYangTerbagi: 0,
-      totalPercentDariKlaim: 0,
-      count: 0,
-    }
-  ) || {
-    totalTarif: 0,
-    totalAlokasi: 0,
-    totalDpjpUtama: 0,
-    totalKonsul: 0,
-    totalLaboratorium: 0,
-    totalRadiologi: 0,
-    totalYangTerbagi: 0,
-    totalPercentDariKlaim: 0,
-    count: 0,
-  };
-
-  const averagePercentDariKlaim =
-    totals.count > 0
-      ? Math.round(totals.totalPercentDariKlaim / totals.count)
-      : 0;
+  const totals = isCsvMode ? csvServerTotals : serverTotals;
+  const averagePercentDariKlaim = totals?.averagePercentDariKlaim || 0;
 
   return (
     <div className="container mx-auto px-4 py-2">
@@ -363,6 +326,7 @@ function HomeComponent() {
               onClick={() => {
                 setSearch("");
                 setLimit(50);
+                setOffset(0);
                 setDateFrom(startOfMonth(new Date()));
                 setDateTo(endOfMonth(new Date()));
                 handleClearCsv();
@@ -372,6 +336,35 @@ function HomeComponent() {
               Clear Filters
             </Button>
           </div>
+
+          {/* Pagination Controls */}
+          {!isCsvMode && limit && (
+            <div className="flex items-center justify-between mt-4">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setOffset(Math.max(0, offset - limit))}
+                  disabled={offset === 0}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Page {Math.floor(offset / limit) + 1} • Showing {offset + 1}-
+                  {Math.min(offset + limit, totals?.count || 0)} of{" "}
+                  {totals?.count || 0}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setOffset(offset + limit)}
+                  disabled={!totals || offset + limit >= totals.count}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -517,8 +510,28 @@ function HomeComponent() {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      {rawatJalan.jns_perawatan_radiologi.map((item: any) => (
-                        <p key={item.kd_jenis_prw}>{item.nm_perawatan}</p>
+                      {Object.entries(
+                        rawatJalan.jns_perawatan_radiologi
+                          .filter((item) => item.noorder)
+                          .reduce(
+                            (acc: any, item: any) => {
+                              if (!acc[item.noorder]) {
+                                acc[item.noorder] = [];
+                              }
+                              acc[item.noorder].push(item);
+                              return acc;
+                            },
+                            {} as { [key: string]: any[] }
+                          )
+                      ).map(([noorder, items]) => (
+                        <div key={noorder} className="mb-2">
+                          <p className="font-semibold">{noorder}</p>
+                          {items.map((item: any) => (
+                            <p key={item.kd_jenis_prw} className="ml-2 text-sm">
+                              {item.nm_perawatan}
+                            </p>
+                          ))}
+                        </div>
                       ))}
                     </TooltipContent>
                   </Tooltip>
@@ -555,25 +568,39 @@ function HomeComponent() {
               {isCsvMode && (
                 <>
                   <TableCell className="text-right font-mono">
-                    {formatCurrency(rawatJalan.tarif_from_csv)}
+                    {rawatJalan.tarif_from_csv > 0
+                      ? formatCurrency(rawatJalan.tarif_from_csv)
+                      : "-"}
                   </TableCell>
                   <TableCell className="text-right font-mono">
-                    {formatCurrency(rawatJalan.alokasi)}
+                    {rawatJalan.alokasi > 0
+                      ? formatCurrency(rawatJalan.alokasi)
+                      : "-"}
                   </TableCell>
                   <TableCell className="text-right font-mono">
-                    {formatCurrency(rawatJalan.dpjp_utama)}
+                    {rawatJalan.dpjp_utama > 0
+                      ? formatCurrency(rawatJalan.dpjp_utama)
+                      : "-"}
                   </TableCell>
                   <TableCell className="text-right font-mono">
-                    {formatCurrency(rawatJalan.konsul)}
+                    {rawatJalan.konsul > 0
+                      ? formatCurrency(rawatJalan.konsul)
+                      : "-"}
                   </TableCell>
                   <TableCell className="text-right font-mono">
-                    {formatCurrency(rawatJalan.laboratorium)}
+                    {rawatJalan.laboratorium > 0
+                      ? formatCurrency(rawatJalan.laboratorium)
+                      : "-"}
                   </TableCell>
                   <TableCell className="text-right font-mono">
-                    {formatCurrency(rawatJalan.radiologi)}
+                    {rawatJalan.radiologi > 0
+                      ? formatCurrency(rawatJalan.radiologi)
+                      : "-"}
                   </TableCell>
                   <TableCell className="text-right font-mono">
-                    {formatCurrency(rawatJalan.yang_terbagi)}
+                    {rawatJalan.yang_terbagi > 0
+                      ? formatCurrency(rawatJalan.yang_terbagi)
+                      : "-"}
                   </TableCell>
                   <TableCell className="text-center font-mono">
                     {rawatJalan.percent_dari_klaim !== undefined
@@ -609,32 +636,32 @@ function HomeComponent() {
                 )}
               </TableCell>
               <TableCell className="text-right font-mono">
-                {formatCurrency(totals.totalTarif)}
+                {formatCurrency(totals?.totalTarif || 0)}
               </TableCell>
               <TableCell className="text-right font-mono">
-                {formatCurrency(totals.totalAlokasi)}
+                {formatCurrency(totals?.totalAlokasi || 0)}
               </TableCell>
               <TableCell className="text-right font-mono">
-                {formatCurrency(totals.totalDpjpUtama)}
+                {formatCurrency(totals?.totalDpjpUtama || 0)}
               </TableCell>
               <TableCell className="text-right font-mono">
-                {totals.totalKonsul > 0
-                  ? formatCurrency(totals.totalKonsul)
+                {totals?.totalKonsul > 0
+                  ? formatCurrency(totals?.totalKonsul || 0)
                   : "-"}
               </TableCell>
               <TableCell className="text-right font-mono">
-                {totals.totalLaboratorium > 0
-                  ? formatCurrency(totals.totalLaboratorium)
+                {totals?.totalLaboratorium > 0
+                  ? formatCurrency(totals?.totalLaboratorium || 0)
                   : "-"}
               </TableCell>
               <TableCell className="text-right font-mono">
-                {totals.totalRadiologi > 0
-                  ? formatCurrency(totals.totalRadiologi)
+                {totals?.totalRadiologi > 0
+                  ? formatCurrency(totals?.totalRadiologi || 0)
                   : "-"}
               </TableCell>
               <TableCell className="text-right font-mono">
-                {totals.totalYangTerbagi > 0
-                  ? formatCurrency(totals.totalYangTerbagi)
+                {totals?.totalYangTerbagi > 0
+                  ? formatCurrency(totals?.totalYangTerbagi || 0)
                   : "-"}
               </TableCell>
               <TableCell className="text-center font-mono">
