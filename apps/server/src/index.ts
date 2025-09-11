@@ -5,6 +5,7 @@ import { appRouter } from "./routers/index";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { serveStatic } from "hono/bun";
 
 const app = new Hono();
 
@@ -16,6 +17,9 @@ app.use(
     allowMethods: ["GET", "POST", "OPTIONS"],
   })
 );
+
+// Serve uploaded files
+app.use("/uploads/*", serveStatic({ root: "./" }));
 
 app.use(
   "/trpc/*",

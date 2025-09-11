@@ -10,15 +10,7 @@ import { CsvUpload } from "@/components/csv-upload";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 
-interface UploadCSVSheetProps {
-  onImport: (csvData: { no_sep: string; tarif: number }[]) => Promise<void>;
-  isLoading: boolean;
-}
-
-export const UploadCSVSheet = ({
-  onImport,
-  isLoading,
-}: UploadCSVSheetProps) => {
+export const UploadCSVSheet = () => {
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -36,7 +28,7 @@ export const UploadCSVSheet = ({
           </SheetDescription>
         </SheetHeader>
         <div className="p-4">
-          <CsvUpload onImport={onImport} isLoading={isLoading} />
+          <CsvUpload />
         </div>
       </SheetContent>
     </Sheet>

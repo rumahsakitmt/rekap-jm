@@ -14,6 +14,9 @@ import { poliklinik } from "@/db/schema/poliklinik";
 import { z } from "zod";
 import { jns_perawatan_radiologi } from "@/db/schema/jns_perawatan_radiologi";
 import { permintaan_pemeriksaan_radiologi } from "@/db/schema/permintaan_pemeriksaan_radiologi";
+import { readFileSync } from "fs";
+import { join } from "path";
+import { TRPCError } from "@trpc/server";
 
 export const regPeriksaRouter = router({
   getRegPeriksa: publicProcedure
@@ -24,8 +27,8 @@ export const regPeriksaRouter = router({
         offset: z.number().min(0).optional(),
         dateFrom: z.coerce.date().optional(),
         dateTo: z.coerce.date().optional(),
-        noSepList: z.array(z.string()).optional(),
         includeTotals: z.boolean().optional(),
+        filename: z.string().optional(),
       })
     )
     .query(async ({ input }) => {
@@ -45,8 +48,47 @@ export const regPeriksaRouter = router({
         conditions.push(lte(reg_periksa.tgl_registrasi, input.dateTo));
       }
 
-      if (input.noSepList && input.noSepList.length > 0) {
-        conditions.push(inArray(bridging_sep.no_sep, input.noSepList));
+      // If filename is provided, read CSV and use those SEP numbers
+      let csvData: { no_sep: string; tarif: number }[] = [];
+      if (input.filename) {
+        try {
+          const filepath = join(process.cwd(), "uploads", input.filename);
+          const csvContent = readFileSync(filepath, "utf-8");
+
+          const lines = csvContent.split("\n");
+          for (const line of lines) {
+            const trimmedLine = line.trim();
+            if (trimmedLine) {
+              // Skip header row
+              if (
+                trimmedLine.toLowerCase().includes("no_sep") ||
+                trimmedLine.toLowerCase().includes("sep")
+              ) {
+                continue;
+              }
+
+              const columns = trimmedLine.split(",");
+              const noSep = columns[0]?.trim();
+              const tarifStr = columns[1]?.trim();
+
+              if (noSep && noSep.length > 0) {
+                const tarif = tarifStr ? parseFloat(tarifStr) || 0 : 0;
+                csvData.push({ no_sep: noSep, tarif });
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error reading CSV file:", error);
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Failed to read CSV file",
+          });
+        }
+      }
+
+      if (csvData.length > 0) {
+        const noSepList = csvData.map((item) => item.no_sep);
+        conditions.push(inArray(bridging_sep.no_sep, noSepList));
       }
 
       const baseQuery = db
@@ -150,13 +192,19 @@ export const regPeriksaRouter = router({
         .groupBy(reg_periksa.no_rawat)
         .orderBy(asc(reg_periksa.tgl_registrasi));
 
+      // Create CSV tarif map if CSV data is available
+      const csvTarifMap = new Map(
+        csvData.map((item) => [item.no_sep, item.tarif])
+      );
+
       // Calculate totals if requested
       let totals = null;
       if (input.includeTotals) {
         const allResults = await baseQuery;
         totals = allResults.reduce(
           (acc, row) => {
-            const tarif = row.biaya_rawat || 0;
+            const tarif =
+              csvTarifMap.get(row.no_sep || "") || row.biaya_rawat || 0;
             const alokasi = tarif * 0.2;
             const laboratorium = (row.total_permintaan_lab || 0) * 10000;
 
@@ -217,7 +265,8 @@ export const regPeriksaRouter = router({
         .limit(input.limit || 1000);
 
       const processedResult = result.map((row) => {
-        const tarif = row.biaya_rawat || 0;
+        // Use CSV tarif if available, otherwise use biaya_rawat
+        const tarif = csvTarifMap.get(row.no_sep || "") || row.biaya_rawat || 0;
         const alokasi = tarif * 0.2;
         const laboratorium = (row.total_permintaan_lab || 0) * 10000;
 
@@ -259,6 +308,7 @@ export const regPeriksaRouter = router({
               noorder: string;
             }[]
           ).filter((item) => item !== null),
+          tarif_from_csv: csvTarifMap.get(row.no_sep || "") || null,
           alokasi,
           laboratorium,
           radiologi,
@@ -279,242 +329,6 @@ export const regPeriksaRouter = router({
                   : 0,
             }
           : null,
-      };
-    }),
-
-  importCsv: publicProcedure
-    .input(
-      z.object({
-        csvData: z
-          .array(
-            z.object({
-              no_sep: z.string(),
-              tarif: z.number(),
-            })
-          )
-          .min(1)
-          .max(10000),
-        dateFrom: z.coerce.date().optional(),
-        dateTo: z.coerce.date().optional(),
-      })
-    )
-    .mutation(async ({ input }) => {
-      const conditions = [];
-      const noSepList = input.csvData.map((item) => item.no_sep);
-
-      conditions.push(inArray(bridging_sep.no_sep, noSepList));
-
-      if (input.dateFrom) {
-        conditions.push(gte(reg_periksa.tgl_registrasi, input.dateFrom));
-      }
-
-      if (input.dateTo) {
-        conditions.push(lte(reg_periksa.tgl_registrasi, input.dateTo));
-      }
-
-      const result = await db
-        .select({
-          no_rawat: reg_periksa.no_rawat,
-          no_rekam_medis: reg_periksa.no_rkm_medis,
-          jns_perawatan: sql<string>`JSON_ARRAYAGG(
-            CASE 
-              WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' 
-              AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%'
-              AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%'
-              AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%'
-              AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%'
-              THEN JSON_OBJECT(
-                'kd_jenis_prw', ${jns_perawatan.kd_jenis_prw},
-                'nm_perawatan', ${jns_perawatan.nm_perawatan}
-              )
-              ELSE NULL
-            END
-          )`,
-          jns_perawatan_radiologi: sql<string>`(
-            SELECT JSON_ARRAYAGG(
-              JSON_OBJECT(
-                'kd_jenis_prw', jpr.kd_jenis_prw,
-                'nm_perawatan', jpr.nm_perawatan,
-                'noorder', pr.noorder
-              )
-            )
-            FROM ${permintaan_radiologi} pr
-            JOIN ${permintaan_pemeriksaan_radiologi} ppr ON pr.noorder = ppr.noorder
-            JOIN ${jns_perawatan_radiologi} jpr ON ppr.kd_jenis_prw = jpr.kd_jenis_prw
-            WHERE pr.no_rawat = ${reg_periksa.no_rawat}
-          )`,
-          konsul_count: sql<number>`SUM(CASE WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%' THEN 1 ELSE 0 END)`,
-          kd_dokter: reg_periksa.kd_dokter,
-          nip: rawat_jl_drpr.nip,
-          tgl_perawatan: reg_periksa.tgl_registrasi,
-          jam_rawat: reg_periksa.jam_reg,
-          material: sql<number>`SUM(${rawat_jl_drpr.material})`,
-          bhp: sql<number>`SUM(${rawat_jl_drpr.bhp})`,
-          tarif_tindakandr: sql<number>`SUM(${rawat_jl_drpr.tarif_tindakandr})`,
-          tarif_tindakanpr: sql<number>`SUM(${rawat_jl_drpr.tarif_tindakanpr})`,
-          kso: sql<number>`SUM(${rawat_jl_drpr.kso})`,
-          menejemen: sql<number>`SUM(${rawat_jl_drpr.menejemen})`,
-          biaya_rawat: sql<number>`SUM(${rawat_jl_drpr.biaya_rawat})`,
-          stts_bayar: reg_periksa.status_bayar,
-          no_sep: bridging_sep.no_sep,
-          total_permintaan_radiologi: sql<number>`(
-          SELECT COUNT(*) 
-          FROM ${permintaan_radiologi} 
-          WHERE ${permintaan_radiologi.no_rawat} = ${reg_periksa.no_rawat}
-        )`,
-          total_permintaan_lab: sql<number>`(
-          SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
-          FROM ${permintaan_lab} 
-          WHERE ${permintaan_lab.no_rawat} = ${reg_periksa.no_rawat}
-        )`,
-          nm_dokter: dokter.nm_dokter,
-          nm_pasien: pasien.nm_pasien,
-          no_rkm_medis: pasien.no_rkm_medis,
-          jk: pasien.jk,
-          tgl_lahir: pasien.tgl_lahir,
-          alamat: pasien.alamat,
-          nm_poli: poliklinik.nm_poli,
-        })
-        .from(reg_periksa)
-        .leftJoin(dokter, eq(reg_periksa.kd_dokter, dokter.kd_dokter))
-        .leftJoin(
-          rawat_jl_drpr,
-          eq(reg_periksa.no_rawat, rawat_jl_drpr.no_rawat)
-        )
-        .leftJoin(
-          jns_perawatan,
-          eq(rawat_jl_drpr.kd_jenis_prw, jns_perawatan.kd_jenis_prw)
-        )
-        .innerJoin(
-          bridging_sep,
-          eq(reg_periksa.no_rawat, bridging_sep.no_rawat)
-        )
-        .leftJoin(pasien, eq(reg_periksa.no_rkm_medis, pasien.no_rkm_medis))
-        .leftJoin(poliklinik, eq(reg_periksa.kd_poli, poliklinik.kd_poli))
-        .where(and(...conditions))
-        .groupBy(reg_periksa.no_rawat, bridging_sep.no_sep)
-        .orderBy(asc(reg_periksa.tgl_registrasi));
-
-      const csvTarifMap = new Map(
-        input.csvData.map((item) => [item.no_sep, item.tarif])
-      );
-
-      const processedResult = result.map((row) => {
-        const tarifFromCsv = csvTarifMap.get(row.no_sep || "") || 0;
-        const alokasi = tarifFromCsv * 0.2;
-        const laboratorium = (row.total_permintaan_lab || 0) * 10000;
-
-        const jnsPerawatanRadiologi = JSON.parse(
-          row.jns_perawatan_radiologi || "[]"
-        ) as {
-          kd_jenis_prw: string;
-          nm_perawatan: string;
-          noorder: string;
-        }[];
-
-        const usgCount = jnsPerawatanRadiologi.filter(
-          (item) =>
-            item.nm_perawatan && item.nm_perawatan.toLowerCase().includes("usg")
-        ).length;
-        const nonUsgCount = (row.total_permintaan_radiologi || 0) - usgCount;
-
-        const radiologi =
-          usgCount > 0
-            ? Math.max(0, tarifFromCsv - 185000) + nonUsgCount * 15000
-            : (row.total_permintaan_radiologi || 0) * 15000;
-        const dpjp_utama = alokasi - laboratorium - radiologi;
-        const konsul =
-          row.konsul_count && row.konsul_count > 1
-            ? dpjp_utama / row.konsul_count
-            : 0;
-        const yang_terbagi = dpjp_utama + konsul + radiologi + laboratorium;
-        const percent_dari_klaim =
-          tarifFromCsv > 0
-            ? Math.floor((yang_terbagi / tarifFromCsv) * 100)
-            : 0;
-
-        return {
-          ...row,
-          jns_perawatan: (
-            JSON.parse(row.jns_perawatan || "[]") as {
-              kd_jenis_prw: string;
-              nm_perawatan: string;
-            }[]
-          ).filter((item) => item !== null),
-          jns_perawatan_radiologi: (
-            JSON.parse(row.jns_perawatan_radiologi || "[]") as {
-              kd_jenis_prw: string;
-              nm_perawatan: string;
-              noorder: string;
-            }[]
-          ).filter((item) => item !== null),
-          tarif_from_csv: tarifFromCsv,
-          alokasi,
-          laboratorium,
-          radiologi,
-          dpjp_utama,
-          konsul,
-          yang_terbagi,
-          percent_dari_klaim,
-        };
-      });
-
-      const foundNoSepValues = processedResult.map((row) => row.no_sep);
-
-      const notFoundNoSepValues = noSepList.filter(
-        (noSep) => !foundNoSepValues.includes(noSep)
-      );
-
-      // Calculate totals from all processed data (before limiting)
-      const totals = processedResult.reduce(
-        (acc, row) => {
-          const tarif = row.tarif_from_csv || 0;
-          return {
-            totalTarif: acc.totalTarif + Number(tarif),
-            totalAlokasi: acc.totalAlokasi + Number(row.alokasi || 0),
-            totalDpjpUtama: acc.totalDpjpUtama + Number(row.dpjp_utama || 0),
-            totalKonsul: acc.totalKonsul + Number(row.konsul || 0),
-            totalLaboratorium:
-              acc.totalLaboratorium + Number(row.laboratorium || 0),
-            totalRadiologi: acc.totalRadiologi + Number(row.radiologi || 0),
-            totalYangTerbagi:
-              acc.totalYangTerbagi + Number(row.yang_terbagi || 0),
-            totalPercentDariKlaim:
-              acc.totalPercentDariKlaim + Number(row.percent_dari_klaim || 0),
-            count: acc.count + 1,
-          };
-        },
-        {
-          totalTarif: 0,
-          totalAlokasi: 0,
-          totalDpjpUtama: 0,
-          totalKonsul: 0,
-          totalLaboratorium: 0,
-          totalRadiologi: 0,
-          totalYangTerbagi: 0,
-          totalPercentDariKlaim: 0,
-          count: 0,
-        }
-      );
-
-      // Calculate average percentage
-      const averagePercentDariKlaim =
-        totals.count > 0
-          ? Math.floor(totals.totalPercentDariKlaim / totals.count)
-          : 0;
-
-      return {
-        data: processedResult,
-        totals: {
-          ...totals,
-          averagePercentDariKlaim,
-        },
-        statistics: {
-          totalRequested: input.csvData.length,
-          found: foundNoSepValues.length,
-          notFound: notFoundNoSepValues.length,
-          notFoundValues: notFoundNoSepValues,
-        },
       };
     }),
 });

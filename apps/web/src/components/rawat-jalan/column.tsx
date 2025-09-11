@@ -154,7 +154,7 @@ export const createColumns = (
         if (value > 0) {
           return (
             <Tooltip delayDuration={0}>
-              <TooltipTrigger>
+              <TooltipTrigger asChild>
                 <Button variant="ghost" size="sm">
                   {value}
                 </Button>
@@ -216,7 +216,7 @@ export const createColumns = (
         if (value > 0) {
           return (
             <Tooltip delayDuration={0}>
-              <TooltipTrigger>
+              <TooltipTrigger asChild>
                 <Button variant="ghost" size="sm">
                   {value}
                 </Button>
