@@ -1,8 +1,6 @@
 import { publicProcedure, router } from "../lib/trpc";
 import { db } from "../db";
-import { dokter } from "../db/schema/dokter";
 import { sql } from "drizzle-orm";
-import { rawatJalanRouter } from "./rawat-jalan";
 import { bridgingSepRouter } from "./bridging-sep";
 import { regPeriksaRouter } from "./reg-periksa";
 import { csvUploadRouter } from "./csv-upload";
@@ -20,10 +18,6 @@ export const appRouter = router({
       };
     }
   }),
-  getDokter: publicProcedure.query(() => {
-    return db.select().from(dokter);
-  }),
-  rawatJalan: rawatJalanRouter,
   bridgingSep: bridgingSepRouter,
   regPeriksa: regPeriksaRouter,
   csvUpload: csvUploadRouter,

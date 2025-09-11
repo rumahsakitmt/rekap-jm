@@ -3,14 +3,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, FileText, X, CheckCircle, AlertCircle } from "lucide-react";
+import {
+  Upload,
+  FileText,
+  X,
+  CheckCircle,
+  AlertCircle,
+  BarChart3,
+} from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { trpc } from "@/utils/trpc";
 import { useMutation } from "@tanstack/react-query";
+import { CsvAnalysis } from "./csv-analysis";
 
 export function CsvUpload() {
   const [file, setFile] = useState<File | null>(null);
   const [uploadedFilename, setUploadedFilename] = useState<string>("");
+  const [showAnalysis, setShowAnalysis] = useState(false);
 
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
@@ -35,6 +44,7 @@ export function CsvUpload() {
 
     setFile(selectedFile);
     setUploadedFilename(""); // Reset uploaded filename
+    setShowAnalysis(false); // Reset analysis view
     setError("");
     setSuccess("");
   };
@@ -77,6 +87,7 @@ export function CsvUpload() {
       setSuccess(
         `CSV processed successfully! ${processResult.count} records imported.`
       );
+      setShowAnalysis(true);
     } catch (err) {
       setError(
         err instanceof Error
@@ -133,22 +144,41 @@ export function CsvUpload() {
           </Alert>
         )}
 
-        <Button
-          onClick={handleImport}
-          className="w-full"
-          disabled={
-            !file ||
-            uploading ||
+        <div className="flex gap-2">
+          <Button
+            onClick={handleImport}
+            className="flex-1"
+            disabled={
+              !file ||
+              uploading ||
+              uploadFileMutation.isPending ||
+              uploadCsvMutation.isPending
+            }
+          >
+            {uploading ||
             uploadFileMutation.isPending ||
             uploadCsvMutation.isPending
-          }
-        >
-          {uploading ||
-          uploadFileMutation.isPending ||
-          uploadCsvMutation.isPending
-            ? "Processing..."
-            : "Import CSV file"}
-        </Button>
+              ? "Processing..."
+              : "Import CSV file"}
+          </Button>
+
+          {uploadedFilename && (
+            <Button
+              onClick={() => setShowAnalysis(!showAnalysis)}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <BarChart3 className="h-4 w-4" />
+              {showAnalysis ? "Hide" : "Show"} Analysis
+            </Button>
+          )}
+        </div>
+
+        {showAnalysis && uploadedFilename && (
+          <div className="mt-6">
+            <CsvAnalysis filename={uploadedFilename} />
+          </div>
+        )}
       </CardContent>
     </Card>
   );

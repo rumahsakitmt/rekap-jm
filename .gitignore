@@ -2,3 +2,7 @@ node_modules
 .turbo
 .alchemy
 .env
+
+# Keep uploads directory but ignore its contents
+apps/server/uploads/*
+!apps/server/uploads/.gitkeep

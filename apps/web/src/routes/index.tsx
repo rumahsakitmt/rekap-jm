@@ -15,8 +15,9 @@ import {
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/calendar";
 import { UploadCSVSheet } from "@/components/upload-csv-sheet";
-import { ChevronUp, ChevronDown } from "lucide-react";
+import { ChevronUp, ChevronDown, BarChart3 } from "lucide-react";
 import { DataTable, createColumns } from "@/components/rawat-jalan";
+import { CsvAnalysis } from "@/components/csv-analysis";
 
 export const Route = createFileRoute("/")({
   component: HomeComponent,
@@ -33,6 +34,7 @@ function HomeComponent() {
     endOfMonth(new Date())
   );
   const [selectedCsvFile, setSelectedCsvFile] = useState<string | undefined>();
+  const [showCsvAnalysis, setShowCsvAnalysis] = useState(false);
   const [copiedItems, setCopiedItems] = useState<Set<string>>(new Set());
   const [showScrollButtons, setShowScrollButtons] = useState(false);
 
@@ -117,21 +119,26 @@ function HomeComponent() {
             </div>
             <div>
               <label className="text-sm font-medium">CSV File</label>
-              <Select
-                value={selectedCsvFile}
-                onValueChange={setSelectedCsvFile}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select CSV file..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {uploadedFiles.data?.map((file) => (
-                    <SelectItem key={file.filename} value={file.filename}>
-                      {file.filename}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Select
+                  value={selectedCsvFile}
+                  onValueChange={(value) => {
+                    setSelectedCsvFile(value);
+                    setShowCsvAnalysis(false);
+                  }}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Select CSV file..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {uploadedFiles.data?.map((file) => (
+                      <SelectItem key={file.filename} value={file.filename}>
+                        {file.filename}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div>
               <label className="text-sm font-medium">Limit</label>
@@ -160,6 +167,7 @@ function HomeComponent() {
                 setLimit(50);
                 setOffset(0);
                 setSelectedCsvFile(undefined);
+                setShowCsvAnalysis(false);
                 setDateFrom(startOfMonth(new Date()));
                 setDateTo(endOfMonth(new Date()));
               }}
@@ -168,8 +176,30 @@ function HomeComponent() {
               Clear Filters
             </Button>
           </div>
+
+          {selectedCsvFile && (
+            <Button
+              onClick={() => setShowCsvAnalysis(!showCsvAnalysis)}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1"
+            >
+              <BarChart3 className="h-4 w-4" />
+              {showCsvAnalysis ? "Hide" : "Analyze"}
+            </Button>
+          )}
         </CardContent>
       </Card>
+
+      {showCsvAnalysis && selectedCsvFile && (
+        <div className="mb-6">
+          <CsvAnalysis
+            filename={selectedCsvFile}
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+          />
+        </div>
+      )}
 
       <div className="flex justify-between items-center py-4">
         <div className="flex items-center gap-4">

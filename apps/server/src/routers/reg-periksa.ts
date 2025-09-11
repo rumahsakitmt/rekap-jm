@@ -308,7 +308,7 @@ export const regPeriksaRouter = router({
               noorder: string;
             }[]
           ).filter((item) => item !== null),
-          tarif_from_csv: csvTarifMap.get(row.no_sep || "") || null,
+          tarif_from_csv: csvTarifMap.get(row.no_sep || "") || undefined,
           alokasi,
           laboratorium,
           radiologi,

@@ -3,14 +3,19 @@ import { publicProcedure, router } from "../lib/trpc";
 import { TRPCError } from "@trpc/server";
 import { readFileSync } from "fs";
 import { join } from "path";
+import { db } from "../db";
+import { bridging_sep } from "../db/schema/bridging_sep";
+import { inArray, notInArray, and, gte, lte } from "drizzle-orm";
 
 const csvUploadSchema = z.object({
   filename: z.string(),
+  dateFrom: z.coerce.date().optional(),
+  dateTo: z.coerce.date().optional(),
 });
 
 const fileUploadSchema = z.object({
   filename: z.string(),
-  content: z.string(), // base64 encoded file content
+  content: z.string(),
 });
 
 export const csvUploadRouter = router({
@@ -127,4 +132,121 @@ export const csvUploadRouter = router({
       });
     }
   }),
+
+  analyzeCsv: publicProcedure
+    .input(csvUploadSchema)
+    .query(async ({ input }) => {
+      try {
+        const filepath = join(process.cwd(), "uploads", input.filename);
+        const csvContent = readFileSync(filepath, "utf-8");
+
+        const lines = csvContent.split("\n");
+        const csvData: { no_sep: string; tarif: number }[] = [];
+
+        // Parse CSV data
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          if (trimmedLine) {
+            // Skip header row
+            if (
+              trimmedLine.toLowerCase().includes("no_sep") ||
+              trimmedLine.toLowerCase().includes("sep")
+            ) {
+              continue;
+            }
+
+            const columns = trimmedLine.split(",");
+            const noSep = columns[0]?.trim();
+            const tarifStr = columns[1]?.trim();
+
+            if (noSep && noSep.length > 0) {
+              const tarif = tarifStr ? parseFloat(tarifStr) || 0 : 0;
+              csvData.push({ no_sep: noSep, tarif });
+            }
+          }
+        }
+
+        const csvSepNumbers = csvData.map((item) => item.no_sep);
+
+        // Build date range conditions
+        const conditions = [];
+        if (input.dateFrom) {
+          conditions.push(gte(bridging_sep.tglsep, input.dateFrom));
+        }
+        if (input.dateTo) {
+          conditions.push(lte(bridging_sep.tglsep, input.dateTo));
+        }
+
+        // Get SEPs from database that match CSV
+        const foundInDb = await db
+          .select({
+            no_sep: bridging_sep.no_sep,
+            nama_pasien: bridging_sep.nama_pasien,
+            tglsep: bridging_sep.tglsep,
+            nmppkpelayanan: bridging_sep.nmppkpelayanan,
+          })
+          .from(bridging_sep)
+          .where(
+            conditions.length > 0
+              ? and(inArray(bridging_sep.no_sep, csvSepNumbers), ...conditions)
+              : inArray(bridging_sep.no_sep, csvSepNumbers)
+          );
+
+        // Get SEPs from database that are NOT in CSV
+        const notInCsv = await db
+          .select({
+            no_sep: bridging_sep.no_sep,
+            nama_pasien: bridging_sep.nama_pasien,
+            tglsep: bridging_sep.tglsep,
+            nmppkpelayanan: bridging_sep.nmppkpelayanan,
+          })
+          .from(bridging_sep)
+          .where(
+            conditions.length > 0
+              ? and(
+                  notInArray(bridging_sep.no_sep, csvSepNumbers),
+                  ...conditions
+                )
+              : notInArray(bridging_sep.no_sep, csvSepNumbers)
+          );
+
+        // Find SEPs in CSV that are NOT in database
+        const foundInDbNumbers = new Set(foundInDb.map((item) => item.no_sep));
+        const notFoundInDb = csvData.filter(
+          (item) => !foundInDbNumbers.has(item.no_sep)
+        );
+
+        // Calculate statistics
+        const stats = {
+          totalCsvRecords: csvData.length,
+          totalFoundInDb: foundInDb.length,
+          totalNotFoundInDb: notFoundInDb.length,
+          totalInDbNotInCsv: notInCsv.length,
+          totalTarifInCsv: csvData.reduce((sum, item) => sum + item.tarif, 0),
+          averageTarifInCsv:
+            csvData.length > 0
+              ? csvData.reduce((sum, item) => sum + item.tarif, 0) /
+                csvData.length
+              : 0,
+        };
+
+        return {
+          success: true,
+          filename: input.filename,
+          stats,
+          notFoundInDb: notFoundInDb.map((item) => ({
+            no_sep: item.no_sep,
+            tarif: item.tarif,
+          })),
+          foundInDb: foundInDb,
+          notInCsv: notInCsv,
+        };
+      } catch (error) {
+        console.error("CSV analysis error:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to analyze CSV file",
+        });
+      }
+    }),
 });
