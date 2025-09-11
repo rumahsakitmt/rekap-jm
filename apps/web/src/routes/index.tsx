@@ -175,6 +175,7 @@ function HomeComponent() {
             row.tarif_from_csv || 0,
             row.alokasi || 0,
             row.dpjp_utama || 0,
+            row.konsul || 0,
             row.laboratorium || 0,
             row.radiologi || 0,
             row.yang_terbagi || 0,
@@ -213,6 +214,7 @@ function HomeComponent() {
         totals.totalTarif,
         totals.totalAlokasi,
         totals.totalDpjpUtama,
+        totals.totalKonsul,
         totals.totalLaboratorium,
         totals.totalRadiologi,
         totals.totalYangTerbagi,
@@ -272,6 +274,7 @@ function HomeComponent() {
         totalTarif: acc.totalTarif + Number(tarif),
         totalAlokasi: acc.totalAlokasi + Number(row.alokasi || 0),
         totalDpjpUtama: acc.totalDpjpUtama + Number(row.dpjp_utama || 0),
+        totalKonsul: acc.totalKonsul + Number(row.konsul || 0),
         totalLaboratorium:
           acc.totalLaboratorium + Number(row.laboratorium || 0),
         totalRadiologi: acc.totalRadiologi + Number(row.radiologi || 0),
@@ -285,6 +288,7 @@ function HomeComponent() {
       totalTarif: 0,
       totalAlokasi: 0,
       totalDpjpUtama: 0,
+      totalKonsul: 0,
       totalLaboratorium: 0,
       totalRadiologi: 0,
       totalYangTerbagi: 0,
@@ -295,6 +299,7 @@ function HomeComponent() {
     totalTarif: 0,
     totalAlokasi: 0,
     totalDpjpUtama: 0,
+    totalKonsul: 0,
     totalLaboratorium: 0,
     totalRadiologi: 0,
     totalYangTerbagi: 0,
@@ -421,6 +426,7 @@ function HomeComponent() {
                 <TableHead className="text-right">Total Tarif</TableHead>
                 <TableHead className="text-right">Alokasi</TableHead>
                 <TableHead className="text-right">DPJP Utama</TableHead>
+                <TableHead className="text-right">Konsul</TableHead>
                 <TableHead className="text-right">Laboratorium</TableHead>
                 <TableHead className="text-right">Radiologi</TableHead>
                 <TableHead className="text-right">Yang Terbagi</TableHead>
@@ -559,6 +565,15 @@ function HomeComponent() {
                       : "-"}
                   </TableCell>
                   <TableCell className="text-right font-mono">
+                    {rawatJalan.konsul
+                      ? new Intl.NumberFormat("id-ID", {
+                          style: "currency",
+                          currency: "IDR",
+                          minimumFractionDigits: 0,
+                        }).format(rawatJalan.konsul)
+                      : "-"}
+                  </TableCell>
+                  <TableCell className="text-right font-mono">
                     {rawatJalan.laboratorium
                       ? new Intl.NumberFormat("id-ID", {
                           style: "currency",
@@ -644,6 +659,13 @@ function HomeComponent() {
                   style: "currency",
                   currency: "IDR",
                   minimumFractionDigits: 0,
+                }).format(totals.totalKonsul)}
+              </TableCell>
+              <TableCell className="text-right font-mono">
+                {new Intl.NumberFormat("id-ID", {
+                  style: "currency",
+                  currency: "IDR",
+                  minimumFractionDigits: 0,
                 }).format(totals.totalLaboratorium)}
               </TableCell>
               <TableCell className="text-right font-mono">
@@ -653,7 +675,6 @@ function HomeComponent() {
                   minimumFractionDigits: 0,
                 }).format(totals.totalRadiologi)}
               </TableCell>
-
               <TableCell className="text-right font-mono">
                 {new Intl.NumberFormat("id-ID", {
                   style: "currency",

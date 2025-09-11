@@ -257,7 +257,11 @@ export const regPeriksaRouter = router({
         const laboratorium = (row.total_permintaan_lab || 0) * 10000;
         const radiologi = (row.total_permintaan_radiologi || 0) * 15000;
         const dpjp_utama = alokasi - laboratorium - radiologi;
-        const yang_terbagi = dpjp_utama + radiologi + laboratorium;
+        const konsul =
+          row.konsul_count && row.konsul_count > 1
+            ? dpjp_utama / row.konsul_count
+            : 0;
+        const yang_terbagi = dpjp_utama + konsul + radiologi + laboratorium;
         const percent_dari_klaim =
           tarifFromCsv > 0
             ? Math.floor((yang_terbagi / tarifFromCsv) * 100)
@@ -276,6 +280,7 @@ export const regPeriksaRouter = router({
           laboratorium,
           radiologi,
           dpjp_utama,
+          konsul,
           yang_terbagi,
           percent_dari_klaim,
         };
