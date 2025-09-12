@@ -33,7 +33,7 @@ import {
 import { cn } from "@/lib/utils";
 import { DataTableFilters } from "./data-table-filters";
 import { TotalsDisplay } from "./totals-display";
-import { Columns } from "lucide-react";
+import { Columns, Download } from "lucide-react";
 import { DataTablePagination } from "./pagination";
 
 interface DataTableProps<TData, TValue> {
@@ -60,6 +60,7 @@ interface DataTableProps<TData, TValue> {
     page: number;
     totalPages: number;
   };
+  onDownloadCsv?: () => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -68,6 +69,7 @@ export function DataTable<TData, TValue>({
   isCsvMode = false,
   totals,
   pagination,
+  onDownloadCsv,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -100,7 +102,15 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="w-full">
-      <DataTableFilters table={table} />
+      <div className="flex items-center justify-between mb-4">
+        <DataTableFilters table={table} />
+        {onDownloadCsv && isCsvMode && (
+          <Button onClick={onDownloadCsv} variant="outline" size="sm">
+            <Download className="h-4 w-4 mr-2" />
+            Download CSV
+          </Button>
+        )}
+      </div>
       <TotalsDisplay totals={totals} isCsvMode={isCsvMode} />
       <div className="rounded-md border uppercase">
         <Table>

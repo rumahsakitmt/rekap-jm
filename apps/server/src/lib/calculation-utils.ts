@@ -10,6 +10,8 @@ export interface CalculationInput {
   total_permintaan_radiologi: number;
   jns_perawatan_radiologi: string;
   konsul_count: number;
+  jns_perawatan?: string;
+  nm_dokter?: string;
 }
 
 export interface CalculationResult {
@@ -31,6 +33,8 @@ export function calculateFinancials(
     total_permintaan_radiologi,
     jns_perawatan_radiologi,
     konsul_count,
+    jns_perawatan,
+    nm_dokter,
   } = input;
 
   const alokasi = tarif * 0.2;
@@ -53,8 +57,30 @@ export function calculateFinancials(
       : (total_permintaan_radiologi || 0) * 15000;
 
   const dpjp_utama = alokasi - laboratorium - radiologi;
-  const konsul =
-    konsul_count && konsul_count > 1 ? dpjp_utama / konsul_count : 0;
+
+  let shouldCountKonsul = konsul_count && konsul_count >= 1;
+
+  if (shouldCountKonsul && jns_perawatan && nm_dokter) {
+    const jnsPerawatanData = JSON.parse(jns_perawatan || "[]") as Array<{
+      kd_jenis_prw: string;
+      nm_perawatan: string;
+      kd_dokter: string;
+      nm_dokter: string;
+      is_konsul?: boolean;
+    }>;
+
+    const konsulTreatments = jnsPerawatanData.filter(
+      (item) => item && item.is_konsul
+    );
+
+    const allSameDoctor = konsulTreatments.every(
+      (item) => item.nm_dokter === nm_dokter
+    );
+
+    shouldCountKonsul = !allSameDoctor;
+  }
+
+  const konsul = shouldCountKonsul ? dpjp_utama / 2 : 0;
 
   const yang_terbagi = dpjp_utama + konsul + radiologi + laboratorium;
   const percent_dari_klaim =

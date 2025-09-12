@@ -21,9 +21,22 @@ function HomeComponent() {
     selectedCsvFile,
     selectedDoctor,
     selectedPoliklinik,
+    konsulFilters,
   } = useFilterStore();
 
   const { copiedItems, addCopiedItem, removeCopiedItem } = useUIState();
+
+  const { data: csvData, isLoading: isLoadingCsv } = useQuery({
+    ...trpc.regPeriksa.downloadCsv.queryOptions({
+      search: search || undefined,
+      dateFrom: dateFrom || undefined,
+      dateTo: dateTo || undefined,
+      filename: selectedCsvFile,
+      kd_dokter: selectedDoctor || undefined,
+      kd_poli: selectedPoliklinik || undefined,
+    }),
+    enabled: !!selectedCsvFile,
+  });
 
   const handleCopy = async (text: string, id: string) => {
     try {
@@ -34,6 +47,31 @@ function HomeComponent() {
       }, 2000);
     } catch (err) {
       console.error("Failed to copy: ", err);
+    }
+  };
+
+  const handleDownloadCsv = async () => {
+    if (isLoadingCsv) return;
+    try {
+      // Create blob and download
+      const blob = new Blob([csvData || ""], {
+        type: "text/csv;charset=utf-8;",
+      });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+
+      // Generate filename with current date and filters
+      const dateStr = new Date().toISOString().split("T")[0];
+      const filename = `rawat-jalan-${dateStr}.csv`;
+      link.setAttribute("download", filename);
+
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Failed to download CSV:", error);
     }
   };
 
@@ -48,6 +86,7 @@ function HomeComponent() {
       ...(selectedCsvFile && { filename: selectedCsvFile }),
       ...(selectedDoctor && { kd_dokter: selectedDoctor }),
       ...(selectedPoliklinik && { kd_poli: selectedPoliklinik }),
+      ...(konsulFilters.length > 0 && { konsulFilters }),
     })
   );
 
@@ -70,6 +109,7 @@ function HomeComponent() {
         totals={rawatJalan.data?.totals}
         pagination={rawatJalan.data?.pagination}
         isCsvMode={selectedCsvFile !== ""}
+        onDownloadCsv={handleDownloadCsv}
       />
     </div>
   );

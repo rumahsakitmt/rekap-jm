@@ -25,6 +25,7 @@ export type RawatJalanData = {
   jns_perawatan: Array<{
     kd_jenis_prw: string;
     nm_perawatan: string;
+    nm_dokter: string;
   }>;
   jns_perawatan_radiologi: Array<{
     kd_jenis_prw: string;

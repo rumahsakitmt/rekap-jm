@@ -3,7 +3,12 @@ import {
   createSummaryReportQuery,
 } from "./query-builders";
 import { buildFilterConditions, type FilterInput } from "./filter-utils";
-import { readCsvFile, createCsvTarifMap, type CsvData } from "./csv-utils";
+import {
+  readCsvFile,
+  createCsvTarifMap,
+  convertToCsv,
+  type CsvData,
+} from "./csv-utils";
 import {
   calculateFinancials,
   accumulateTotals,
@@ -47,16 +52,19 @@ export async function getRegPeriksaData(
 ): Promise<RegPeriksaResult> {
   let csvData: CsvData[] = [];
   if (input.filename) {
-    csvData = readCsvFile(input.filename);
+    csvData = await readCsvFile(input.filename);
   }
 
   const filterInput: FilterInput = {
     ...input,
     csvSepNumbers: csvData.map((item) => item.no_sep),
   };
-  const whereCondition = buildFilterConditions(filterInput);
+  const filterConditions = buildFilterConditions(filterInput);
 
-  const baseQuery = createBaseRegPeriksaQuery(whereCondition);
+  const baseQuery = createBaseRegPeriksaQuery(
+    filterConditions.where,
+    filterConditions.having
+  );
   const csvTarifMap = createCsvTarifMap(csvData);
 
   const totalCount = await baseQuery.then((results) => results.length);
@@ -77,6 +85,8 @@ export async function getRegPeriksaData(
         total_permintaan_radiologi: row.total_permintaan_radiologi || 0,
         jns_perawatan_radiologi: row.jns_perawatan_radiologi || "[]",
         konsul_count: row.konsul_count || 0,
+        jns_perawatan: row.jns_perawatan || undefined,
+        nm_dokter: row.nm_dokter || undefined,
       };
       const calculation = calculateFinancials(calculationInput);
       return accumulateTotals(acc, tarif, calculation);
@@ -93,6 +103,8 @@ export async function getRegPeriksaData(
       total_permintaan_radiologi: row.total_permintaan_radiologi || 0,
       jns_perawatan_radiologi: row.jns_perawatan_radiologi || "[]",
       konsul_count: row.konsul_count || 0,
+      jns_perawatan: row.jns_perawatan || undefined,
+      nm_dokter: row.nm_dokter || undefined,
     };
     const calculation = calculateFinancials(calculationInput);
 
@@ -155,16 +167,19 @@ export async function getSummaryReport(
 ): Promise<SummaryReportResult> {
   let csvData: CsvData[] = [];
   if (input.filename) {
-    csvData = readCsvFile(input.filename);
+    csvData = await readCsvFile(input.filename);
   }
 
   const filterInput: FilterInput = {
     ...input,
     csvSepNumbers: csvData.map((item) => item.no_sep),
   };
-  const whereCondition = buildFilterConditions(filterInput);
+  const filterConditions = buildFilterConditions(filterInput);
 
-  const query = createSummaryReportQuery(whereCondition);
+  const query = createSummaryReportQuery(
+    filterConditions.where,
+    filterConditions.having
+  );
   const results = await query;
 
   const csvTarifMap = createCsvTarifMap(csvData);
@@ -182,6 +197,8 @@ export async function getSummaryReport(
       total_permintaan_radiologi: row.total_permintaan_radiologi || 0,
       jns_perawatan_radiologi: row.jns_perawatan_radiologi || "[]",
       konsul_count: row.konsul_count || 0,
+      jns_perawatan: row.jns_perawatan || undefined,
+      nm_dokter: row.nm_dokter || undefined,
     };
     const calculation = calculateFinancials(calculationInput);
 
@@ -194,10 +211,36 @@ export async function getSummaryReport(
     }
 
     if (calculation.konsul > 0) {
-      if (konsulMap.has(dpjpKey)) {
-        konsulMap.get(dpjpKey)!.total += calculation.konsul;
-      } else {
-        konsulMap.set(dpjpKey, { name: dpjpName, total: calculation.konsul });
+      // Parse jns_perawatan to get konsul doctors
+      const jnsPerawatanData = JSON.parse(row.jns_perawatan || "[]") as Array<{
+        kd_jenis_prw: string;
+        nm_perawatan: string;
+        kd_dokter: string;
+        nm_dokter: string;
+        is_konsul?: boolean;
+      }>;
+
+      // Filter konsul treatments and get unique konsul doctors
+      const konsulDoctors = jnsPerawatanData
+        .filter((item) => item && item.is_konsul && item.nm_dokter !== dpjpName)
+        .map((item) => ({
+          kd_dokter: item.kd_dokter,
+          nm_dokter: item.nm_dokter,
+        }));
+
+      if (konsulDoctors.length > 0) {
+        const konsulDoctor = konsulDoctors[0];
+        const konsulKey = konsulDoctor.kd_dokter;
+        const konsulName = konsulDoctor.nm_dokter;
+
+        if (konsulMap.has(konsulKey)) {
+          konsulMap.get(konsulKey)!.total += calculation.konsul;
+        } else {
+          konsulMap.set(konsulKey, {
+            name: konsulName,
+            total: calculation.konsul,
+          });
+        }
       }
     }
 
@@ -229,4 +272,71 @@ export async function getSummaryReport(
     labTotal: Math.round(labTotal),
     radTotal: Math.round(radTotal),
   };
+}
+
+export interface CsvExportInput extends FilterInput {
+  filename?: string;
+}
+
+export async function getRegPeriksaDataForCsv(
+  input: CsvExportInput
+): Promise<string> {
+  if (!input.filename) {
+    return "";
+  }
+
+  const csvData = await readCsvFile(input.filename);
+
+  if (csvData.length === 0) {
+    return "";
+  }
+
+  const filterInput: FilterInput = {
+    ...input,
+    csvSepNumbers: csvData.map((item) => item.no_sep),
+  };
+  const filterConditions = buildFilterConditions(filterInput);
+
+  const baseQuery = createBaseRegPeriksaQuery(
+    filterConditions.where,
+    filterConditions.having
+  );
+  const csvTarifMap = createCsvTarifMap(csvData);
+
+  const allResults = await baseQuery;
+
+  const processedResult = allResults.map((row) => {
+    const tarif = csvTarifMap.get(row.no_sep || "") || row.biaya_rawat || 0;
+    const calculationInput: CalculationInput = {
+      tarif,
+      total_permintaan_lab: row.total_permintaan_lab || 0,
+      total_permintaan_radiologi: row.total_permintaan_radiologi || 0,
+      jns_perawatan_radiologi: row.jns_perawatan_radiologi || "[]",
+      konsul_count: row.konsul_count || 0,
+      jns_perawatan: row.jns_perawatan || undefined,
+      nm_dokter: row.nm_dokter || undefined,
+    };
+    const calculation = calculateFinancials(calculationInput);
+
+    return {
+      ...row,
+      jns_perawatan: (
+        JSON.parse(row.jns_perawatan || "[]") as {
+          kd_jenis_prw: string;
+          nm_perawatan: string;
+        }[]
+      ).filter((item) => item !== null),
+      jns_perawatan_radiologi: (
+        JSON.parse(row.jns_perawatan_radiologi || "[]") as {
+          kd_jenis_prw: string;
+          nm_perawatan: string;
+          noorder: string;
+        }[]
+      ).filter((item) => item !== null),
+      tarif_from_csv: csvTarifMap.get(row.no_sep || "") || undefined,
+      ...calculation,
+    };
+  });
+
+  return convertToCsv(processedResult);
 }

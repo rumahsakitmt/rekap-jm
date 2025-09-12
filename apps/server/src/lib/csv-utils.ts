@@ -1,51 +1,91 @@
-import { readFileSync } from "fs";
+import { createReadStream } from "fs";
 import { join } from "path";
 import { TRPCError } from "@trpc/server";
+import csv from "csv-parser";
 
 export interface CsvData {
   no_sep: string;
   tarif: number;
 }
 
-export function readCsvFile(filename: string): CsvData[] {
-  try {
-    const filepath = join(process.cwd(), "uploads", filename);
-    const csvContent = readFileSync(filepath, "utf-8");
+export function readCsvFile(filename: string): Promise<CsvData[]> {
+  return new Promise((resolve, reject) => {
+    try {
+      const filepath = join(process.cwd(), "uploads", filename);
+      const csvData: CsvData[] = [];
 
-    const lines = csvContent.split("\n");
-    const csvData: CsvData[] = [];
+      createReadStream(filepath)
+        .pipe(csv())
+        .on("data", (row) => {
+          if (
+            row.no_sep?.toLowerCase().includes("no_sep") ||
+            row.no_sep?.toLowerCase().includes("sep") ||
+            !row.no_sep
+          ) {
+            return;
+          }
 
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      if (trimmedLine) {
-        if (
-          trimmedLine.toLowerCase().includes("no_sep") ||
-          trimmedLine.toLowerCase().includes("sep")
-        ) {
-          continue;
-        }
+          const noSep = row.no_sep?.trim();
+          const tarifStr = row.tarif?.trim();
 
-        const columns = trimmedLine.split(",");
-        const noSep = columns[0]?.trim();
-        const tarifStr = columns[1]?.trim();
-
-        if (noSep && noSep.length > 0) {
-          const tarif = tarifStr ? parseFloat(tarifStr) || 0 : 0;
-          csvData.push({ no_sep: noSep, tarif });
-        }
-      }
+          if (noSep && noSep.length > 0) {
+            const tarif = tarifStr ? parseFloat(tarifStr) || 0 : 0;
+            csvData.push({ no_sep: noSep, tarif });
+          }
+        })
+        .on("end", () => {
+          resolve(csvData);
+        })
+        .on("error", (error) => {
+          console.error("Error reading CSV file:", error);
+          reject(
+            new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Failed to read CSV file",
+            })
+          );
+        });
+    } catch (error) {
+      console.error("Error reading CSV file:", error);
+      reject(
+        new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Failed to read CSV file",
+        })
+      );
     }
-
-    return csvData;
-  } catch (error) {
-    console.error("Error reading CSV file:", error);
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: "Failed to read CSV file",
-    });
-  }
+  });
 }
 
 export function createCsvTarifMap(csvData: CsvData[]): Map<string, number> {
   return new Map(csvData.map((item) => [item.no_sep, item.tarif]));
+}
+
+export function convertToCsv(data: any[]): string {
+  if (data.length === 0) return "";
+
+  const headers = Object.keys(data[0]);
+
+  const csvHeaders = headers.join(",");
+
+  const csvRows = data.map((row) => {
+    return headers
+      .map((header) => {
+        const value = row[header];
+        if (value === null || value === undefined) return "";
+        if (typeof value === "object") {
+          return `"${JSON.stringify(value).replace(/"/g, '""')}"`;
+        }
+        if (
+          typeof value === "string" &&
+          (value.includes(",") || value.includes('"') || value.includes("\n"))
+        ) {
+          return `"${value.replace(/"/g, '""')}"`;
+        }
+        return value;
+      })
+      .join(",");
+  });
+
+  return [csvHeaders, ...csvRows].join("\n");
 }

@@ -13,7 +13,10 @@ import { permintaan_pemeriksaan_radiologi } from "../db/schema/permintaan_pemeri
 import { sql, eq, asc } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 
-export function createBaseRegPeriksaQuery(whereCondition?: SQL) {
+export function createBaseRegPeriksaQuery(
+  whereCondition?: SQL,
+  havingCondition?: SQL
+) {
   return db
     .select({
       no_rawat: reg_periksa.no_rawat,
@@ -27,7 +30,14 @@ export function createBaseRegPeriksaQuery(whereCondition?: SQL) {
           AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%'
           THEN JSON_OBJECT(
             'kd_jenis_prw', ${jns_perawatan.kd_jenis_prw},
-            'nm_perawatan', ${jns_perawatan.nm_perawatan}
+            'nm_perawatan', ${jns_perawatan.nm_perawatan},
+            'kd_dokter', ${rawat_jl_drpr.kd_dokter},
+            'nm_dokter', (
+              SELECT d.nm_dokter 
+              FROM ${dokter} d 
+              WHERE d.kd_dokter = ${rawat_jl_drpr.kd_dokter}
+            ),
+            'is_konsul', true
           )
           ELSE NULL
         END
@@ -104,16 +114,41 @@ export function createBaseRegPeriksaQuery(whereCondition?: SQL) {
     .leftJoin(poliklinik, eq(reg_periksa.kd_poli, poliklinik.kd_poli))
     .where(whereCondition)
     .groupBy(reg_periksa.no_rawat)
+    .having(havingCondition)
     .orderBy(asc(reg_periksa.tgl_registrasi));
 }
 
-export function createSummaryReportQuery(whereCondition?: SQL) {
+export function createSummaryReportQuery(
+  whereCondition?: SQL,
+  havingCondition?: SQL
+) {
   return db
     .select({
       kd_dokter: reg_periksa.kd_dokter,
       nm_dokter: dokter.nm_dokter,
       konsul_count: sql<number>`SUM(CASE WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%' THEN 1 ELSE 0 END)`,
       no_sep: bridging_sep.no_sep,
+      jns_perawatan: sql<string>`JSON_ARRAYAGG(
+        CASE 
+          WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' 
+          AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%'
+          AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%'
+          AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%'
+          AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%'
+          THEN JSON_OBJECT(
+            'kd_jenis_prw', ${jns_perawatan.kd_jenis_prw},
+            'nm_perawatan', ${jns_perawatan.nm_perawatan},
+            'kd_dokter', ${rawat_jl_drpr.kd_dokter},
+            'nm_dokter', (
+              SELECT d.nm_dokter 
+              FROM ${dokter} d 
+              WHERE d.kd_dokter = ${rawat_jl_drpr.kd_dokter}
+            ),
+            'is_konsul', true
+          )
+          ELSE NULL
+        END
+      )`,
       total_permintaan_radiologi: sql<number>`(
         SELECT COUNT(*) 
         FROM ${permintaan_radiologi} 
@@ -162,5 +197,6 @@ export function createSummaryReportQuery(whereCondition?: SQL) {
       )
     )
     .where(whereCondition)
-    .groupBy(reg_periksa.no_rawat);
+    .groupBy(reg_periksa.no_rawat)
+    .having(havingCondition);
 }

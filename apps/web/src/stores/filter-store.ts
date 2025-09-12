@@ -1,6 +1,12 @@
 import { create } from "zustand";
 import { startOfMonth, endOfMonth } from "date-fns";
 
+export interface KonsulFilter {
+  field: string;
+  operator: string;
+  value: string;
+}
+
 export interface FilterState {
   // Search and pagination
   search: string;
@@ -18,6 +24,9 @@ export interface FilterState {
   // Doctor and Poliklinik selection
   selectedDoctor: string;
   selectedPoliklinik: string | undefined;
+
+  // Konsul filters
+  konsulFilters: KonsulFilter[];
 
   // UI state
   showCsvAnalysis: boolean;
@@ -44,6 +53,12 @@ export interface FilterActions {
   setSelectedDoctor: (doctorId: string) => void;
   setSelectedPoliklinik: (poliklinikId: string) => void;
 
+  // Konsul filter actions
+  addKonsulFilter: (filter: KonsulFilter) => void;
+  updateKonsulFilter: (index: number, filter: KonsulFilter) => void;
+  removeKonsulFilter: (index: number) => void;
+  clearKonsulFilters: () => void;
+
   // UI state actions
   setShowCsvAnalysis: (show: boolean) => void;
   addCopiedItem: (id: string) => void;
@@ -67,6 +82,7 @@ const defaultState: FilterState = {
   selectedCsvFile: "",
   selectedDoctor: "",
   selectedPoliklinik: "",
+  konsulFilters: [],
   showCsvAnalysis: false,
   copiedItems: new Set(),
   showScrollButtons: false,
@@ -105,6 +121,29 @@ export const useFilterStore = create<FilterStore>((set, get) => ({
   setSelectedPoliklinik: (selectedPoliklinik: string) =>
     set({ selectedPoliklinik, offset: 0, page: 1 }),
 
+  // Konsul filter actions
+  addKonsulFilter: (filter: KonsulFilter) =>
+    set((state) => ({
+      konsulFilters: [...state.konsulFilters, filter],
+      offset: 0,
+      page: 1,
+    })),
+  updateKonsulFilter: (index: number, filter: KonsulFilter) =>
+    set((state) => ({
+      konsulFilters: state.konsulFilters.map((f, i) =>
+        i === index ? filter : f
+      ),
+      offset: 0,
+      page: 1,
+    })),
+  removeKonsulFilter: (index: number) =>
+    set((state) => ({
+      konsulFilters: state.konsulFilters.filter((_, i) => i !== index),
+      offset: 0,
+      page: 1,
+    })),
+  clearKonsulFilters: () => set({ konsulFilters: [], offset: 0, page: 1 }),
+
   // UI state actions
   setShowCsvAnalysis: (showCsvAnalysis: boolean) => set({ showCsvAnalysis }),
   addCopiedItem: (id: string) =>
@@ -130,6 +169,7 @@ export const useFilterStore = create<FilterStore>((set, get) => ({
       selectedCsvFile: "",
       selectedDoctor: "",
       selectedPoliklinik: "",
+      konsulFilters: [],
       showCsvAnalysis: false,
       dateFrom: startOfMonth(new Date()),
       dateTo: endOfMonth(new Date()),
@@ -151,6 +191,7 @@ export const useSearchFilters = () => {
   const selectedPoliklinik = useFilterStore(
     (state) => state.selectedPoliklinik
   );
+  const konsulFilters = useFilterStore((state) => state.konsulFilters);
   return {
     search,
     limit,
@@ -161,6 +202,7 @@ export const useSearchFilters = () => {
     selectedCsvFile,
     selectedDoctor,
     selectedPoliklinik,
+    konsulFilters,
   };
 };
 

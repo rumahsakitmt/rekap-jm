@@ -1,7 +1,26 @@
-import { sql, and, gte, lte, eq, inArray } from "drizzle-orm";
+import {
+  sql,
+  and,
+  gte,
+  lte,
+  eq,
+  inArray,
+  gt,
+  lt,
+  gte as gteOp,
+  lte as lteOp,
+  ne,
+} from "drizzle-orm";
 import { reg_periksa } from "../db/schema/reg_periksa";
 import { bridging_sep } from "../db/schema/bridging_sep";
 import { pasien } from "../db/schema/pasien";
+import { jns_perawatan } from "@/db/schema/jns_perawatan";
+
+export interface KonsulFilter {
+  field: string;
+  operator: string;
+  value: string;
+}
 
 export interface FilterInput {
   search?: string;
@@ -10,36 +29,112 @@ export interface FilterInput {
   kd_dokter?: string;
   kd_poli?: string;
   csvSepNumbers?: string[];
+  konsulFilters?: KonsulFilter[];
 }
 
 export function buildFilterConditions(input: FilterInput) {
-  const conditions = [];
+  const whereConditions = [];
+  const havingConditions = [];
 
   if (input.search) {
-    conditions.push(
+    whereConditions.push(
       sql`(${reg_periksa.no_rawat} LIKE ${`%${input.search}%`} OR ${bridging_sep.no_sep} LIKE ${`%${input.search}%`} OR ${reg_periksa.no_rkm_medis} LIKE ${`%${input.search}%`} OR ${pasien.nm_pasien} LIKE ${`%${input.search}%`})`
     );
   }
 
   if (input.dateFrom) {
-    conditions.push(gte(reg_periksa.tgl_registrasi, input.dateFrom));
+    whereConditions.push(gte(reg_periksa.tgl_registrasi, input.dateFrom));
   }
 
   if (input.dateTo) {
-    conditions.push(lte(reg_periksa.tgl_registrasi, input.dateTo));
+    whereConditions.push(lte(reg_periksa.tgl_registrasi, input.dateTo));
   }
 
   if (input.kd_dokter) {
-    conditions.push(eq(reg_periksa.kd_dokter, input.kd_dokter));
+    whereConditions.push(eq(reg_periksa.kd_dokter, input.kd_dokter));
   }
 
   if (input.kd_poli) {
-    conditions.push(eq(reg_periksa.kd_poli, input.kd_poli));
+    whereConditions.push(eq(reg_periksa.kd_poli, input.kd_poli));
   }
 
   if (input.csvSepNumbers && input.csvSepNumbers.length > 0) {
-    conditions.push(inArray(bridging_sep.no_sep, input.csvSepNumbers));
+    whereConditions.push(inArray(bridging_sep.no_sep, input.csvSepNumbers));
   }
 
-  return conditions.length > 0 ? and(...conditions) : undefined;
+  if (input.konsulFilters && input.konsulFilters.length > 0) {
+    for (const filter of input.konsulFilters) {
+      if (!filter.value) continue;
+
+      const numericValue = parseFloat(filter.value);
+      if (isNaN(numericValue)) continue;
+
+      let condition;
+
+      if (filter.field === "konsul_count") {
+        // Aggregated fields go in HAVING clause
+        const konsulCountExpr = sql<number>`SUM(CASE WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%' THEN 1 ELSE 0 END)`;
+
+        switch (filter.operator) {
+          case "=":
+            condition = eq(konsulCountExpr, numericValue);
+            break;
+          case "<>":
+            condition = ne(konsulCountExpr, numericValue);
+            break;
+          case ">":
+            condition = gt(konsulCountExpr, numericValue);
+            break;
+          case "<":
+            condition = lt(konsulCountExpr, numericValue);
+            break;
+          case ">=":
+            condition = gteOp(konsulCountExpr, numericValue);
+            break;
+          case "<=":
+            condition = lteOp(konsulCountExpr, numericValue);
+            break;
+          default:
+            continue;
+        }
+
+        if (condition) {
+          havingConditions.push(condition);
+        }
+      } else {
+        // Non-aggregated fields go in WHERE clause
+        switch (filter.operator) {
+          case "=":
+            condition = eq(sql`${filter.field}`, numericValue);
+            break;
+          case "<>":
+            condition = ne(sql`${filter.field}`, numericValue);
+            break;
+          case ">":
+            condition = gt(sql`${filter.field}`, numericValue);
+            break;
+          case "<":
+            condition = lt(sql`${filter.field}`, numericValue);
+            break;
+          case ">=":
+            condition = gteOp(sql`${filter.field}`, numericValue);
+            break;
+          case "<=":
+            condition = lteOp(sql`${filter.field}`, numericValue);
+            break;
+          default:
+            continue;
+        }
+
+        if (condition) {
+          whereConditions.push(condition);
+        }
+      }
+    }
+  }
+
+  return {
+    where: whereConditions.length > 0 ? and(...whereConditions) : undefined,
+    having: havingConditions.length > 0 ? and(...havingConditions) : undefined,
+  };
 }
