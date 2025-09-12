@@ -110,7 +110,7 @@ export async function getRegPeriksaData(
     };
     const calculation = calculateFinancials(calculationInput);
 
-    return {
+    const result = {
       ...row,
       jns_perawatan: (
         JSON.parse(row.jns_perawatan || "[]") as {
@@ -128,6 +128,15 @@ export async function getRegPeriksaData(
       tarif_from_csv: csvTarifMap.get(row.no_sep || "") || undefined,
       ...calculation,
     };
+
+    // Debug logging
+    console.log("Processed result for", row.no_sep, ":", {
+      usgCount: result.usgCount,
+      nonUsgCount: result.nonUsgCount,
+      calculation,
+    });
+
+    return result;
   });
 
   return {

@@ -19,8 +19,8 @@ const SelectDoctor = () => {
 
   return (
     <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
-      <SelectTrigger className="flex-1">
-        <SelectValue placeholder="Select doctor..." />
+      <SelectTrigger className="w-full">
+        <SelectValue placeholder="Pilih dokter..." />
       </SelectTrigger>
       <SelectContent>
         {doctors.data?.data?.map((doctor) => (

@@ -44,25 +44,31 @@ export function DataTableFilters({ table }: DataTableFiltersProps) {
   };
 
   return (
-    <div>
-      <div className="flex items-center py-4 gap-4">
+    <div className="p-2">
+      <div className="space-y-2 py-2">
         <Input
-          placeholder="Filter by patient name..."
+          placeholder="Cari berdasarkan nama pasien/no rm/no rawat/sep..."
           value={search}
           onChange={handleSearch}
-          className="w-[200px]"
+          className="w-full"
         />
-        <DatePicker date={dateFrom} setDate={setDateFrom} />
-        <DatePicker date={dateTo} setDate={setDateTo} />
-        <SelectFileSEP />
-        <SelectDoctor />
-        <SelectPoliklinik />
-        <Button onClick={clearFilters}>Clear Filters</Button>
-        <DataTableViewOptions table={table} />
+        <div className="grid grid-cols-3 gap-2">
+          <DatePicker date={dateFrom} setDate={setDateFrom} />
+          <DatePicker date={dateTo} setDate={setDateTo} />
+          <SelectFileSEP />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <SelectDoctor />
+          <SelectPoliklinik />
+        </div>
+        <div className="flex justify-end">
+          <Button onClick={clearFilters}>Hapus filter</Button>
+        </div>
+        {/* <DataTableViewOptions table={table} /> */}
       </div>
 
-      {/* Konsul Filters */}
-      <div className="mb-4">
+      {/* TODO: Add konsul filter */}
+      {/* <div className="mb-4">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-sm font-medium">Konsul Filters:</span>
           <Button
@@ -87,17 +93,7 @@ export function DataTableFilters({ table }: DataTableFiltersProps) {
             />
           ))}
         </div>
-      </div>
-
-      {selectedCsvFile && (
-        <div className="mb-6">
-          <CsvAnalysis
-            filename={selectedCsvFile}
-            dateFrom={dateFrom}
-            dateTo={dateTo}
-          />
-        </div>
-      )}
+      </div> */}
     </div>
   );
 }

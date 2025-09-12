@@ -38,6 +38,8 @@ export type RawatJalanData = {
   konsul?: number;
   laboratorium?: number;
   radiologi?: number;
+  usgCount?: number;
+  nonUsgCount?: number;
   yang_terbagi?: number;
   percent_dari_klaim?: number;
 };
@@ -160,7 +162,7 @@ export const createColumns = (
                   {value}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
+              <TooltipContent className="bg-background text-primary">
                 {Object.entries(
                   radiologiData
                     .filter((item) => item.noorder)
@@ -222,7 +224,7 @@ export const createColumns = (
                   {value}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
+              <TooltipContent className="bg-background">
                 <PerawatanList perawatanList={perawatanList} />
               </TooltipContent>
             </Tooltip>
@@ -246,8 +248,8 @@ export const createColumns = (
         cell: ({ row }) => {
           const value = row.getValue("tarif_from_csv") as number;
           return (
-            <span className="text-right font-mono">
-              {value > 0 ? formatCurrency(value) : "-"}
+            <span className="text-right font-mono text-primary font-bold">
+              {value > 0 ? formatCurrency(value) : ""}
             </span>
           );
         },
@@ -257,10 +259,25 @@ export const createColumns = (
         header: "Alokasi",
         cell: ({ row }) => {
           const value = row.getValue("alokasi") as number;
+          const totalTarif = row.getValue("tarif_from_csv") as number;
           return (
-            <span className="text-right font-mono">
-              {value > 0 ? formatCurrency(value) : "-"}
-            </span>
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger>
+                <span className="text-right font-mono text-primary font-bold">
+                  {value > 0 ? formatCurrency(value) : ""}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent triangle="bg-primary fill-primary">
+                <div className="flex items-center gap-2 uppercase">
+                  <span>Total Tarif</span>
+                  <span>x 20%</span>
+                </div>
+                <div className="flex items-center gap-2 font-bold">
+                  <span>{formatCurrency(totalTarif)}</span>
+                  <span>x 20%</span>
+                </div>
+              </TooltipContent>
+            </Tooltip>
           );
         },
       },
@@ -269,10 +286,33 @@ export const createColumns = (
         header: "DPJP Utama",
         cell: ({ row }) => {
           const value = row.getValue("dpjp_utama") as number;
+          const alokasi = row.getValue("alokasi") as number;
+          const lab = row.getValue("laboratorium") as number;
+          const rad = row.getValue("radiologi") as number;
           return (
-            <span className="text-right font-mono">
-              {value > 0 ? formatCurrency(value) : "-"}
-            </span>
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger>
+                <span className="text-right font-mono text-primary font-bold">
+                  {value > 0 ? formatCurrency(value) : ""}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent triangle="bg-primary fill-primary">
+                <div className="flex items-center gap-2 uppercase">
+                  <span>Alokasi</span>
+                  <span>-</span>
+                  <span>Lab</span>
+                  <span>-</span>
+                  <span>Radiologi</span>
+                </div>
+                <div className="flex items-center gap-2 font-bold">
+                  <span>{formatCurrency(alokasi)}</span>
+                  <span>-</span>
+                  <span>{formatCurrency(lab)}</span>
+                  <span>-</span>
+                  <span>{formatCurrency(rad)}</span>
+                </div>
+              </TooltipContent>
+            </Tooltip>
           );
         },
       },
@@ -282,10 +322,41 @@ export const createColumns = (
         header: "Radiologi",
         cell: ({ row }) => {
           const value = row.getValue("radiologi") as number;
+          const usgCount = row.original.usgCount as number;
+          const nonUsgCount = row.original.nonUsgCount as number;
+
+          const tarif = row.getValue("tarif_from_csv") as number;
           return (
-            <span className="text-right font-mono">
-              {value > 0 ? formatCurrency(value) : "-"}
-            </span>
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger>
+                <span className="text-right font-mono text-primary font-bold">
+                  {value > 0 ? formatCurrency(value) : ""}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent triangle="bg-primary fill-primary">
+                {usgCount > 0 && (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <span>USG: {usgCount}</span>
+                      <span>x</span>
+                      <span>20% dari (Tarif - 185.000)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>USG: {usgCount}</span>
+                      <span>x</span>
+                      <span>20% dari ({formatCurrency(tarif)} - 185.000)</span>
+                    </div>
+                  </>
+                )}
+                {nonUsgCount > 0 && (
+                  <div className="flex items-center gap-2">
+                    <span>Foto: {nonUsgCount}</span>
+                    <span>x</span>
+                    <span>15.000</span>
+                  </div>
+                )}
+              </TooltipContent>
+            </Tooltip>
           );
         },
       },
@@ -294,10 +365,27 @@ export const createColumns = (
         header: "Lab",
         cell: ({ row }) => {
           const value = row.getValue("laboratorium") as number;
+          const totalPermintaanLab = row.getValue(
+            "total_permintaan_lab"
+          ) as number;
           return (
-            <span className="text-right font-mono">
-              {value > 0 ? formatCurrency(value) : "-"}
-            </span>
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger>
+                <span className="text-right font-mono text-primary font-bold">
+                  {value > 0 ? formatCurrency(value) : ""}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent triangle="bg-primary fill-primary">
+                <div className="flex items-center gap-2 uppercase">
+                  <span>Lab</span>
+                  <span>x 10.000</span>
+                </div>
+                <div className="flex items-center gap-2 font-bold">
+                  <span>{totalPermintaanLab}</span>
+                  <span>x 10.000</span>
+                </div>
+              </TooltipContent>
+            </Tooltip>
           );
         },
       },
@@ -306,10 +394,26 @@ export const createColumns = (
         header: "Konsul",
         cell: ({ row }) => {
           const value = row.getValue("konsul") as number;
+          const dpjpUtama = row.getValue("dpjp_utama") as number;
+          const konsulCount = row.getValue("konsul_count") as number;
           return (
-            <span className="text-right font-mono">
-              {value > 0 ? formatCurrency(value) : "-"}
-            </span>
+            <Tooltip>
+              <TooltipTrigger>
+                <span className="text-right font-mono text-primary font-bold">
+                  {value > 0 ? formatCurrency(value) : ""}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent triangle="bg-primary fill-primary">
+                <div className="flex items-center gap-2 uppercase">
+                  <span>DPJP Utama</span>
+                  <span>/{konsulCount}</span>
+                </div>
+                <div className="flex items-center gap-2 font-bold">
+                  <span>{formatCurrency(dpjpUtama)}</span>
+                  <span>/{konsulCount}</span>
+                </div>
+              </TooltipContent>
+            </Tooltip>
           );
         },
       },
@@ -318,10 +422,38 @@ export const createColumns = (
         header: "Yang Terbagi",
         cell: ({ row }) => {
           const value = row.getValue("yang_terbagi") as number;
+          const dpjpUtama = row.getValue("dpjp_utama") as number;
+          const konsul = row.getValue("konsul") as number;
+          const radiologi = row.getValue("radiologi") as number;
+          const laboratorium = row.getValue("laboratorium") as number;
           return (
-            <span className="text-right font-mono">
-              {value > 0 ? formatCurrency(value) : "-"}
-            </span>
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger>
+                <span className="text-right font-mono text-primary font-bold">
+                  {value > 0 ? formatCurrency(value) : ""}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent triangle="bg-primary fill-primary">
+                <div className="flex items-center gap-2 uppercase">
+                  <span>DPJP Utama</span>
+                  <span>+</span>
+                  <span>Konsul</span>
+                  <span>+</span>
+                  <span>Radiologi</span>
+                  <span>+</span>
+                  <span>Lab</span>
+                </div>
+                <div className="flex items-center gap-2 font-bold">
+                  <span>{formatCurrency(dpjpUtama)}</span>
+                  <span>+</span>
+                  <span>{formatCurrency(konsul)}</span>
+                  <span>+</span>
+                  <span>{formatCurrency(radiologi)}</span>
+                  <span>+</span>
+                  <span>{formatCurrency(laboratorium)}</span>
+                </div>
+              </TooltipContent>
+            </Tooltip>
           );
         },
       },
@@ -330,10 +462,30 @@ export const createColumns = (
         header: "% Dari Klaim",
         cell: ({ row }) => {
           const value = row.getValue("percent_dari_klaim") as number;
+          const yangTerbagi = row.getValue("yang_terbagi") as number;
+          const totalTarif = row.getValue("tarif_from_csv") as number;
           return (
-            <p className="text-center font-mono">
-              {value !== undefined ? `${value}%` : "-"}
-            </p>
+            <div className="text-center">
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger>
+                  <p className="font-mono text-primary font-bold">
+                    {value !== undefined ? `${value}%` : ""}
+                  </p>
+                </TooltipTrigger>
+                <TooltipContent triangle="bg-primary fill-primary">
+                  <div className="flex items-center gap-2 uppercase">
+                    <span>Yang Terbagi</span>
+                    <span>/</span>
+                    <span>Total Tarif</span>
+                  </div>
+                  <div className="flex items-center gap-2 font-bold">
+                    <span>{formatCurrency(yangTerbagi)}</span>
+                    <span>/</span>
+                    <span>{formatCurrency(totalTarif)}</span>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </div>
           );
         },
       },

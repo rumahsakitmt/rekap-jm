@@ -33,8 +33,10 @@ import {
 import { cn } from "@/lib/utils";
 import { DataTableFilters } from "./data-table-filters";
 import { TotalsDisplay } from "./totals-display";
-import { Columns, Download } from "lucide-react";
+import { Brackets, Columns, Download, Slash } from "lucide-react";
 import { DataTablePagination } from "./pagination";
+import { useFilterStore } from "@/stores/filter-store";
+import { CsvAnalysis } from "../csv-analysis";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -77,6 +79,7 @@ export function DataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const { selectedCsvFile, dateFrom, dateTo } = useFilterStore();
 
   const table = useReactTable({
     data,
@@ -84,7 +87,6 @@ export function DataTable<TData, TValue>({
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    // Disable client-side pagination since we're using server-side
     manualPagination: true,
     pageCount: pagination?.totalPages || -1,
     getSortedRowModel: getSortedRowModel(),
@@ -100,15 +102,38 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="w-full">
+    <div className="w-full space-y-2 ">
       <DataTableFilters table={table} />
-
-      <TotalsDisplay totals={totals} isCsvMode={isCsvMode} />
-      <div className="rounded-md border uppercase">
+      <div className="p-2 space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <span>::[</span>
+            <p>
+              Total data:{" "}
+              <span className="font-bold text-primary">
+                {pagination?.total}
+              </span>
+            </p>
+            <span>]::</span>
+          </div>
+          {selectedCsvFile && (
+            <CsvAnalysis
+              filename={selectedCsvFile}
+              dateFrom={dateFrom}
+              dateTo={dateTo}
+            />
+          )}
+        </div>
+        <TotalsDisplay totals={totals} isCsvMode={isCsvMode} />
+      </div>
+      <div className=" uppercase">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow
+                key={headerGroup.id}
+                className="bg-primary text-primary-foreground hover:bg-primary"
+              >
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead key={header.id}>

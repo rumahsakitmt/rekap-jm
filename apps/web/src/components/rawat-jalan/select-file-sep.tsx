@@ -16,8 +16,8 @@ const SelectFileSEP = () => {
   );
   return (
     <Select value={selectedCsvFile} onValueChange={setSelectedCsvFile}>
-      <SelectTrigger className="flex-1">
-        <SelectValue placeholder="Select CSV file..." />
+      <SelectTrigger className="w-full">
+        <SelectValue placeholder="Pilih CSV file..." />
       </SelectTrigger>
       <SelectContent>
         {uploadedFiles.data?.map((file) => (

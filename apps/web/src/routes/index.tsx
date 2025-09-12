@@ -90,15 +90,8 @@ function HomeComponent() {
   );
 
   return (
-    <div className="container mx-auto px-4 py-2">
+    <div className="py-2">
       <div className="flex justify-end gap-2">
-        <div className="mt-4">
-          {rawatJalan.data?.pagination.total && (
-            <p className="text-sm text-muted-foreground">
-              Total: {rawatJalan.data?.pagination.total}
-            </p>
-          )}
-        </div>
         <UploadCSVSheet />
         {selectedCsvFile !== "" && (
           <>

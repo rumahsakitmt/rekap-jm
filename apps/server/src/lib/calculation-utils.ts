@@ -21,6 +21,8 @@ export interface CalculationResult {
   radiologi: number;
   dpjp_utama: number;
   konsul: number;
+  usgCount: number;
+  nonUsgCount: number;
   yang_terbagi: number;
   percent_dari_klaim: number;
 }
@@ -54,6 +56,14 @@ export function calculateFinancials(
         item.nm_perawatan && item.nm_perawatan.toLowerCase().includes("usg")
     ).length || 0;
   const nonUsgCount = (total_permintaan_radiologi || 0) - usgCount;
+
+  // Debug logging
+  console.log("Calculation debug:", {
+    jnsPerawatanRadiologi,
+    total_permintaan_radiologi,
+    usgCount,
+    nonUsgCount,
+  });
 
   const radiologi =
     usgCount > 0
@@ -96,6 +106,8 @@ export function calculateFinancials(
     radiologi,
     dpjp_utama,
     konsul,
+    usgCount,
+    nonUsgCount,
     yang_terbagi,
     percent_dari_klaim,
   };

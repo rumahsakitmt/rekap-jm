@@ -19,8 +19,8 @@ const SelectPoliklinik = () => {
 
   return (
     <Select value={selectedPoliklinik} onValueChange={setSelectedPoliklinik}>
-      <SelectTrigger className="flex-1">
-        <SelectValue placeholder="Select poliklinik..." />
+      <SelectTrigger className="w-full">
+        <SelectValue placeholder="Pilih poliklinik..." />
       </SelectTrigger>
       <SelectContent>
         {polikliniks.data?.data?.map((poliklinik) => (

@@ -9,18 +9,20 @@ export default function Header() {
   ] as const;
 
   return (
-    <div className="flex flex-row items-center justify-between px-2 py-2 container mx-auto">
-      <nav className="flex gap-4 ">
-        {links.map(({ to, label }) => {
-          return (
-            <Link key={to} to={to}>
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
-      <div className="flex items-center gap-2">
-        <ModeToggle />
+    <div className="w-full border-y border-dashed">
+      <div className="flex flex-row items-center justify-between px-2 py-4 container mx-auto border-x border-dashed">
+        <nav className="flex gap-4">
+          {links.map(({ to, label }) => {
+            return (
+              <Link key={to} to={to}>
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="flex items-center gap-2">
+          <ModeToggle />
+        </div>
       </div>
     </div>
   );
