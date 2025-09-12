@@ -9,9 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ReportRawatJalanRouteImport } from './routes/report-rawat-jalan'
 import { Route as BridgingRouteImport } from './routes/bridging'
 import { Route as IndexRouteImport } from './routes/index'
 
+const ReportRawatJalanRoute = ReportRawatJalanRouteImport.update({
+  id: '/report-rawat-jalan',
+  path: '/report-rawat-jalan',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BridgingRoute = BridgingRouteImport.update({
   id: '/bridging',
   path: '/bridging',
@@ -26,31 +32,42 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/bridging': typeof BridgingRoute
+  '/report-rawat-jalan': typeof ReportRawatJalanRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/bridging': typeof BridgingRoute
+  '/report-rawat-jalan': typeof ReportRawatJalanRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/bridging': typeof BridgingRoute
+  '/report-rawat-jalan': typeof ReportRawatJalanRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/bridging'
+  fullPaths: '/' | '/bridging' | '/report-rawat-jalan'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/bridging'
-  id: '__root__' | '/' | '/bridging'
+  to: '/' | '/bridging' | '/report-rawat-jalan'
+  id: '__root__' | '/' | '/bridging' | '/report-rawat-jalan'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BridgingRoute: typeof BridgingRoute
+  ReportRawatJalanRoute: typeof ReportRawatJalanRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/report-rawat-jalan': {
+      id: '/report-rawat-jalan'
+      path: '/report-rawat-jalan'
+      fullPath: '/report-rawat-jalan'
+      preLoaderRoute: typeof ReportRawatJalanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/bridging': {
       id: '/bridging'
       path: '/bridging'
@@ -71,6 +88,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BridgingRoute: BridgingRoute,
+  ReportRawatJalanRoute: ReportRawatJalanRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

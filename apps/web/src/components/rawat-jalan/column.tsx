@@ -49,7 +49,7 @@ export const createColumns = (
   const baseColumns: ColumnDef<RawatJalanData>[] = [
     {
       accessorKey: "tgl_perawatan",
-      header: "Tanggal Perawatan",
+      header: "Tanggal",
       cell: ({ row }) => {
         const value = row.getValue("tgl_perawatan") as string | null;
         return value ? format(new Date(value), "dd MMM yyyy") : "-";
@@ -146,7 +146,7 @@ export const createColumns = (
     },
     {
       accessorKey: "total_permintaan_radiologi",
-      header: "Permintaan Radiologi",
+      header: "Radiologi",
       cell: ({ row }) => {
         const value = row.getValue("total_permintaan_radiologi") as number;
         const radiologiData = row.original.jns_perawatan_radiologi;
@@ -197,7 +197,7 @@ export const createColumns = (
     },
     {
       accessorKey: "total_permintaan_lab",
-      header: "Permintaan Lab",
+      header: "Lab",
       cell: ({ row }) => {
         return (
           <span className="text-center">
@@ -275,11 +275,12 @@ export const createColumns = (
           );
         },
       },
+
       {
-        accessorKey: "konsul",
-        header: "Konsul",
+        accessorKey: "radiologi",
+        header: "Radiologi",
         cell: ({ row }) => {
-          const value = row.getValue("konsul") as number;
+          const value = row.getValue("radiologi") as number;
           return (
             <span className="text-right font-mono">
               {value > 0 ? formatCurrency(value) : "-"}
@@ -289,7 +290,7 @@ export const createColumns = (
       },
       {
         accessorKey: "laboratorium",
-        header: "Laboratorium",
+        header: "Lab",
         cell: ({ row }) => {
           const value = row.getValue("laboratorium") as number;
           return (
@@ -300,10 +301,10 @@ export const createColumns = (
         },
       },
       {
-        accessorKey: "radiologi",
-        header: "Radiologi",
+        accessorKey: "konsul",
+        header: "Konsul",
         cell: ({ row }) => {
-          const value = row.getValue("radiologi") as number;
+          const value = row.getValue("konsul") as number;
           return (
             <span className="text-right font-mono">
               {value > 0 ? formatCurrency(value) : "-"}
@@ -329,9 +330,9 @@ export const createColumns = (
         cell: ({ row }) => {
           const value = row.getValue("percent_dari_klaim") as number;
           return (
-            <span className="text-center font-mono">
+            <p className="text-center font-mono">
               {value !== undefined ? `${value}%` : "-"}
-            </span>
+            </p>
           );
         },
       },

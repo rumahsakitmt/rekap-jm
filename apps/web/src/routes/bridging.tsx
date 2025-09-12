@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { trpc, trpcClient } from "@/utils/trpc";
+import { trpcClient } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 import { startOfMonth, endOfMonth } from "date-fns";
-import { formatCurrency } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -16,7 +15,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
-import { useState } from "react";
 import {
   Select,
   SelectContent,
@@ -24,23 +22,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DatePicker } from "@/components/calendar";
+import { DatePicker } from "@/components/date-picker";
 import { Copy, Check } from "lucide-react";
+import { useFilterStore, useUIState } from "@/stores/filter-store";
 
 export const Route = createFileRoute("/bridging")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const [search, setSearch] = useState("");
-  const [limit, setLimit] = useState<number | undefined>(50);
-  const [dateFrom, setDateFrom] = useState<Date | undefined>(() =>
-    startOfMonth(new Date())
-  );
-  const [dateTo, setDateTo] = useState<Date | undefined>(() =>
-    endOfMonth(new Date())
-  );
-  const [copiedItems, setCopiedItems] = useState<Set<string>>(new Set());
+  // Use filter store
+  const {
+    search,
+    limit,
+    dateFrom,
+    dateTo,
+    setSearch,
+    setLimit,
+    setDateFrom,
+    setDateTo,
+    selectedCsvFile,
+  } = useFilterStore();
+
+  console.log(selectedCsvFile);
+  const { copiedItems, addCopiedItem, removeCopiedItem } = useUIState();
 
   const {
     data: bridgingSepData,
@@ -60,13 +65,9 @@ function RouteComponent() {
   const copyToClipboard = async (text: string, itemId: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopiedItems((prev) => new Set([...prev, itemId]));
+      addCopiedItem(itemId);
       setTimeout(() => {
-        setCopiedItems((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(itemId);
-          return newSet;
-        });
+        removeCopiedItem(itemId);
       }, 2000);
     } catch (err) {
       console.error("Failed to copy: ", err);

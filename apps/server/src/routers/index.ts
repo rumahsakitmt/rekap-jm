@@ -4,6 +4,8 @@ import { sql } from "drizzle-orm";
 import { bridgingSepRouter } from "./bridging-sep";
 import { regPeriksaRouter } from "./reg-periksa";
 import { csvUploadRouter } from "./csv-upload";
+import { dokterRouter } from "./dokter";
+import { poliklinikRouter } from "./poliklinik";
 
 export const appRouter = router({
   healthCheck: publicProcedure.query(async () => {
@@ -21,5 +23,7 @@ export const appRouter = router({
   bridgingSep: bridgingSepRouter,
   regPeriksa: regPeriksaRouter,
   csvUpload: csvUploadRouter,
+  dokter: dokterRouter,
+  poliklinik: poliklinikRouter,
 });
 export type AppRouter = typeof appRouter;

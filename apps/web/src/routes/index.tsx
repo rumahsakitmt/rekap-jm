@@ -1,53 +1,36 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
-import { startOfMonth, endOfMonth } from "date-fns";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState, useEffect } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { DatePicker } from "@/components/calendar";
-import { UploadCSVSheet } from "@/components/upload-csv-sheet";
-import { ChevronUp, ChevronDown, BarChart3 } from "lucide-react";
 import { DataTable, createColumns } from "@/components/rawat-jalan";
-import { CsvAnalysis } from "@/components/csv-analysis";
+import { useFilterStore, useUIState } from "@/stores/filter-store";
+import { FileText } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
   component: HomeComponent,
 });
 
 function HomeComponent() {
-  const [search, setSearch] = useState("");
-  const [limit, setLimit] = useState<number | undefined>(50);
-  const [offset, setOffset] = useState(0);
-  const [dateFrom, setDateFrom] = useState<Date | undefined>(() =>
-    startOfMonth(new Date())
-  );
-  const [dateTo, setDateTo] = useState<Date | undefined>(() =>
-    endOfMonth(new Date())
-  );
-  const [selectedCsvFile, setSelectedCsvFile] = useState<string | undefined>();
-  const [showCsvAnalysis, setShowCsvAnalysis] = useState(false);
-  const [copiedItems, setCopiedItems] = useState<Set<string>>(new Set());
-  const [showScrollButtons, setShowScrollButtons] = useState(false);
+  const {
+    search,
+    limit,
+    offset,
+    dateFrom,
+    dateTo,
+    selectedCsvFile,
+    selectedDoctor,
+    selectedPoliklinik,
+  } = useFilterStore();
+
+  const { copiedItems, addCopiedItem, removeCopiedItem } = useUIState();
 
   const handleCopy = async (text: string, id: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopiedItems((prev) => new Set(prev).add(id));
+      addCopiedItem(id);
       setTimeout(() => {
-        setCopiedItems((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(id);
-          return newSet;
-        });
+        removeCopiedItem(id);
       }, 2000);
     } catch (err) {
       console.error("Failed to copy: ", err);
@@ -63,182 +46,31 @@ function HomeComponent() {
       dateTo: dateTo || undefined,
       includeTotals: true,
       ...(selectedCsvFile && { filename: selectedCsvFile }),
+      ...(selectedDoctor && { kd_dokter: selectedDoctor }),
+      ...(selectedPoliklinik && { kd_poli: selectedPoliklinik }),
     })
   );
 
-  const uploadedFiles = useQuery(
-    trpc.csvUpload.getUploadedFiles.queryOptions()
-  );
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const scrollToBottom = () => {
-    window.scrollTo({
-      top: document.body.scrollHeight,
-      behavior: "smooth",
-    });
-  };
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop =
-        window.pageYOffset || document.documentElement.scrollTop;
-      setShowScrollButtons(scrollTop > 300);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
     <div className="container mx-auto px-4 py-2">
-      <Card className="sticky top-0 z-10">
-        <CardHeader className="flex items-center justify-between">
-          <CardTitle>Filter & Search</CardTitle>
-          <UploadCSVSheet />
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <label className="text-sm font-medium">Search (No Rawat/SEP)</label>
-            <Input
-              placeholder="Search by no_rawat or no_sep..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div>
-              <label className="text-sm font-medium">Date From</label>
-              <DatePicker date={dateFrom} setDate={setDateFrom} />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Date To</label>
-              <DatePicker date={dateTo} setDate={setDateTo} />
-            </div>
-            <div>
-              <label className="text-sm font-medium">CSV File</label>
-              <div className="flex gap-2">
-                <Select
-                  value={selectedCsvFile}
-                  onValueChange={(value) => {
-                    setSelectedCsvFile(value);
-                    setShowCsvAnalysis(false);
-                  }}
-                >
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Select CSV file..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {uploadedFiles.data?.map((file) => (
-                      <SelectItem key={file.filename} value={file.filename}>
-                        {file.filename}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Limit</label>
-              <Select
-                value={limit?.toString() || "no-limit"}
-                onValueChange={(value) =>
-                  setLimit(value === "no-limit" ? undefined : Number(value))
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Limit" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
-                  <SelectItem value="250">250</SelectItem>
-                  <SelectItem value="500">500</SelectItem>
-                  <SelectItem value="no-limit">No Limit</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button
-              className="self-end"
-              onClick={() => {
-                setSearch("");
-                setLimit(50);
-                setOffset(0);
-                setSelectedCsvFile(undefined);
-                setShowCsvAnalysis(false);
-                setDateFrom(startOfMonth(new Date()));
-                setDateTo(endOfMonth(new Date()));
-              }}
-              variant="outline"
-            >
-              Clear Filters
-            </Button>
-          </div>
-
-          {selectedCsvFile && (
-            <Button
-              onClick={() => setShowCsvAnalysis(!showCsvAnalysis)}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-1"
-            >
-              <BarChart3 className="h-4 w-4" />
-              {showCsvAnalysis ? "Hide" : "Analyze"}
-            </Button>
-          )}
-        </CardContent>
-      </Card>
-
-      {showCsvAnalysis && selectedCsvFile && (
-        <div className="mb-6">
-          <CsvAnalysis
-            filename={selectedCsvFile}
-            dateFrom={dateFrom}
-            dateTo={dateTo}
-          />
+      {selectedCsvFile !== "" && (
+        <div className="flex justify-end">
+          <Link
+            to="/report-rawat-jalan"
+            className={cn(buttonVariants({ variant: "default" }))}
+          >
+            <FileText />
+            Report Rawat Jalan
+          </Link>
         </div>
       )}
-
-      <div className="flex justify-between items-center py-4">
-        <div className="flex items-center gap-4">
-          <p className="text-end">
-            Total data: {rawatJalan.data?.data?.length || 0}
-          </p>
-        </div>
-      </div>
       <DataTable
-        columns={createColumns(
-          copiedItems,
-          handleCopy,
-          selectedCsvFile !== undefined
-        )}
+        columns={createColumns(copiedItems, handleCopy, selectedCsvFile !== "")}
         data={rawatJalan.data?.data || []}
         totals={rawatJalan.data?.totals}
-        isCsvMode={selectedCsvFile !== undefined}
+        pagination={rawatJalan.data?.pagination}
+        isCsvMode={selectedCsvFile !== ""}
       />
-
-      {showScrollButtons && (
-        <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-50">
-          <Button
-            onClick={scrollToTop}
-            size="sm"
-            className="rounded-full w-12 h-12 shadow-lg"
-            variant="outline"
-          >
-            <ChevronUp className="h-4 w-4" />
-          </Button>
-          <Button
-            onClick={scrollToBottom}
-            size="sm"
-            className="rounded-full w-12 h-12 shadow-lg"
-            variant="outline"
-          >
-            <ChevronDown className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
     </div>
   );
 }
