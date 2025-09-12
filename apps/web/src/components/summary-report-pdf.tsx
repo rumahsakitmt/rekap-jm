@@ -1,59 +1,64 @@
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import { formatCurrency } from "@/lib/utils";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
 
 const styles = StyleSheet.create({
   page: {
     flexDirection: "column",
     backgroundColor: "#FFFFFF",
-    padding: 30,
+    padding: 20,
+    fontSize: 10,
   },
   header: {
     marginBottom: 20,
     textAlign: "center",
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 8,
     color: "#1f2937",
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#6b7280",
-    marginBottom: 5,
+    marginBottom: 4,
   },
   section: {
-    marginBottom: 20,
+    marginBottom: 15,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 8,
     color: "#1f2937",
     borderBottom: "1px solid #e5e7eb",
-    paddingBottom: 5,
+    paddingBottom: 4,
   },
   table: {
-    width: "auto",
+    width: "100%",
     borderStyle: "solid",
     borderWidth: 1,
     borderColor: "#e5e7eb",
-    marginBottom: 10,
+    marginBottom: 8,
   },
   tableRow: {
     flexDirection: "row",
     borderBottomWidth: 1,
     borderBottomColor: "#e5e7eb",
     borderBottomStyle: "solid",
+    minHeight: 20,
   },
   tableHeader: {
     backgroundColor: "#f9fafb",
     fontWeight: "bold",
   },
   tableCell: {
-    padding: 8,
-    fontSize: 12,
+    padding: 6,
+    fontSize: 10,
     flex: 1,
+    wordWrap: "break-word",
   },
   tableCellRight: {
     textAlign: "right",
@@ -66,14 +71,17 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#6b7280",
     fontStyle: "italic",
-    padding: 20,
+    padding: 15,
+    fontSize: 10,
   },
   grid: {
     flexDirection: "row",
     justifyContent: "space-between",
+    flexWrap: "wrap",
   },
   gridItem: {
     width: "48%",
+    marginBottom: 10,
   },
 });
 
@@ -96,21 +104,22 @@ interface SummaryReportPDFProps {
 }
 
 export function SummaryReportPDF({ data, filters }: SummaryReportPDFProps) {
-  const formatDate = (date?: string) => {
-    if (!date) return "N/A";
-    return new Date(date).toLocaleDateString("id-ID");
-  };
-
   return (
     <Document>
-      {/* First Page - DPJP and Konsul */}
-      <Page size="A4" style={styles.page}>
-        {/* Header */}
+      <Page size="A4" orientation="landscape" style={styles.page} wrap>
         <View style={styles.header}>
-          <Text style={styles.title}>Laporan Ringkasan Rawat Jalan</Text>
+          <Text style={styles.title}>
+            Laporan Rekap Klaim - RSUD Mamuju Tengah
+          </Text>
           <Text style={styles.subtitle}>
-            Periode: {formatDate(filters.dateFrom)} -{" "}
-            {formatDate(filters.dateTo)}
+            Pasien Rawat Jalan, Pediode tanggal{" "}
+            {format(new Date(filters.dateFrom || ""), "dd MMMM yyyy", {
+              locale: id,
+            })}{" "}
+            s/d{" "}
+            {format(new Date(filters.dateTo || ""), "dd MMMM yyyy", {
+              locale: id,
+            })}
           </Text>
           {filters.selectedDoctor && (
             <Text style={styles.subtitle}>
@@ -124,16 +133,13 @@ export function SummaryReportPDF({ data, filters }: SummaryReportPDFProps) {
           )}
         </View>
 
-        {/* Content Grid */}
         <View style={styles.grid}>
-          {/* DPJP Section */}
           <View style={styles.gridItem}>
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>DPJP</Text>
 
               {data.dpjp.length > 0 ? (
                 <View style={styles.table}>
-                  {/* Table Header */}
                   <View style={[styles.tableRow, styles.tableHeader]}>
                     <Text style={styles.tableCell}>Nama Dokter</Text>
                     <Text style={[styles.tableCell, styles.tableCellRight]}>
@@ -141,7 +147,6 @@ export function SummaryReportPDF({ data, filters }: SummaryReportPDFProps) {
                     </Text>
                   </View>
 
-                  {/* Table Rows */}
                   {data.dpjp.map((item, index) => (
                     <View key={index} style={styles.tableRow}>
                       <Text style={styles.tableCell}>{item.name}</Text>
@@ -151,7 +156,6 @@ export function SummaryReportPDF({ data, filters }: SummaryReportPDFProps) {
                     </View>
                   ))}
 
-                  {/* Total Row */}
                   <View style={[styles.tableRow, styles.totalRow]}>
                     <Text style={styles.tableCell}>Total DPJP</Text>
                     <Text style={[styles.tableCell, styles.tableCellRight]}>
@@ -160,19 +164,17 @@ export function SummaryReportPDF({ data, filters }: SummaryReportPDFProps) {
                   </View>
                 </View>
               ) : (
-                <Text style={styles.emptyState}>No DPJP data available</Text>
+                <Text style={styles.emptyState}>Tidak ada DPJP</Text>
               )}
             </View>
           </View>
 
-          {/* Konsul Section */}
           <View style={styles.gridItem}>
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Konsul</Text>
 
               {data.konsul.length > 0 ? (
                 <View style={styles.table}>
-                  {/* Table Header */}
                   <View style={[styles.tableRow, styles.tableHeader]}>
                     <Text style={styles.tableCell}>Nama Dokter</Text>
                     <Text style={[styles.tableCell, styles.tableCellRight]}>
@@ -180,7 +182,6 @@ export function SummaryReportPDF({ data, filters }: SummaryReportPDFProps) {
                     </Text>
                   </View>
 
-                  {/* Table Rows */}
                   {data.konsul.map((item, index) => (
                     <View key={index} style={styles.tableRow}>
                       <Text style={styles.tableCell}>{item.name}</Text>
@@ -190,7 +191,6 @@ export function SummaryReportPDF({ data, filters }: SummaryReportPDFProps) {
                     </View>
                   ))}
 
-                  {/* Total Row */}
                   <View style={[styles.tableRow, styles.totalRow]}>
                     <Text style={styles.tableCell}>Total Konsul</Text>
                     <Text style={[styles.tableCell, styles.tableCellRight]}>
@@ -199,20 +199,17 @@ export function SummaryReportPDF({ data, filters }: SummaryReportPDFProps) {
                   </View>
                 </View>
               ) : (
-                <Text style={styles.emptyState}>
-                  No consultation data available
-                </Text>
+                <Text style={styles.emptyState}>Tidak ada konsul</Text>
               )}
             </View>
           </View>
         </View>
       </Page>
-
-      {(data.labTotal && data.labTotal > 0) ||
-      (data.radTotal && data.radTotal > 0) ? (
-        <Page size="A4" style={styles.page}>
+      <Page size="A4" orientation="landscape" style={styles.page} wrap>
+        {(data.labTotal && data.labTotal > 0) ||
+        (data.radTotal && data.radTotal > 0) ? (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Ringkasan Lainnya</Text>
+            <Text style={styles.sectionTitle}>Ruangan</Text>
             <View style={styles.table}>
               <View style={[styles.tableRow, styles.tableHeader]}>
                 <Text style={styles.tableCell}>Jenis</Text>
@@ -238,8 +235,8 @@ export function SummaryReportPDF({ data, filters }: SummaryReportPDFProps) {
               )}
             </View>
           </View>
-        </Page>
-      ) : null}
+        ) : null}
+      </Page>
     </Document>
   );
 }
