@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ReportRawatJalanRouteImport } from './routes/report-rawat-jalan'
+import { Route as RawatInapRouteImport } from './routes/rawat-inap'
 import { Route as BridgingRouteImport } from './routes/bridging'
 import { Route as IndexRouteImport } from './routes/index'
 
 const ReportRawatJalanRoute = ReportRawatJalanRouteImport.update({
   id: '/report-rawat-jalan',
   path: '/report-rawat-jalan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RawatInapRoute = RawatInapRouteImport.update({
+  id: '/rawat-inap',
+  path: '/rawat-inap',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BridgingRoute = BridgingRouteImport.update({
@@ -32,30 +38,34 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/bridging': typeof BridgingRoute
+  '/rawat-inap': typeof RawatInapRoute
   '/report-rawat-jalan': typeof ReportRawatJalanRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/bridging': typeof BridgingRoute
+  '/rawat-inap': typeof RawatInapRoute
   '/report-rawat-jalan': typeof ReportRawatJalanRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/bridging': typeof BridgingRoute
+  '/rawat-inap': typeof RawatInapRoute
   '/report-rawat-jalan': typeof ReportRawatJalanRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/bridging' | '/report-rawat-jalan'
+  fullPaths: '/' | '/bridging' | '/rawat-inap' | '/report-rawat-jalan'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/bridging' | '/report-rawat-jalan'
-  id: '__root__' | '/' | '/bridging' | '/report-rawat-jalan'
+  to: '/' | '/bridging' | '/rawat-inap' | '/report-rawat-jalan'
+  id: '__root__' | '/' | '/bridging' | '/rawat-inap' | '/report-rawat-jalan'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BridgingRoute: typeof BridgingRoute
+  RawatInapRoute: typeof RawatInapRoute
   ReportRawatJalanRoute: typeof ReportRawatJalanRoute
 }
 
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/report-rawat-jalan'
       fullPath: '/report-rawat-jalan'
       preLoaderRoute: typeof ReportRawatJalanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rawat-inap': {
+      id: '/rawat-inap'
+      path: '/rawat-inap'
+      fullPath: '/rawat-inap'
+      preLoaderRoute: typeof RawatInapRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/bridging': {
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BridgingRoute: BridgingRoute,
+  RawatInapRoute: RawatInapRoute,
   ReportRawatJalanRoute: ReportRawatJalanRoute,
 }
 export const routeTree = rootRouteImport

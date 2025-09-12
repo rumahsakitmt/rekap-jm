@@ -23,7 +23,7 @@ export function createBaseRegPeriksaQuery(
       no_rekam_medis: reg_periksa.no_rkm_medis,
       jns_perawatan: sql<string>`JSON_ARRAYAGG(
         CASE 
-          WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' 
+          WHEN (${jns_perawatan.nm_perawatan} LIKE '%konsul%' OR ${jns_perawatan.nm_perawatan} LIKE '%visite%')
           AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%'
           AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%'
           AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%'
@@ -55,8 +55,37 @@ export function createBaseRegPeriksaQuery(
         JOIN ${jns_perawatan_radiologi} jpr ON ppr.kd_jenis_prw = jpr.kd_jenis_prw
         WHERE pr.no_rawat = ${reg_periksa.no_rawat}
       )`,
-      konsul_count: sql<number>`SUM(CASE WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%' THEN 1 ELSE 0 END)`,
-      kd_dokter: reg_periksa.kd_dokter,
+      konsul_count: sql<number>`SUM(CASE WHEN (${jns_perawatan.nm_perawatan} LIKE '%konsul%' OR ${jns_perawatan.nm_perawatan} LIKE '%visite%') AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%' THEN 1 ELSE 0 END)`,
+      kd_dokter: sql<string>`CASE 
+        WHEN ${poliklinik.nm_poli} = 'IGD' AND (
+          SELECT COUNT(*) 
+          FROM ${rawat_jl_drpr} rjd2
+          JOIN ${jns_perawatan} jp2 ON rjd2.kd_jenis_prw = jp2.kd_jenis_prw
+          WHERE rjd2.no_rawat = ${reg_periksa.no_rawat}
+          AND (jp2.nm_perawatan LIKE '%konsul%' OR jp2.nm_perawatan LIKE '%visite%')
+          AND jp2.nm_perawatan NOT LIKE '%hp%'
+          AND jp2.nm_perawatan NOT LIKE '%radiologi%'
+          AND jp2.nm_perawatan NOT LIKE '%dokter umum%'
+          AND jp2.nm_perawatan NOT LIKE '%antar spesialis%'
+        ) > 0
+        THEN (
+          SELECT rjd3.kd_dokter
+          FROM ${rawat_jl_drpr} rjd3
+          JOIN ${jns_perawatan} jp3 ON rjd3.kd_jenis_prw = jp3.kd_jenis_prw
+          WHERE rjd3.no_rawat = ${reg_periksa.no_rawat}
+          AND (jp3.nm_perawatan LIKE '%konsul%' OR jp3.nm_perawatan LIKE '%visite%')
+          AND jp3.nm_perawatan NOT LIKE '%hp%'
+          AND jp3.nm_perawatan NOT LIKE '%radiologi%'
+          AND jp3.nm_perawatan NOT LIKE '%dokter umum%'
+          AND jp3.nm_perawatan NOT LIKE '%antar spesialis%'
+          LIMIT 1
+        )
+        ELSE COALESCE(
+          ${rawat_jl_drpr.kd_dokter},
+          ${dokter.kd_dokter},
+          'Unknown'
+        )
+      END`,
       nip: rawat_jl_drpr.nip,
       tgl_perawatan: sql<string>`DATE_FORMAT(${reg_periksa.tgl_registrasi}, '%e %b %Y')`,
       jam_rawat: reg_periksa.jam_reg,
@@ -79,7 +108,45 @@ export function createBaseRegPeriksaQuery(
         FROM ${permintaan_lab} 
         WHERE ${permintaan_lab.no_rawat} = ${reg_periksa.no_rawat}
       )`,
-      nm_dokter: dokter.nm_dokter,
+      nm_dokter: sql<string>`CASE 
+        WHEN ${poliklinik.nm_poli} = 'IGD' AND (
+          SELECT COUNT(*) 
+          FROM ${rawat_jl_drpr} rjd2
+          JOIN ${jns_perawatan} jp2 ON rjd2.kd_jenis_prw = jp2.kd_jenis_prw
+          WHERE rjd2.no_rawat = ${reg_periksa.no_rawat}
+          AND (jp2.nm_perawatan LIKE '%konsul%' OR jp2.nm_perawatan LIKE '%visite%')
+          AND jp2.nm_perawatan NOT LIKE '%hp%'
+          AND jp2.nm_perawatan NOT LIKE '%radiologi%'
+          AND jp2.nm_perawatan NOT LIKE '%dokter umum%'
+          AND jp2.nm_perawatan NOT LIKE '%antar spesialis%'
+        ) > 0
+        THEN (
+          SELECT d.nm_dokter 
+          FROM ${dokter} d 
+          WHERE d.kd_dokter = (
+            SELECT rjd3.kd_dokter
+            FROM ${rawat_jl_drpr} rjd3
+            JOIN ${jns_perawatan} jp3 ON rjd3.kd_jenis_prw = jp3.kd_jenis_prw
+            WHERE rjd3.no_rawat = ${reg_periksa.no_rawat}
+            AND (jp3.nm_perawatan LIKE '%konsul%' OR jp3.nm_perawatan LIKE '%visite%')
+            AND jp3.nm_perawatan NOT LIKE '%hp%'
+            AND jp3.nm_perawatan NOT LIKE '%radiologi%'
+            AND jp3.nm_perawatan NOT LIKE '%dokter umum%'
+            AND jp3.nm_perawatan NOT LIKE '%antar spesialis%'
+            LIMIT 1
+          )
+        )
+        ELSE COALESCE(
+          (
+            SELECT d.nm_dokter 
+            FROM ${dokter} d 
+            WHERE d.kd_dokter = ${rawat_jl_drpr.kd_dokter}
+            LIMIT 1
+          ),
+          ${dokter.nm_dokter},
+          'Unknown'
+        )
+      END`,
       nm_pasien: pasien.nm_pasien,
       no_rkm_medis: pasien.no_rkm_medis,
       jk: pasien.jk,
@@ -124,13 +191,11 @@ export function createSummaryReportQuery(
 ) {
   return db
     .select({
-      kd_dokter: reg_periksa.kd_dokter,
-      nm_dokter: dokter.nm_dokter,
-      konsul_count: sql<number>`SUM(CASE WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%' THEN 1 ELSE 0 END)`,
-      no_sep: bridging_sep.no_sep,
+      no_rawat: reg_periksa.no_rawat,
+      no_rekam_medis: reg_periksa.no_rkm_medis,
       jns_perawatan: sql<string>`JSON_ARRAYAGG(
         CASE 
-          WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' 
+          WHEN (${jns_perawatan.nm_perawatan} LIKE '%konsul%' OR ${jns_perawatan.nm_perawatan} LIKE '%visite%')
           AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%'
           AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%'
           AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%'
@@ -149,16 +214,6 @@ export function createSummaryReportQuery(
           ELSE NULL
         END
       )`,
-      total_permintaan_radiologi: sql<number>`(
-        SELECT COUNT(*) 
-        FROM ${permintaan_radiologi} 
-        WHERE ${permintaan_radiologi.no_rawat} = ${reg_periksa.no_rawat}
-      )`,
-      total_permintaan_lab: sql<number>`(
-        SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
-        FROM ${permintaan_lab} 
-        WHERE ${permintaan_lab.no_rawat} = ${reg_periksa.no_rawat}
-      )`,
       jns_perawatan_radiologi: sql<string>`(
         SELECT JSON_ARRAYAGG(
           JSON_OBJECT(
@@ -172,6 +227,104 @@ export function createSummaryReportQuery(
         JOIN ${jns_perawatan_radiologi} jpr ON ppr.kd_jenis_prw = jpr.kd_jenis_prw
         WHERE pr.no_rawat = ${reg_periksa.no_rawat}
       )`,
+      konsul_count: sql<number>`SUM(CASE WHEN (${jns_perawatan.nm_perawatan} LIKE '%konsul%' OR ${jns_perawatan.nm_perawatan} LIKE '%visite%') AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%' THEN 1 ELSE 0 END)`,
+      kd_dokter: sql<string>`CASE 
+        WHEN ${poliklinik.nm_poli} = 'IGD' AND (
+          SELECT COUNT(*) 
+          FROM ${rawat_jl_drpr} rjd2
+          JOIN ${jns_perawatan} jp2 ON rjd2.kd_jenis_prw = jp2.kd_jenis_prw
+          WHERE rjd2.no_rawat = ${reg_periksa.no_rawat}
+          AND (jp2.nm_perawatan LIKE '%konsul%' OR jp2.nm_perawatan LIKE '%visite%')
+          AND jp2.nm_perawatan NOT LIKE '%hp%'
+          AND jp2.nm_perawatan NOT LIKE '%radiologi%'
+          AND jp2.nm_perawatan NOT LIKE '%dokter umum%'
+          AND jp2.nm_perawatan NOT LIKE '%antar spesialis%'
+        ) > 0
+        THEN (
+          SELECT rjd3.kd_dokter
+          FROM ${rawat_jl_drpr} rjd3
+          JOIN ${jns_perawatan} jp3 ON rjd3.kd_jenis_prw = jp3.kd_jenis_prw
+          WHERE rjd3.no_rawat = ${reg_periksa.no_rawat}
+          AND (jp3.nm_perawatan LIKE '%konsul%' OR jp3.nm_perawatan LIKE '%visite%')
+          AND jp3.nm_perawatan NOT LIKE '%hp%'
+          AND jp3.nm_perawatan NOT LIKE '%radiologi%'
+          AND jp3.nm_perawatan NOT LIKE '%dokter umum%'
+          AND jp3.nm_perawatan NOT LIKE '%antar spesialis%'
+          LIMIT 1
+        )
+        ELSE COALESCE(
+          ${rawat_jl_drpr.kd_dokter},
+          ${dokter.kd_dokter},
+          'Unknown'
+        )
+      END`,
+      nip: rawat_jl_drpr.nip,
+      tgl_perawatan: sql<string>`DATE_FORMAT(${reg_periksa.tgl_registrasi}, '%e %b %Y')`,
+      jam_rawat: reg_periksa.jam_reg,
+      material: sql<number>`SUM(${rawat_jl_drpr.material})`,
+      bhp: sql<number>`SUM(${rawat_jl_drpr.bhp})`,
+      tarif_tindakandr: sql<number>`SUM(${rawat_jl_drpr.tarif_tindakandr})`,
+      tarif_tindakanpr: sql<number>`SUM(${rawat_jl_drpr.tarif_tindakanpr})`,
+      kso: sql<number>`SUM(${rawat_jl_drpr.kso})`,
+      menejemen: sql<number>`SUM(${rawat_jl_drpr.menejemen})`,
+      biaya_rawat: sql<number>`SUM(${rawat_jl_drpr.biaya_rawat})`,
+      stts_bayar: reg_periksa.status_bayar,
+      no_sep: bridging_sep.no_sep,
+      total_permintaan_radiologi: sql<number>`(
+        SELECT COUNT(*) 
+        FROM ${permintaan_radiologi} 
+        WHERE ${permintaan_radiologi.no_rawat} = ${reg_periksa.no_rawat}
+      )`,
+      total_permintaan_lab: sql<number>`(
+        SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
+        FROM ${permintaan_lab} 
+        WHERE ${permintaan_lab.no_rawat} = ${reg_periksa.no_rawat}
+      )`,
+      nm_dokter: sql<string>`CASE 
+        WHEN ${poliklinik.nm_poli} = 'IGD' AND (
+          SELECT COUNT(*) 
+          FROM ${rawat_jl_drpr} rjd2
+          JOIN ${jns_perawatan} jp2 ON rjd2.kd_jenis_prw = jp2.kd_jenis_prw
+          WHERE rjd2.no_rawat = ${reg_periksa.no_rawat}
+          AND (jp2.nm_perawatan LIKE '%konsul%' OR jp2.nm_perawatan LIKE '%visite%')
+          AND jp2.nm_perawatan NOT LIKE '%hp%'
+          AND jp2.nm_perawatan NOT LIKE '%radiologi%'
+          AND jp2.nm_perawatan NOT LIKE '%dokter umum%'
+          AND jp2.nm_perawatan NOT LIKE '%antar spesialis%'
+        ) > 0
+        THEN (
+          SELECT d.nm_dokter 
+          FROM ${dokter} d 
+          WHERE d.kd_dokter = (
+            SELECT rjd3.kd_dokter
+            FROM ${rawat_jl_drpr} rjd3
+            JOIN ${jns_perawatan} jp3 ON rjd3.kd_jenis_prw = jp3.kd_jenis_prw
+            WHERE rjd3.no_rawat = ${reg_periksa.no_rawat}
+            AND (jp3.nm_perawatan LIKE '%konsul%' OR jp3.nm_perawatan LIKE '%visite%')
+            AND jp3.nm_perawatan NOT LIKE '%hp%'
+            AND jp3.nm_perawatan NOT LIKE '%radiologi%'
+            AND jp3.nm_perawatan NOT LIKE '%dokter umum%'
+            AND jp3.nm_perawatan NOT LIKE '%antar spesialis%'
+            LIMIT 1
+          )
+        )
+        ELSE COALESCE(
+          (
+            SELECT d.nm_dokter 
+            FROM ${dokter} d 
+            WHERE d.kd_dokter = ${rawat_jl_drpr.kd_dokter}
+            LIMIT 1
+          ),
+          ${dokter.nm_dokter},
+          'Unknown'
+        )
+      END`,
+      nm_pasien: pasien.nm_pasien,
+      no_rkm_medis: pasien.no_rkm_medis,
+      jk: pasien.jk,
+      tgl_lahir: pasien.tgl_lahir,
+      alamat: pasien.alamat,
+      nm_poli: poliklinik.nm_poli,
     })
     .from(reg_periksa)
     .leftJoin(dokter, eq(reg_periksa.kd_dokter, dokter.kd_dokter))
@@ -196,7 +349,10 @@ export function createSummaryReportQuery(
         jns_perawatan_radiologi.kd_jenis_prw
       )
     )
+    .leftJoin(pasien, eq(reg_periksa.no_rkm_medis, pasien.no_rkm_medis))
+    .leftJoin(poliklinik, eq(reg_periksa.kd_poli, poliklinik.kd_poli))
     .where(whereCondition)
     .groupBy(reg_periksa.no_rawat)
-    .having(havingCondition);
+    .having(havingCondition)
+    .orderBy(asc(reg_periksa.tgl_registrasi));
 }

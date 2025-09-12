@@ -28,7 +28,7 @@ function HomeComponent() {
   const { copiedItems, addCopiedItem, removeCopiedItem } = useUIState();
 
   const { data: csvData, isLoading: isLoadingCsv } = useQuery({
-    ...trpc.regPeriksa.downloadCsv.queryOptions({
+    ...trpc.rawatJalan.downloadCsv.queryOptions({
       search: search || undefined,
       dateFrom: dateFrom || undefined,
       dateTo: dateTo || undefined,
@@ -75,7 +75,7 @@ function HomeComponent() {
   };
 
   const rawatJalan = useQuery(
-    trpc.regPeriksa.getRegPeriksa.queryOptions({
+    trpc.rawatJalan.getRegPeriksa.queryOptions({
       search: search || undefined,
       ...(limit && { limit }),
       ...(offset > 0 && { offset }),

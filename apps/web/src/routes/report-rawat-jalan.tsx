@@ -24,7 +24,7 @@ function RouteComponent() {
     isLoading,
     error,
   } = useQuery(
-    trpc.regPeriksa.getSummaryReport.queryOptions({
+    trpc.rawatJalan.getSummaryReport.queryOptions({
       dateFrom,
       dateTo,
       filename: selectedCsvFile || undefined,

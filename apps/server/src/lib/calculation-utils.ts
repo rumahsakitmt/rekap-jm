@@ -12,6 +12,7 @@ export interface CalculationInput {
   konsul_count: number;
   jns_perawatan?: string;
   nm_dokter?: string;
+  nm_poli?: string;
 }
 
 export interface CalculationResult {
@@ -35,9 +36,12 @@ export function calculateFinancials(
     konsul_count,
     jns_perawatan,
     nm_dokter,
+    nm_poli,
   } = input;
 
-  const alokasi = tarif * 0.2;
+  // If nm_poli is IGD, set alokasi and dpjp_utama to 0
+  const isIGD = nm_poli === "IGD" && konsul_count < 1;
+  const alokasi = isIGD ? 0 : tarif * 0.2;
   const laboratorium = (total_permintaan_lab || 0) * 10000;
 
   const jnsPerawatanRadiologi = JSON.parse(
@@ -56,7 +60,7 @@ export function calculateFinancials(
       ? Math.max(0, tarif - 185000) * usgCount * 0.2 + nonUsgCount * 15000
       : (total_permintaan_radiologi || 0) * 15000;
 
-  const dpjp_utama = alokasi - laboratorium - radiologi;
+  const dpjp_utama = isIGD ? 0 : alokasi - laboratorium - radiologi;
 
   let shouldCountKonsul = konsul_count && konsul_count >= 1;
 

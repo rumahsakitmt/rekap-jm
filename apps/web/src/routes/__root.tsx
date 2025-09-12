@@ -1,5 +1,6 @@
 import Header from "@/components/header";
 import Loader from "@/components/loader";
+import { Footer } from "@/components/footer";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import type { trpc } from "@/utils/trpc";
@@ -45,7 +46,6 @@ function RootComponent() {
     select: (s) => s.isLoading,
   });
 
-
   return (
     <>
       <HeadContent />
@@ -58,6 +58,7 @@ function RootComponent() {
         <div className="grid grid-rows-[auto_1fr] h-svh">
           <Header />
           {isFetching ? <Loader /> : <Outlet />}
+          <Footer />
         </div>
         <Toaster richColors />
       </ThemeProvider>

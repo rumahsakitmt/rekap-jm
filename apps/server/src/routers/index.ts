@@ -2,7 +2,7 @@ import { publicProcedure, router } from "../lib/trpc";
 import { db } from "../db";
 import { sql } from "drizzle-orm";
 import { bridgingSepRouter } from "./bridging-sep";
-import { regPeriksaRouter } from "./reg-periksa";
+import { rawatJalanRouter } from "./rawat-jalan";
 import { csvUploadRouter } from "./csv-upload";
 import { dokterRouter } from "./dokter";
 import { poliklinikRouter } from "./poliklinik";
@@ -21,7 +21,7 @@ export const appRouter = router({
     }
   }),
   bridgingSep: bridgingSepRouter,
-  regPeriksa: regPeriksaRouter,
+  rawatJalan: rawatJalanRouter,
   csvUpload: csvUploadRouter,
   dokter: dokterRouter,
   poliklinik: poliklinikRouter,

@@ -7,7 +7,7 @@ import {
   getRegPeriksaDataForCsv,
 } from "../lib/reg-periksa-queries";
 
-export const regPeriksaRouter = router({
+export const rawatJalanRouter = router({
   getRegPeriksa: publicProcedure
     .input(
       z.object({

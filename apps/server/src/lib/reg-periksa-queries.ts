@@ -87,6 +87,7 @@ export async function getRegPeriksaData(
         konsul_count: row.konsul_count || 0,
         jns_perawatan: row.jns_perawatan || undefined,
         nm_dokter: row.nm_dokter || undefined,
+        nm_poli: row.nm_poli || undefined,
       };
       const calculation = calculateFinancials(calculationInput);
       return accumulateTotals(acc, tarif, calculation);
@@ -105,6 +106,7 @@ export async function getRegPeriksaData(
       konsul_count: row.konsul_count || 0,
       jns_perawatan: row.jns_perawatan || undefined,
       nm_dokter: row.nm_dokter || undefined,
+      nm_poli: row.nm_poli || undefined,
     };
     const calculation = calculateFinancials(calculationInput);
 
@@ -199,6 +201,7 @@ export async function getSummaryReport(
       konsul_count: row.konsul_count || 0,
       jns_perawatan: row.jns_perawatan || undefined,
       nm_dokter: row.nm_dokter || undefined,
+      nm_poli: row.nm_poli || undefined,
     };
     const calculation = calculateFinancials(calculationInput);
 
@@ -249,6 +252,7 @@ export async function getSummaryReport(
   }
 
   const dpjpTotals = Array.from(dpjpMap.values())
+    .filter((item) => item.total > 0)
     .sort((a, b) => b.total - a.total)
     .map((item) => ({
       name: item.name,
@@ -256,6 +260,7 @@ export async function getSummaryReport(
     }));
 
   const konsulTotals = Array.from(konsulMap.values())
+    .filter((item) => item.total > 0)
     .sort((a, b) => b.total - a.total)
     .map((item) => ({
       name: item.name,
@@ -321,6 +326,7 @@ export async function getRegPeriksaDataForCsv(
       konsul_count: row.konsul_count || 0,
       jns_perawatan: row.jns_perawatan || undefined,
       nm_dokter: row.nm_dokter || undefined,
+      nm_poli: row.nm_poli || undefined,
     };
     const calculation = calculateFinancials(calculationInput);
 
@@ -355,6 +361,7 @@ export async function getRegPeriksaDataForCsv(
       konsul_count: row.konsul_count || 0,
       jns_perawatan: row.jns_perawatan || undefined,
       nm_dokter: row.nm_dokter || undefined,
+      nm_poli: row.nm_poli || undefined,
     };
     const calculation = calculateFinancials(calculationInput);
     return accumulateTotals(acc, tarif, calculation);
