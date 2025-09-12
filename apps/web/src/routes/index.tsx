@@ -3,9 +3,10 @@ import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 import { DataTable, createColumns } from "@/components/rawat-jalan";
 import { useFilterStore, useUIState } from "@/stores/filter-store";
-import { FileText } from "lucide-react";
+import { Download, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import UploadCSVSheet from "@/components/upload-csv-sheet";
 
 export const Route = createFileRoute("/")({
   component: HomeComponent,
@@ -53,7 +54,6 @@ function HomeComponent() {
   const handleDownloadCsv = async () => {
     if (isLoadingCsv) return;
     try {
-      // Create blob and download
       const blob = new Blob([csvData || ""], {
         type: "text/csv;charset=utf-8;",
       });
@@ -61,7 +61,6 @@ function HomeComponent() {
       const url = URL.createObjectURL(blob);
       link.setAttribute("href", url);
 
-      // Generate filename with current date and filters
       const dateStr = new Date().toISOString().split("T")[0];
       const filename = `rawat-jalan-${dateStr}.csv`;
       link.setAttribute("download", filename);
@@ -92,24 +91,37 @@ function HomeComponent() {
 
   return (
     <div className="container mx-auto px-4 py-2">
-      {selectedCsvFile !== "" && (
-        <div className="flex justify-end">
-          <Link
-            to="/report-rawat-jalan"
-            className={cn(buttonVariants({ variant: "default" }))}
-          >
-            <FileText />
-            Report Rawat Jalan
-          </Link>
+      <div className="flex justify-end gap-2">
+        <div className="mt-4">
+          {rawatJalan.data?.pagination.total && (
+            <p className="text-sm text-muted-foreground">
+              Total: {rawatJalan.data?.pagination.total}
+            </p>
+          )}
         </div>
-      )}
+        <UploadCSVSheet />
+        {selectedCsvFile !== "" && (
+          <>
+            <Link
+              to="/report-rawat-jalan"
+              className={cn(buttonVariants({ variant: "default" }))}
+            >
+              <FileText />
+              Report Rawat Jalan
+            </Link>
+            <Button onClick={handleDownloadCsv} variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Download CSV
+            </Button>
+          </>
+        )}
+      </div>
       <DataTable
         columns={createColumns(copiedItems, handleCopy, selectedCsvFile !== "")}
         data={rawatJalan.data?.data || []}
         totals={rawatJalan.data?.totals}
         pagination={rawatJalan.data?.pagination}
         isCsvMode={selectedCsvFile !== ""}
-        onDownloadCsv={handleDownloadCsv}
       />
     </div>
   );

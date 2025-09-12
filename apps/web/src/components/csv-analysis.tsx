@@ -2,13 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
-import {
-  FileText,
-  AlertCircle,
-  CheckCircle,
-  XCircle,
-  Users,
-} from "lucide-react";
+import { FileText, AlertCircle } from "lucide-react";
 import { DialogNotFoundSep } from "./rawat-jalan/dialog-not-found-sep";
 
 interface CsvAnalysisProps {
@@ -73,7 +67,7 @@ export function CsvAnalysis({ filename, dateFrom, dateTo }: CsvAnalysisProps) {
         File CSV : {data.filename}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 border">
+      <div className="grid grid-cols-2 md:grid-cols-3 border">
         <div className="bg-muted p-2 text-center">
           <p className="text-2xl font-bold ">{data.stats.totalCsvRecords}</p>
           <p className="text-sm text-muted-foreground">SEP dari CASEMIX</p>
@@ -89,13 +83,6 @@ export function CsvAnalysis({ filename, dateFrom, dateTo }: CsvAnalysisProps) {
 
         <div className="bg-red-50 p-2 text-center">
           <DialogNotFoundSep notFoundInDb={data.notFoundInDb} />
-        </div>
-
-        <div className="bg-yellow-50 p-2 text-center">
-          <p className="text-2xl font-bold text-yellow-500 text-center">
-            {data.stats.totalInDbNotInCsv}
-          </p>
-          <p className="text-sm text-muted-foreground">Belum terklaim</p>
         </div>
       </div>
     </div>

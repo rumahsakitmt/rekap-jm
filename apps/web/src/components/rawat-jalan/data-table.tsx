@@ -69,7 +69,6 @@ export function DataTable<TData, TValue>({
   isCsvMode = false,
   totals,
   pagination,
-  onDownloadCsv,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -102,15 +101,8 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-4">
-        <DataTableFilters table={table} />
-        {onDownloadCsv && isCsvMode && (
-          <Button onClick={onDownloadCsv} variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Download CSV
-          </Button>
-        )}
-      </div>
+      <DataTableFilters table={table} />
+
       <TotalsDisplay totals={totals} isCsvMode={isCsvMode} />
       <div className="rounded-md border uppercase">
         <Table>

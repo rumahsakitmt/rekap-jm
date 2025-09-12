@@ -305,7 +305,13 @@ export async function getRegPeriksaDataForCsv(
 
   const allResults = await baseQuery;
 
-  const processedResult = allResults.map((row) => {
+  const csvSepSet = new Set(csvData.map((item) => item.no_sep));
+
+  const filteredResults = allResults.filter((row) =>
+    csvSepSet.has(row.no_sep || "")
+  );
+
+  const processedResult = filteredResults.map((row) => {
     const tarif = csvTarifMap.get(row.no_sep || "") || row.biaya_rawat || 0;
     const calculationInput: CalculationInput = {
       tarif,
@@ -338,5 +344,87 @@ export async function getRegPeriksaDataForCsv(
     };
   });
 
-  return convertToCsv(processedResult);
+  // Calculate totals using the original row data before processing
+  const totals = filteredResults.reduce((acc, row) => {
+    const tarif = csvTarifMap.get(row.no_sep || "") || row.biaya_rawat || 0;
+    const calculationInput: CalculationInput = {
+      tarif,
+      total_permintaan_lab: row.total_permintaan_lab || 0,
+      total_permintaan_radiologi: row.total_permintaan_radiologi || 0,
+      jns_perawatan_radiologi: row.jns_perawatan_radiologi || "[]",
+      konsul_count: row.konsul_count || 0,
+      jns_perawatan: row.jns_perawatan || undefined,
+      nm_dokter: row.nm_dokter || undefined,
+    };
+    const calculation = calculateFinancials(calculationInput);
+    return accumulateTotals(acc, tarif, calculation);
+  }, createEmptyTotals());
+
+  // Create totals row
+  const totalsRow = {
+    tgl_perawatan: "",
+    no_rekam_medis: "",
+    nm_pasien: "TOTAL",
+    no_sep: "",
+    tarif_from_csv: Math.round(totals.totalTarif),
+    nm_poli: "",
+    nm_dokter: "",
+    konsul_count: "",
+    total_permintaan_lab: "",
+    total_permintaan_radiologi: "",
+    alokasi: Math.round(totals.totalAlokasi),
+    dpjp_utama: Math.round(totals.totalDpjpUtama),
+    konsul: Math.round(totals.totalKonsul),
+    laboratorium: Math.round(totals.totalLaboratorium),
+    radiologi: Math.round(totals.totalRadiologi),
+    yang_terbagi: Math.round(totals.totalYangTerbagi),
+    percent_dari_klaim:
+      totals.count > 0
+        ? Math.round(totals.totalPercentDariKlaim / totals.count)
+        : 0,
+  };
+
+  // Add totals row to the data
+  const dataWithTotals = [...processedResult, totalsRow];
+
+  return convertToCsv(dataWithTotals, {
+    fields: [
+      "tgl_perawatan",
+      "no_rekam_medis",
+      "nm_pasien",
+      "no_sep",
+      "tarif_from_csv",
+      "nm_poli",
+      "nm_dokter",
+      "konsul_count",
+      "total_permintaan_lab",
+      "total_permintaan_radiologi",
+      "alokasi",
+      "dpjp_utama",
+      "konsul",
+      "laboratorium",
+      "radiologi",
+      "yang_terbagi",
+      "percent_dari_klaim",
+    ],
+    fieldLabels: {
+      tgl_perawatan: "Tanggal Perawatan",
+      no_rekam_medis: "No RM",
+      nm_pasien: "Nama Pasien",
+      no_sep: "No SEP",
+      tarif_from_csv: "Total Tarif",
+      nm_poli: "Poli",
+      nm_dokter: "DPJP",
+      konsul_count: "Konsul",
+      total_permintaan_lab: "Lab",
+      total_permintaan_radiologi: "Radiologi",
+      alokasi: "Alokasi",
+      dpjp_utama: "DPJP Utama",
+      konsul: "Konsul",
+      laboratorium: "Laboratorium",
+      radiologi: "Radiologi",
+      yang_terbagi: "Yang Terbagi",
+      percent_dari_klaim: "Persentase Dari Klaim",
+    },
+  });
 }

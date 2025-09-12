@@ -58,7 +58,7 @@ export function createBaseRegPeriksaQuery(
       konsul_count: sql<number>`SUM(CASE WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%' THEN 1 ELSE 0 END)`,
       kd_dokter: reg_periksa.kd_dokter,
       nip: rawat_jl_drpr.nip,
-      tgl_perawatan: reg_periksa.tgl_registrasi,
+      tgl_perawatan: sql<string>`DATE_FORMAT(${reg_periksa.tgl_registrasi}, '%e %b %Y')`,
       jam_rawat: reg_periksa.jam_reg,
       material: sql<number>`SUM(${rawat_jl_drpr.material})`,
       bhp: sql<number>`SUM(${rawat_jl_drpr.bhp})`,
