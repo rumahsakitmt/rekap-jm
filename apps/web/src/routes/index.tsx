@@ -92,7 +92,6 @@ function HomeComponent() {
   return (
     <div className="py-2">
       <div className="flex justify-end gap-2">
-        <UploadCSVSheet />
         {selectedCsvFile !== "" && (
           <>
             <Link
@@ -108,6 +107,7 @@ function HomeComponent() {
             </Button>
           </>
         )}
+        <UploadCSVSheet />
       </div>
       <DataTable
         columns={createColumns(copiedItems, handleCopy, selectedCsvFile !== "")}

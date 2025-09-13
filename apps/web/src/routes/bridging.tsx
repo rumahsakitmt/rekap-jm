@@ -44,7 +44,6 @@ function RouteComponent() {
     selectedCsvFile,
   } = useFilterStore();
 
-  console.log(selectedCsvFile);
   const { copiedItems, addCopiedItem, removeCopiedItem } = useUIState();
 
   const {

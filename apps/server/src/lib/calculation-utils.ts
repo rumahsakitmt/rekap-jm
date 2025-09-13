@@ -57,14 +57,6 @@ export function calculateFinancials(
     ).length || 0;
   const nonUsgCount = (total_permintaan_radiologi || 0) - usgCount;
 
-  // Debug logging
-  console.log("Calculation debug:", {
-    jnsPerawatanRadiologi,
-    total_permintaan_radiologi,
-    usgCount,
-    nonUsgCount,
-  });
-
   const radiologi =
     usgCount > 0
       ? Math.max(0, tarif - 185000) * usgCount * 0.2 + nonUsgCount * 15000

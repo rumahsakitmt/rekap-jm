@@ -129,13 +129,6 @@ export async function getRegPeriksaData(
       ...calculation,
     };
 
-    // Debug logging
-    console.log("Processed result for", row.no_sep, ":", {
-      usgCount: result.usgCount,
-      nonUsgCount: result.nonUsgCount,
-      calculation,
-    });
-
     return result;
   });
 
