@@ -6,6 +6,7 @@ import { rawatJalanRouter } from "./rawat-jalan";
 import { csvUploadRouter } from "./csv-upload";
 import { dokterRouter } from "./dokter";
 import { poliklinikRouter } from "./poliklinik";
+import { rawatInapRouter } from "./rawat-inap";
 
 export const appRouter = router({
   healthCheck: publicProcedure.query(async () => {
@@ -22,6 +23,7 @@ export const appRouter = router({
   }),
   bridgingSep: bridgingSepRouter,
   rawatJalan: rawatJalanRouter,
+  rawatInap: rawatInapRouter,
   csvUpload: csvUploadRouter,
   dokter: dokterRouter,
   poliklinik: poliklinikRouter,

@@ -1,0 +1,342 @@
+import { type ColumnDef } from "@tanstack/react-table";
+import { Button } from "@/components/ui/button";
+import { Check, Copy } from "lucide-react";
+import { format } from "date-fns";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+
+export type RawatInapData = {
+  no_rawat: string | null;
+  no_rkm_medis: string | null;
+  tgl_masuk: string | null;
+  tgl_keluar: string | null;
+  kd_dokter: string | null;
+  nm_dokter: string | null;
+  nm_pasien: string | null;
+  kd_poli: string | null;
+  status_bayar: string | null;
+  no_sep: string | null;
+  visite_dpjp_utama: number | null;
+  visite_konsul_1: Array<{
+    kd_jenis_prw: string;
+    nm_perawatan: string;
+    nm_dokter: string;
+    nm_bangsal: string;
+  }> | null;
+  visite_konsul_2: Array<{
+    kd_jenis_prw: string;
+    nm_perawatan: string;
+    nm_dokter: string;
+    nm_bangsal: string;
+  }> | null;
+  visite_konsul_3: Array<{
+    kd_jenis_prw: string;
+    nm_perawatan: string;
+    nm_dokter: string;
+    nm_bangsal: string;
+  }> | null;
+  visite_dokter_umum: Array<{
+    kd_jenis_prw: string;
+    nm_perawatan: string;
+    nm_dokter: string;
+    nm_bangsal: string;
+  }> | null;
+  jns_perawatan?: Array<{
+    kd_jenis_prw: string;
+    nm_perawatan: string;
+    nm_dokter: string;
+    nm_bangsal: string;
+  }>;
+  kd_jenis_prw: string | null;
+  kamar: string | null;
+  hari_rawat: number | null;
+  total_permintaan_radiologi: number | null;
+  total_permintaan_lab: number | null;
+  has_operasi: boolean | null;
+  operator: string | null;
+  anestesi: string | null;
+};
+
+export const createColumns = (
+  copiedItems: Set<string>,
+  handleCopy: (text: string, id: string) => void
+) => {
+  const columns: ColumnDef<RawatInapData>[] = [
+    {
+      accessorKey: "tgl_masuk",
+      header: "Tanggal Masuk",
+      cell: ({ row }) => {
+        const value = row.original.tgl_masuk;
+        return value ? format(new Date(value), "dd MMM yyyy") : "-";
+      },
+    },
+    {
+      accessorKey: "tgl_keluar",
+      header: "Tanggal Keluar",
+      cell: ({ row }) => {
+        const value = row.original.tgl_keluar;
+        return value ? format(new Date(value), "dd MMM yyyy") : "-";
+      },
+    },
+    {
+      accessorKey: "no_rkm_medis",
+      header: "No RM",
+      cell: ({ row }) => {
+        const value = row.original.no_rkm_medis;
+        if (!value) return "-";
+        const id = `rekam-medis-${value}`;
+        return (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleCopy(value, id)}
+          >
+            {value}
+            {copiedItems.has(id) ? (
+              <Check size={8} className="ml-1" />
+            ) : (
+              <Copy size={8} className="ml-1" />
+            )}
+          </Button>
+        );
+      },
+    },
+    {
+      accessorKey: "no_rawat",
+      header: "No Rawat",
+      cell: ({ row }) => {
+        const value = row.original.no_rawat;
+        if (!value) return "-";
+        const id = `rawat-${value}`;
+        return (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleCopy(value, id)}
+          >
+            {value}
+            {copiedItems.has(id) ? (
+              <Check size={8} className="ml-1" />
+            ) : (
+              <Copy size={8} className="ml-1" />
+            )}
+          </Button>
+        );
+      },
+    },
+
+    {
+      accessorKey: "no_sep",
+      header: "No SEP",
+      cell: ({ row }) => {
+        const value = row.original.no_sep;
+        if (!value) return "-";
+        const id = `sep-${value}`;
+        return (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleCopy(value, id)}
+          >
+            {value}
+            {copiedItems.has(id) ? (
+              <Check size={8} className="ml-1" />
+            ) : (
+              <Copy size={8} className="ml-1" />
+            )}
+          </Button>
+        );
+      },
+    },
+    {
+      accessorKey: "nm_pasien",
+      header: "Nama Pasien",
+      cell: ({ row }) => {
+        const value = row.original.nm_pasien;
+        return <span className="font-mono text-sm">{value || "-"}</span>;
+      },
+    },
+    {
+      accessorKey: "kamar",
+      header: "Kamar",
+      cell: ({ row }) => {
+        const value = row.original.kamar;
+        return <span className="font-mono text-sm">{value || "-"}</span>;
+      },
+    },
+    {
+      accessorKey: "nm_dokter",
+      header: "DPJP",
+      cell: ({ row }) => {
+        const value = row.original.nm_dokter;
+        return <span className="font-mono text-sm">{value || "-"}</span>;
+      },
+    },
+    {
+      accessorKey: "visite_dpjp_utama",
+      header: "Visite DPJP Utama",
+      cell: ({ row }) => {
+        const value = row.original.visite_dpjp_utama;
+        return (
+          <div className="font-mono text-sm text-center">{value || ""}</div>
+        );
+      },
+    },
+    {
+      accessorKey: "visite_anastesi",
+      header: "Visite Konsul Anastesi",
+      cell: ({ row }) => {
+        const value = row.original.visite_konsul_1;
+        return (
+          <Tooltip>
+            <TooltipTrigger>
+              <Button variant="ghost" size="sm">
+                {value?.length || ""}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="bg-background text-foreground">
+              {value?.map((item) => (
+                <div key={item.kd_jenis_prw}>
+                  <div>{item.nm_perawatan}</div>
+                  <div className="font-bold">{item.nm_dokter}</div>
+                </div>
+              ))}
+            </TooltipContent>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      accessorKey: "visite_konsul_2",
+      header: "Visite Konsul 1",
+      cell: ({ row }) => {
+        const value = row.original.visite_konsul_2;
+        return (
+          <Tooltip>
+            <TooltipTrigger>
+              <Button variant="ghost" size="sm">
+                {value?.length || ""}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="bg-background text-foreground">
+              {value?.map((item) => (
+                <div key={item.kd_jenis_prw}>
+                  <div>{item.nm_perawatan}</div>
+                  <div className="font-bold">{item.nm_dokter}</div>
+                </div>
+              ))}
+            </TooltipContent>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      accessorKey: "visite_konsul_3",
+      header: "Visite Konsul 2",
+      cell: ({ row }) => {
+        const value = row.original.visite_konsul_3;
+        return (
+          <Tooltip>
+            <TooltipTrigger>
+              <Button variant="ghost" size="sm">
+                {value?.length || ""}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="bg-background text-foreground">
+              {value?.map((item) => (
+                <div key={item.kd_jenis_prw}>
+                  <div>{item.nm_perawatan}</div>
+                  <div className="font-bold">{item.nm_dokter}</div>
+                </div>
+              ))}
+            </TooltipContent>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      accessorKey: "visite_dokter_umum",
+      header: "Visite Dokter Umum",
+      cell: ({ row }) => {
+        const value = row.original.visite_dokter_umum;
+        return (
+          <Tooltip>
+            <TooltipTrigger>
+              <Button variant="ghost" size="sm" className="mx-auto">
+                {value?.length || ""}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="bg-background text-foreground">
+              {value?.map((item) => (
+                <div key={item.kd_jenis_prw}>
+                  <div>{item.nm_perawatan}</div>
+                  <div className="font-bold">{item.nm_dokter}</div>
+                </div>
+              ))}
+            </TooltipContent>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      accessorKey: "hari_rawat",
+      header: "Hari Rawat",
+      cell: ({ row }) => {
+        const value = row.original.hari_rawat;
+        return (
+          <div className="font-mono text-sm text-center">{value || ""}</div>
+        );
+      },
+    },
+    {
+      accessorKey: "total_permintaan_lab",
+      header: "Lab",
+      cell: ({ row }) => {
+        const value = row.original.total_permintaan_lab;
+        return (
+          <div className="font-mono text-sm text-center">{value || ""}</div>
+        );
+      },
+    },
+
+    {
+      accessorKey: "total_permintaan_radiologi",
+      header: "Radiologi",
+      cell: ({ row }) => {
+        const value = row.original.total_permintaan_radiologi;
+        return (
+          <div className="font-mono text-sm text-center">{value || ""}</div>
+        );
+      },
+    },
+    {
+      accessorKey: "has_operasi",
+      header: "Operasi",
+      cell: ({ row }) => {
+        const value = row.original.has_operasi;
+        return (
+          <div className="font-mono text-sm text-center">
+            {value ? "Ya" : "Tidak"}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "operator",
+      header: "Operator",
+      cell: ({ row }) => {
+        const value = row.original.operator;
+        return <div className="text-sm">{value || ""}</div>;
+      },
+    },
+    {
+      accessorKey: "anestesi",
+      header: "Anestesi",
+      cell: ({ row }) => {
+        const value = row.original.anestesi;
+        return <div className="text-sm">{value || ""}</div>;
+      },
+    },
+  ];
+
+  return columns;
+};

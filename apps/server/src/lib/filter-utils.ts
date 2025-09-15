@@ -72,7 +72,6 @@ export function buildFilterConditions(input: FilterInput) {
       let condition;
 
       if (filter.field === "konsul_count") {
-        // Aggregated fields go in HAVING clause
         const konsulCountExpr = sql<number>`SUM(CASE WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%' THEN 1 ELSE 0 END)`;
 
         switch (filter.operator) {
@@ -102,7 +101,6 @@ export function buildFilterConditions(input: FilterInput) {
           havingConditions.push(condition);
         }
       } else {
-        // Non-aggregated fields go in WHERE clause
         switch (filter.operator) {
           case "=":
             condition = eq(sql`${filter.field}`, numericValue);

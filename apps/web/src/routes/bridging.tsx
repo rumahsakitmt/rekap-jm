@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { trpcClient } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
-import { startOfMonth, endOfMonth } from "date-fns";
 import {
   Table,
   TableBody,
@@ -41,7 +40,6 @@ function RouteComponent() {
     setLimit,
     setDateFrom,
     setDateTo,
-    selectedCsvFile,
   } = useFilterStore();
 
   const { copiedItems, addCopiedItem, removeCopiedItem } = useUIState();
