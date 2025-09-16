@@ -1,0 +1,28 @@
+import * as m from "drizzle-orm/mysql-core";
+
+export const periksa_radiologi = m.mysqlTable("periksa_radiologi", {
+  no_rawat: m.varchar("no_rawat", { length: 17 }),
+  nip: m.varchar("nip", { length: 20 }),
+  kd_jenis_prw: m.varchar("kd_jenis_prw", { length: 15 }),
+  tgl_periksa: m.date("tgl_periksa"),
+  jam: m.time("jam"),
+  dokter_perujuk: m.varchar("dokter_perujuk", { length: 20 }),
+  bagian_rs: m.double("bagian_rs"),
+  bhp: m.double("bhp"),
+  tarif_perujuk: m.double("tarif_perujuk"),
+  tarif_tindakan_dokter: m.double("tarif_tindakan_dokter"),
+  tarif_tindakan_petugas: m.double("tarif_tindakan_petugas"),
+  kso: m.double("kso"),
+  menejemen: m.double("menejemen"),
+  biaya: m.double("biaya"),
+  kd_dokter: m.varchar("kd_dokter", { length: 20 }),
+  status: m.varchar("status", { length: 10 }),
+  proyeksi: m.varchar("proyeksi", { length: 50 }),
+  kV: m.varchar("kV", { length: 10 }),
+  mAS: m.varchar("mAS", { length: 10 }),
+  FFD: m.varchar("FFD", { length: 10 }),
+  BSF: m.varchar("BSF", { length: 10 }),
+  inak: m.varchar("inak", { length: 10 }),
+  jml_penyinaran: m.varchar("jml_penyinaran", { length: 10 }),
+  dosis: m.varchar("dosis", { length: 20 }),
+});

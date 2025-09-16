@@ -1,10 +1,9 @@
 import { Input } from "@/components/ui/input";
-import { DataTableViewOptions } from "./data-table";
 import { DatePicker } from "../date-picker";
 import { useFilterStore } from "@/stores/filter-store";
 import SelectFileSEP from "../rawat-jalan/select-file-sep";
 import { Button } from "../ui/button";
-import SelectDoctor from "../rawat-jalan/select-doctor";
+import SelectDPJP from "./select-dpjp";
 import SelectPoliklinik from "../rawat-jalan/select-poliklinik";
 
 interface DataTableFiltersProps {
@@ -41,7 +40,7 @@ export function DataTableFilters({ table }: DataTableFiltersProps) {
           <SelectFileSEP />
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <SelectDoctor />
+          <SelectDPJP />
           <SelectPoliklinik />
         </div>
         <div className="flex justify-end">

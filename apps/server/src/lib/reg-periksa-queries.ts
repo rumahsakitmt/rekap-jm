@@ -11,10 +11,10 @@ import {
 } from "./csv-utils";
 import {
   calculateFinancials,
-  accumulateTotals,
-  createEmptyTotals,
+  accumulateTotalsRawatJalan,
+  createEmptyRawatJalanTotals,
   type CalculationInput,
-  type TotalsAccumulator,
+  type RawatJalanTotalsAccumulator,
 } from "./calculation-utils";
 
 export interface RegPeriksaQueryInput extends FilterInput {
@@ -26,18 +26,11 @@ export interface RegPeriksaQueryInput extends FilterInput {
 
 export interface RegPeriksaResult {
   data: any[];
-  totals: {
-    totalTarif: number;
-    totalAlokasi: number;
-    totalDpjpUtama: number;
-    totalKonsul: number;
-    totalLaboratorium: number;
-    totalRadiologi: number;
-    totalYangTerbagi: number;
-    totalPercentDariKlaim: number;
-    averagePercentDariKlaim: number;
-    count: number;
-  } | null;
+  totals:
+    | (RawatJalanTotalsAccumulator & {
+        averagePercentDariKlaim: number;
+      })
+    | null;
   pagination: {
     total: number;
     limit: number;
@@ -74,7 +67,7 @@ export async function getRegPeriksaData(
   const page = Math.floor(offset / limit) + 1;
   const totalPages = Math.ceil(totalCount / limit);
 
-  let totals: TotalsAccumulator | null = null;
+  let totals: RawatJalanTotalsAccumulator | null = null;
   if (input.includeTotals) {
     const allResults = await baseQuery;
     totals = allResults.reduce((acc, row) => {
@@ -90,8 +83,8 @@ export async function getRegPeriksaData(
         nm_poli: row.nm_poli || undefined,
       };
       const calculation = calculateFinancials(calculationInput);
-      return accumulateTotals(acc, tarif, calculation);
-    }, createEmptyTotals());
+      return accumulateTotalsRawatJalan(acc, tarif, calculation);
+    }, createEmptyRawatJalanTotals());
   }
 
   const result = await baseQuery.offset(offset).limit(limit);
@@ -366,8 +359,8 @@ export async function getRegPeriksaDataForCsv(
       nm_poli: row.nm_poli || undefined,
     };
     const calculation = calculateFinancials(calculationInput);
-    return accumulateTotals(acc, tarif, calculation);
-  }, createEmptyTotals());
+    return accumulateTotalsRawatJalan(acc, tarif, calculation);
+  }, createEmptyRawatJalanTotals());
 
   // Create totals row
   const totalsRow = {

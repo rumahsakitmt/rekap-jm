@@ -9,6 +9,7 @@ import SelectPoliklinik from "./select-poliklinik";
 import { CsvAnalysis } from "../csv-analysis";
 import { KonsulFilterComponent } from "./konsul-filter";
 import { Plus } from "lucide-react";
+import { SupportFilter } from "./support-filter";
 
 interface DataTableFiltersProps {
   table: any;
@@ -57,9 +58,10 @@ export function DataTableFilters({ table }: DataTableFiltersProps) {
           <DatePicker date={dateTo} setDate={setDateTo} />
           <SelectFileSEP />
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <SelectDoctor />
           <SelectPoliklinik />
+          <SupportFilter />
         </div>
         <div className="flex justify-end">
           <Button onClick={clearFilters}>Hapus filter</Button>

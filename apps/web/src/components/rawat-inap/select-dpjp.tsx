@@ -11,7 +11,7 @@ import { trpc } from "@/utils/trpc";
 import { Button } from "../ui/button";
 import { X } from "lucide-react";
 
-const SelectDoctor = () => {
+const SelectDPJP = () => {
   const { selectedDoctor, setSelectedDoctor } = useFilterStore();
   const doctors = useQuery(
     trpc.dokter.getDoctor.queryOptions({
@@ -23,7 +23,7 @@ const SelectDoctor = () => {
     <div className="relative">
       <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
         <SelectTrigger className="w-full">
-          <SelectValue placeholder="Pilih dokter..." />
+          <SelectValue placeholder="Pilih DPJP..." />
         </SelectTrigger>
         <SelectContent>
           {doctors.data?.data?.map((doctor) => (
@@ -51,4 +51,4 @@ const SelectDoctor = () => {
   );
 };
 
-export default SelectDoctor;
+export default SelectDPJP;

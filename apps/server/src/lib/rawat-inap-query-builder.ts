@@ -8,13 +8,65 @@ import { penjab } from "../db/schema/penjab";
 import { bridging_sep } from "../db/schema/bridging_sep";
 import { dokter } from "../db/schema/dokter";
 import { permintaan_lab } from "../db/schema/permintaan_lab";
+import { periksa_lab } from "../db/schema/periksa_lab";
 import { permintaan_radiologi } from "../db/schema/permintaan_radiologi";
+import { periksa_radiologi } from "../db/schema/periksa_radiologi";
 import { permintaan_pemeriksaan_radiologi } from "../db/schema/permintaan_pemeriksaan_radiologi";
 import { jns_perawatan_radiologi } from "../db/schema/jns_perawatan_radiologi";
-import { sql, eq, asc } from "drizzle-orm";
+import { jns_perawatan } from "../db/schema/jns_perawatan";
+import { sql, eq, asc, inArray } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import { dpjp_ranap } from "@/db/schema/dpjp_ranap";
 import { operasi } from "@/db/schema/operasi";
+
+export async function getRadiologiData(noRawatList: string[]) {
+  return await db
+    .select({
+      no_rawat: permintaan_radiologi.no_rawat,
+      kd_jenis_prw: jns_perawatan_radiologi.kd_jenis_prw,
+      nm_perawatan: jns_perawatan_radiologi.nm_perawatan,
+      noorder: permintaan_radiologi.noorder,
+      kd_dokter: periksa_radiologi.kd_dokter,
+      nm_dokter: dokter.nm_dokter,
+    })
+    .from(permintaan_radiologi)
+    .innerJoin(
+      permintaan_pemeriksaan_radiologi,
+      eq(permintaan_radiologi.noorder, permintaan_pemeriksaan_radiologi.noorder)
+    )
+    .innerJoin(
+      jns_perawatan_radiologi,
+      eq(
+        permintaan_pemeriksaan_radiologi.kd_jenis_prw,
+        jns_perawatan_radiologi.kd_jenis_prw
+      )
+    )
+    .leftJoin(
+      periksa_radiologi,
+      sql`${permintaan_radiologi.no_rawat} = ${periksa_radiologi.no_rawat} AND ${permintaan_pemeriksaan_radiologi.kd_jenis_prw} = ${periksa_radiologi.kd_jenis_prw}`
+    )
+    .leftJoin(dokter, eq(periksa_radiologi.kd_dokter, dokter.kd_dokter))
+    .where(inArray(permintaan_radiologi.no_rawat, noRawatList));
+}
+
+export async function getLabData(noRawatList: string[]) {
+  return await db
+    .select({
+      no_rawat: periksa_lab.no_rawat,
+      kd_jenis_prw: jns_perawatan.kd_jenis_prw,
+      nm_perawatan: jns_perawatan.nm_perawatan,
+      kd_dokter: periksa_lab.kd_dokter,
+      nm_dokter: dokter.nm_dokter,
+      tgl_periksa: periksa_lab.tgl_periksa,
+    })
+    .from(periksa_lab)
+    .leftJoin(
+      jns_perawatan,
+      eq(periksa_lab.kd_jenis_prw, jns_perawatan.kd_jenis_prw)
+    )
+    .leftJoin(dokter, eq(periksa_lab.kd_dokter, dokter.kd_dokter))
+    .where(inArray(periksa_lab.no_rawat, noRawatList));
+}
 
 export function createRawatInapQuery(whereCondition?: SQL) {
   return db
@@ -32,13 +84,14 @@ export function createRawatInapQuery(whereCondition?: SQL) {
       tgl_keluar: kamarInap.tgl_keluar,
       stts_pulang: kamarInap.stts_pulang,
       lama: kamarInap.lama,
-      nm_dokter: dokter.nm_dokter,
+      nm_dokter: sql<string>`COALESCE(${dokter.nm_dokter}, '-')`,
       jns_perawatan: sql<string>`(
         SELECT COALESCE(
           JSON_ARRAYAGG(
             JSON_OBJECT(
               'kd_jenis_prw', jpi.kd_jenis_prw,
               'nm_perawatan', jpi.nm_perawatan,
+              'kd_dokter', d.kd_dokter,
               'nm_dokter', d.nm_dokter,
               'nm_bangsal', b.nm_bangsal
             )
@@ -52,19 +105,6 @@ export function createRawatInapQuery(whereCondition?: SQL) {
         INNER JOIN kamar k ON ${kamarInap.kd_kamar} = k.kd_kamar
         INNER JOIN bangsal b ON k.kd_bangsal = b.kd_bangsal
         WHERE rid.no_rawat = ${kamarInap.no_rawat}
-      )`,
-      jns_perawatan_radiologi: sql<string>`(
-        SELECT JSON_ARRAYAGG(
-          JSON_OBJECT(
-            'kd_jenis_prw', jpr.kd_jenis_prw,
-            'nm_perawatan', jpr.nm_perawatan,
-            'noorder', pr.noorder
-          )
-        )
-        FROM ${permintaan_radiologi} pr
-        JOIN ${permintaan_pemeriksaan_radiologi} ppr ON pr.noorder = ppr.noorder
-        JOIN ${jns_perawatan_radiologi} jpr ON ppr.kd_jenis_prw = jpr.kd_jenis_prw
-        WHERE pr.no_rawat = ${kamarInap.no_rawat}
       )`,
       total_permintaan_radiologi: sql<number>`(
         SELECT COUNT(*) 
@@ -93,8 +133,8 @@ export function createRawatInapQuery(whereCondition?: SQL) {
     .innerJoin(pasien, eq(reg_periksa.no_rkm_medis, pasien.no_rkm_medis))
     .innerJoin(kamar, eq(kamarInap.kd_kamar, kamar.kd_kamar))
     .innerJoin(bangsal, eq(kamar.kd_bangsal, bangsal.kd_bangsal))
-    .innerJoin(dpjp_ranap, eq(kamarInap.no_rawat, dpjp_ranap.no_rawat))
-    .innerJoin(dokter, eq(dpjp_ranap.kd_dokter, dokter.kd_dokter))
+    .leftJoin(dpjp_ranap, eq(kamarInap.no_rawat, dpjp_ranap.no_rawat))
+    .leftJoin(dokter, eq(dpjp_ranap.kd_dokter, dokter.kd_dokter))
     .innerJoin(penjab, eq(reg_periksa.kd_pj, penjab.kd_pj))
     .leftJoin(bridging_sep, eq(reg_periksa.no_rawat, bridging_sep.no_rawat))
     .leftJoin(operasi, eq(kamarInap.no_rawat, operasi.no_rawat))
@@ -108,7 +148,7 @@ export function createRawatInapSummaryQuery(whereCondition?: SQL) {
     .select({
       no_rawat: kamarInap.no_rawat,
       kd_dokter: dpjp_ranap.kd_dokter,
-      nm_dokter: dokter.nm_dokter,
+      nm_dokter: sql<string>`COALESCE(${dokter.nm_dokter}, '-')`,
       tgl_masuk: kamarInap.tgl_masuk,
       tgl_keluar: kamarInap.tgl_keluar,
       jns_perawatan: sql<string>`(
@@ -117,6 +157,7 @@ export function createRawatInapSummaryQuery(whereCondition?: SQL) {
             JSON_OBJECT(
               'kd_jenis_prw', jpi.kd_jenis_prw,
               'nm_perawatan', jpi.nm_perawatan,
+              'kd_dokter', d.kd_dokter,
               'nm_dokter', d.nm_dokter,
               'nm_bangsal', b.nm_bangsal
             )
@@ -130,19 +171,6 @@ export function createRawatInapSummaryQuery(whereCondition?: SQL) {
         INNER JOIN kamar k ON ${kamarInap.kd_kamar} = k.kd_kamar
         INNER JOIN bangsal b ON k.kd_bangsal = b.kd_bangsal
         WHERE rid.no_rawat = ${kamarInap.no_rawat}
-      )`,
-      jns_perawatan_radiologi: sql<string>`(
-        SELECT JSON_ARRAYAGG(
-          JSON_OBJECT(
-            'kd_jenis_prw', jpr.kd_jenis_prw,
-            'nm_perawatan', jpr.nm_perawatan,
-            'noorder', pr.noorder
-          )
-        )
-        FROM ${permintaan_radiologi} pr
-        JOIN ${permintaan_pemeriksaan_radiologi} ppr ON pr.noorder = ppr.noorder
-        JOIN ${jns_perawatan_radiologi} jpr ON ppr.kd_jenis_prw = jpr.kd_jenis_prw
-        WHERE pr.no_rawat = ${kamarInap.no_rawat}
       )`,
       total_permintaan_radiologi: sql<number>`(
         SELECT COUNT(*) 
@@ -162,8 +190,8 @@ export function createRawatInapSummaryQuery(whereCondition?: SQL) {
     .innerJoin(pasien, eq(reg_periksa.no_rkm_medis, pasien.no_rkm_medis))
     .innerJoin(kamar, eq(kamarInap.kd_kamar, kamar.kd_kamar))
     .innerJoin(bangsal, eq(kamar.kd_bangsal, bangsal.kd_bangsal))
-    .innerJoin(dpjp_ranap, eq(kamarInap.no_rawat, dpjp_ranap.no_rawat))
-    .innerJoin(dokter, eq(dpjp_ranap.kd_dokter, dokter.kd_dokter))
+    .leftJoin(dpjp_ranap, eq(kamarInap.no_rawat, dpjp_ranap.no_rawat))
+    .leftJoin(dokter, eq(dpjp_ranap.kd_dokter, dokter.kd_dokter))
     .innerJoin(penjab, eq(reg_periksa.kd_pj, penjab.kd_pj))
     .leftJoin(bridging_sep, eq(reg_periksa.no_rawat, bridging_sep.no_rawat))
     .leftJoin(operasi, eq(kamarInap.no_rawat, operasi.no_rawat))

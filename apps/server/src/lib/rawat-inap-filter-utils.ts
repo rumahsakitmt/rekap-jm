@@ -3,6 +3,8 @@ import { reg_periksa } from "../db/schema/reg_periksa";
 import { bridging_sep } from "../db/schema/bridging_sep";
 import { pasien } from "../db/schema/pasien";
 import { jns_perawatan_inap } from "../db/schema/jns_perawatan_inap";
+import { kamarInap } from "@/db/schema/kamar_inap";
+import { dpjp_ranap } from "../db/schema/dpjp_ranap";
 
 export interface RawatInapFilterInput {
   search?: string;
@@ -32,7 +34,7 @@ export function buildRawatInapFilterConditions(input: RawatInapFilterInput) {
   }
 
   if (input.kd_dokter) {
-    whereConditions.push(eq(reg_periksa.kd_dokter, input.kd_dokter));
+    whereConditions.push(eq(dpjp_ranap.kd_dokter, input.kd_dokter));
   }
 
   if (input.kd_poli) {

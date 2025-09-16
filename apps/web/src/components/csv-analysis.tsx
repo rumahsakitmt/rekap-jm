@@ -18,11 +18,17 @@ interface CsvAnalysisProps {
   filename: string;
   dateFrom?: Date;
   dateTo?: Date;
+  type: "rawat-jalan" | "rawat-inap";
 }
 
-export function CsvAnalysis({ filename, dateFrom, dateTo }: CsvAnalysisProps) {
+export function CsvAnalysis({
+  filename,
+  dateFrom,
+  dateTo,
+  type,
+}: CsvAnalysisProps) {
   const analysis = useQuery({
-    ...trpc.csvUpload.analyzeCsv.queryOptions({
+    ...trpc.csvUpload.analyzeCsvRawatInap.queryOptions({
       filename,
       dateFrom,
       dateTo,

@@ -5,7 +5,10 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import { db } from "../db";
 import { bridging_sep } from "../db/schema/bridging_sep";
-import { inArray, notInArray, and, gte, lte } from "drizzle-orm";
+import { rawatInapDrpr } from "../db/schema/rawat_inap_drpr";
+import { reg_periksa } from "../db/schema/reg_periksa";
+import { inArray, notInArray, and, gte, lte, eq } from "drizzle-orm";
+import { pasien } from "../db/schema/pasien";
 
 const csvUploadSchema = z.object({
   filename: z.string(),
@@ -246,6 +249,149 @@ export const csvUploadRouter = router({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to analyze CSV file",
+        });
+      }
+    }),
+
+  analyzeCsvRawatInap: publicProcedure
+    .input(csvUploadSchema)
+    .query(async ({ input }) => {
+      try {
+        const filepath = join(process.cwd(), "uploads", input.filename);
+        const csvContent = readFileSync(filepath, "utf-8");
+
+        const lines = csvContent.split("\n");
+        const csvData: { no_sep: string; tarif: number }[] = [];
+
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          if (trimmedLine) {
+            if (
+              trimmedLine.toLowerCase().includes("no_sep") ||
+              trimmedLine.toLowerCase().includes("rawat")
+            ) {
+              continue;
+            }
+
+            const columns = trimmedLine.split(",");
+            const noSep = columns[0]?.trim();
+            const tarifStr = columns[1]?.trim();
+
+            if (noSep && noSep.length > 0) {
+              const tarif = tarifStr ? parseFloat(tarifStr) || 0 : 0;
+              csvData.push({ no_sep: noSep, tarif });
+            }
+          }
+        }
+
+        const csvNoSepNumbers = [
+          ...new Set(csvData.map((item) => item.no_sep)),
+        ];
+
+        const conditions = [];
+        if (input.dateFrom) {
+          conditions.push(gte(bridging_sep.tglsep, input.dateFrom));
+        }
+        if (input.dateTo) {
+          conditions.push(lte(bridging_sep.tglsep, input.dateTo));
+        }
+
+        const foundInDb = await db
+          .select({
+            noSep: bridging_sep.no_sep,
+            nama_pasien: bridging_sep.nama_pasien,
+            tglsep: bridging_sep.tglsep,
+            nmppkpelayanan: bridging_sep.nmppkpelayanan,
+          })
+          .from(bridging_sep)
+          .where(
+            conditions.length > 0
+              ? and(
+                  inArray(bridging_sep.no_sep, csvNoSepNumbers),
+                  ...conditions
+                )
+              : inArray(bridging_sep.no_sep, csvNoSepNumbers)
+          );
+
+        const notInCsv = await db
+          .select({
+            noSep: bridging_sep.no_sep,
+            nama_pasien: bridging_sep.nama_pasien,
+            tglsep: bridging_sep.tglsep,
+            nmppkpelayanan: bridging_sep.nmppkpelayanan,
+          })
+          .from(bridging_sep)
+          .where(
+            conditions.length > 0
+              ? and(
+                  notInArray(bridging_sep.no_sep, csvNoSepNumbers),
+                  ...conditions
+                )
+              : notInArray(bridging_sep.no_sep, csvNoSepNumbers)
+          );
+
+        const foundInDbNumbers = new Set(foundInDb.map((item) => item.noSep));
+        const notFoundInDb = csvData.filter(
+          (item) => !foundInDbNumbers.has(item.no_sep)
+        );
+
+        const foundNoSepNumbers = foundInDb.map((item) => item.noSep);
+        const registrationInfo =
+          foundNoSepNumbers.length > 0
+            ? await db
+                .select({
+                  no_sep: bridging_sep.no_sep,
+                  no_rkm_medis: reg_periksa.no_rkm_medis,
+                  nm_pasien: pasien.nm_pasien,
+                  tgl_registrasi: reg_periksa.tgl_registrasi,
+                  kd_dokter: reg_periksa.kd_dokter,
+                  kd_poli: reg_periksa.kd_poli,
+                  status_lanjut: reg_periksa.status_lanjut,
+                })
+                .from(reg_periksa)
+                .innerJoin(
+                  bridging_sep,
+                  eq(reg_periksa.no_rawat, bridging_sep.no_rawat)
+                )
+                .leftJoin(
+                  pasien,
+                  eq(reg_periksa.no_rkm_medis, pasien.no_rkm_medis)
+                )
+                .where(inArray(bridging_sep.no_sep, foundNoSepNumbers))
+            : [];
+
+        const stats = {
+          totalCsvRecords: csvData.length,
+          uniqueSepNumbers: csvNoSepNumbers.length,
+          totalFoundInDb: foundInDb.length,
+          totalNotFoundInDb: notFoundInDb.length,
+          totalInDbNotInCsv: notInCsv.length,
+          totalTarifInCsv: csvData.reduce((sum, item) => sum + item.tarif, 0),
+          averageTarifInCsv:
+            csvData.length > 0
+              ? csvData.reduce((sum, item) => sum + item.tarif, 0) /
+                csvData.length
+              : 0,
+          totalRegistrationRecords: registrationInfo.length,
+        };
+
+        return {
+          success: true,
+          filename: input.filename,
+          stats,
+          notFoundInDb: notFoundInDb.map((item) => ({
+            no_sep: item.no_sep,
+            tarif: item.tarif,
+          })),
+          foundInDb: foundInDb,
+          notInCsv: notInCsv,
+          registrationInfo,
+        };
+      } catch (error) {
+        console.error("CSV rawat inap analysis error:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to analyze rawat inap CSV file",
         });
       }
     }),

@@ -3,6 +3,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { DataTable, createColumns } from "@/components/rawat-inap";
 import { useFilterStore, useUIState } from "@/stores/filter-store";
+import { Link } from "@tanstack/react-router";
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
+import { FileText, Download } from "lucide-react";
+import UploadCSVSheet from "@/components/upload-csv-sheet";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/rawat-inap")({
   component: RouteComponent,
@@ -50,13 +56,33 @@ function RouteComponent() {
 
   return (
     <div className="py-2">
+      <div className="flex justify-end gap-2">
+        {selectedCsvFile !== "" && (
+          <>
+            <Link
+              to="/report-rawat-inap-detailed"
+              className={cn(buttonVariants({ variant: "default" }))}
+            >
+              <FileText />
+              Report Rawat Inap
+            </Link>
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Download CSV
+            </Button>
+          </>
+        )}
+        <UploadCSVSheet />
+      </div>
       <DataTable
-        columns={createColumns(copiedItems, handleCopy)}
+        columns={createColumns(copiedItems, handleCopy, selectedCsvFile !== "")}
         data={(data?.data || []).map((item: any) => ({
           ...item,
           jns_perawatan: item.jns_perawatan || [],
         }))}
         pagination={data?.pagination}
+        totals={data?.totals}
+        isCsvMode={selectedCsvFile !== ""}
       />
     </div>
   );

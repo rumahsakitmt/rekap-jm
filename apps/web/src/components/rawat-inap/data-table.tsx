@@ -34,7 +34,9 @@ import { cn } from "@/lib/utils";
 import { DataTableFilters } from "./data-table-filters";
 import { DataTablePagination } from "../rawat-jalan/pagination";
 import { Columns } from "lucide-react";
+import { TotalDisplay } from "./total-display";
 import { useFilterStore } from "@/stores/filter-store";
+import { CsvAnalysis } from "../csv-analysis";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -46,13 +48,30 @@ interface DataTableProps<TData, TValue> {
     page: number;
     totalPages: number;
   };
+  totals?:
+    | {
+        totalTarif?: number;
+        totalAlokasi?: number;
+        totalDpjpUtama?: number;
+        totalKonsul?: number;
+        totalLaboratorium?: number;
+        totalRadiologi?: number;
+        totalYangTerbagi?: number;
+        averagePercentDariKlaim?: number;
+      }
+    | null
+    | undefined;
+  isCsvMode?: boolean;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   pagination,
+  totals,
+  isCsvMode,
 }: DataTableProps<TData, TValue>) {
+  const { selectedCsvFile, dateFrom, dateTo } = useFilterStore();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -96,8 +115,18 @@ export function DataTable<TData, TValue>({
             </p>
             <span>]::</span>
           </div>
+
+          {selectedCsvFile && (
+            <CsvAnalysis
+              filename={selectedCsvFile}
+              dateFrom={dateFrom}
+              dateTo={dateTo}
+              type="rawat-inap"
+            />
+          )}
         </div>
       </div>
+      <TotalDisplay totals={totals} />
       <div className="uppercase">
         <Table>
           <TableHeader>

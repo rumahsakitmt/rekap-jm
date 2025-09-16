@@ -121,6 +121,7 @@ export function DataTable<TData, TValue>({
               filename={selectedCsvFile}
               dateFrom={dateFrom}
               dateTo={dateTo}
+              type="rawat-jalan"
             />
           )}
         </div>
