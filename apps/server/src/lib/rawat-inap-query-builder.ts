@@ -109,6 +109,8 @@ export function createRawatInapSummaryQuery(whereCondition?: SQL) {
       no_rawat: kamarInap.no_rawat,
       kd_dokter: dpjp_ranap.kd_dokter,
       nm_dokter: dokter.nm_dokter,
+      tgl_masuk: kamarInap.tgl_masuk,
+      tgl_keluar: kamarInap.tgl_keluar,
       jns_perawatan: sql<string>`(
         SELECT COALESCE(
           JSON_ARRAYAGG(
@@ -152,6 +154,7 @@ export function createRawatInapSummaryQuery(whereCondition?: SQL) {
         FROM ${permintaan_lab} 
         WHERE ${permintaan_lab.no_rawat} = ${kamarInap.no_rawat}
       )`,
+      has_operasi: sql<boolean>`CASE WHEN ${operasi.no_rawat} IS NOT NULL THEN true ELSE false END`,
       no_sep: bridging_sep.no_sep,
     })
     .from(kamarInap)
@@ -163,6 +166,7 @@ export function createRawatInapSummaryQuery(whereCondition?: SQL) {
     .innerJoin(dokter, eq(dpjp_ranap.kd_dokter, dokter.kd_dokter))
     .innerJoin(penjab, eq(reg_periksa.kd_pj, penjab.kd_pj))
     .leftJoin(bridging_sep, eq(reg_periksa.no_rawat, bridging_sep.no_rawat))
+    .leftJoin(operasi, eq(kamarInap.no_rawat, operasi.no_rawat))
     .where(whereCondition)
     .groupBy(kamarInap.no_rawat)
     .orderBy(asc(kamarInap.tgl_masuk));

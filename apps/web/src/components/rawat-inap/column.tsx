@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Check, Copy } from "lucide-react";
 import { format } from "date-fns";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { formatCurrency } from "@/lib/utils";
 
 export type RawatInapData = {
   no_rawat: string | null;
@@ -54,6 +55,22 @@ export type RawatInapData = {
   has_operasi: boolean | null;
   operator: string | null;
   anestesi: string | null;
+  alokasi: number | null;
+  tarif_from_csv: number | null;
+  dpjp_ranap: number | null;
+  remun_dpjp: number | null;
+  remun_lab: number | null;
+  remun_rad: number | null;
+  remun_dokter_umum: number | null;
+  remun_dpjp_utama: number | null;
+  remun_konsul_anastesi: number | null;
+  remun_konsul_2: number | null;
+  remun_konsul_3: number | null;
+  remun_operator: number | null;
+  remun_anestesi: number | null;
+  yang_terbagi: number | null;
+  percent_dari_klaim: number | null;
+  totalVisite: number | null;
 };
 
 export const createColumns = (
@@ -147,6 +164,7 @@ export const createColumns = (
         );
       },
     },
+
     {
       accessorKey: "nm_pasien",
       header: "Nama Pasien",
@@ -309,6 +327,13 @@ export const createColumns = (
       },
     },
     {
+      header: "Total Visite",
+      cell: ({ row }) => {
+        const value = row.original.totalVisite;
+        return <div className="text-sm">{value || "-"}</div>;
+      },
+    },
+    {
       accessorKey: "has_operasi",
       header: "Operasi",
       cell: ({ row }) => {
@@ -334,6 +359,125 @@ export const createColumns = (
       cell: ({ row }) => {
         const value = row.original.anestesi;
         return <div className="text-sm">{value || ""}</div>;
+      },
+    },
+    {
+      accessorKey: "tarif_from_csv",
+      header: "Tarif",
+      cell: ({ row }) => {
+        const value = row.original.tarif_from_csv;
+        return (
+          <div className="font-mono text-sm">
+            {value ? formatCurrency(value) : ""}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "alokasi",
+      header: "Alokasi",
+      cell: ({ row }) => {
+        const value = row.original.alokasi;
+        return (
+          <div className="text-sm">{value ? formatCurrency(value) : "-"}</div>
+        );
+      },
+    },
+    {
+      accessorKey: "dpjp_ranap",
+      header: "DPJP Ranap",
+      cell: ({ row }) => {
+        const value = row.original.dpjp_ranap;
+        return (
+          <div className="text-sm">{value ? formatCurrency(value) : "-"}</div>
+        );
+      },
+    },
+    {
+      accessorKey: "remun_dpjp",
+      header: "Remun DPJP",
+      cell: ({ row }) => {
+        const value = row.original.remun_dpjp_utama;
+        return (
+          <div className="text-sm">{value ? formatCurrency(value) : "-"}</div>
+        );
+      },
+    },
+    {
+      header: "Remun Konsul Anastesi",
+      cell: ({ row }) => {
+        const value = row.original.remun_konsul_anastesi;
+        return (
+          <div className="text-sm">{value ? formatCurrency(value) : "-"}</div>
+        );
+      },
+    },
+
+    {
+      header: "Remun Konsul 1",
+      cell: ({ row }) => {
+        const value = row.original.remun_konsul_2;
+        return (
+          <div className="text-sm">{value ? formatCurrency(value) : "-"}</div>
+        );
+      },
+    },
+    {
+      header: "Remun Konsul 2",
+      cell: ({ row }) => {
+        const value = row.original.remun_konsul_3;
+        return (
+          <div className="text-sm">{value ? formatCurrency(value) : "-"}</div>
+        );
+      },
+    },
+    {
+      header: "Remun Dokter Umum",
+      cell: ({ row }) => {
+        const value = row.original.remun_dokter_umum;
+        return (
+          <div className="text-sm">{value ? formatCurrency(value) : "-"}</div>
+        );
+      },
+    },
+    {
+      header: "Remun Operator",
+      cell: ({ row }) => {
+        const value = row.original.remun_operator;
+        return (
+          <div className="text-sm">{value ? formatCurrency(value) : "-"}</div>
+        );
+      },
+    },
+    {
+      header: "Remun Anestesi",
+      cell: ({ row }) => {
+        const value = row.original.remun_anestesi;
+        return (
+          <div className="text-sm">{value ? formatCurrency(value) : "-"}</div>
+        );
+      },
+    },
+    {
+      header: "Total Yang Terbagi",
+      cell: ({ row }) => {
+        const value = row.original.yang_terbagi;
+        return (
+          <div className="text-sm font-semibold">
+            {value ? formatCurrency(value) : "-"}
+          </div>
+        );
+      },
+    },
+    {
+      header: "% Dari Klaim",
+      cell: ({ row }) => {
+        const value = row.original.percent_dari_klaim;
+        return (
+          <div className="text-sm font-semibold text-center">
+            {value ? `${value}%` : "-"}
+          </div>
+        );
       },
     },
   ];
