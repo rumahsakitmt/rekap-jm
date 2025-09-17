@@ -63,13 +63,45 @@ export const rawatInapRouter = router({
       let totals: TotalsAccumulator | null = null;
       if (input?.includeTotals) {
         const allResults = await baseQuery;
+        const noRawatList = allResults
+          .map((item) => item.no_rawat)
+          .filter((id): id is string => id !== null);
+        const [radiologiData, labData] = await Promise.all([
+          getRadiologiData(noRawatList),
+          getLabData(noRawatList),
+        ]);
+
+        const radiologiMap = new Map<string, any[]>();
+        const labMap = new Map<string, any[]>();
+
+        radiologiData.forEach((item) => {
+          if (item.no_rawat && !radiologiMap.has(item.no_rawat)) {
+            radiologiMap.set(item.no_rawat, []);
+          }
+          if (item.no_rawat) {
+            radiologiMap.get(item.no_rawat)!.push(item);
+          }
+        });
+
+        labData.forEach((item) => {
+          if (item.no_rawat && !labMap.has(item.no_rawat)) {
+            labMap.set(item.no_rawat, []);
+          }
+          if (item.no_rawat) {
+            labMap.get(item.no_rawat)!.push(item);
+          }
+        });
+
         totals = allResults.reduce((acc, row) => {
           const tarif = csvTarifMap.get(row.no_sep || "") || 0;
+          const jnsPerawatanRadiologiArray =
+            radiologiMap.get(row.no_rawat) || [];
           const calculation = calculateRawatInapFinancials({
             tarif,
             total_permintaan_lab: row.total_permintaan_lab || 0,
             total_permintaan_radiologi: row.total_permintaan_radiologi || 0,
             jns_perawatan: row.jns_perawatan || "[]",
+            jns_perawatan_radiologi: jnsPerawatanRadiologiArray,
             nm_dokter: row.nm_dokter || "",
             tgl_masuk: row.tgl_masuk,
             tgl_keluar: row.tgl_keluar,
@@ -82,7 +114,6 @@ export const rawatInapRouter = router({
 
       const rawatInap = await baseQuery.offset(offset).limit(limit);
 
-      // Get radiologi and lab data for all records
       const noRawatList = rawatInap
         .map((item) => item.no_rawat)
         .filter((id): id is string => id !== null);
@@ -91,7 +122,6 @@ export const rawatInapRouter = router({
         getLabData(noRawatList),
       ]);
 
-      // Create maps for quick lookup
       const radiologiMap = new Map<string, any[]>();
       const labMap = new Map<string, any[]>();
 
@@ -115,8 +145,12 @@ export const rawatInapRouter = router({
 
       const rawatInapWithArray = rawatInap.map((item) => {
         const jnsPerawatanArray = JSON.parse(item.jns_perawatan || "[]");
-        const jnsPerawatanRadiologiArray =
-          radiologiMap.get(item.no_rawat) || [];
+        const jnsPerawatanRadiologiArray: {
+          kd_jenis_prw: string;
+          nm_perawatan: string;
+          nm_dokter: string;
+          noorder: string;
+        }[] = radiologiMap.get(item.no_rawat) || [];
         const jnsPerawatanLabArray = labMap.get(item.no_rawat) || [];
         const tarif = csvTarifMap.get(item.no_sep || "") || 0;
 
@@ -133,6 +167,7 @@ export const rawatInapRouter = router({
           total_permintaan_lab: item.total_permintaan_lab || 0,
           total_permintaan_radiologi: item.total_permintaan_radiologi || 0,
           jns_perawatan: item.jns_perawatan || "[]",
+          jns_perawatan_radiologi: jnsPerawatanRadiologiArray,
           nm_dokter: item.nm_dokter || "",
           tgl_masuk: item.tgl_masuk,
           tgl_keluar: item.tgl_keluar,
@@ -285,6 +320,7 @@ export const rawatInapRouter = router({
           total_permintaan_lab: row.total_permintaan_lab || 0,
           total_permintaan_radiologi: row.total_permintaan_radiologi || 0,
           jns_perawatan: row.jns_perawatan || "[]",
+          jns_perawatan_radiologi: radiologiMap.get(row.no_rawat) || [],
           nm_dokter: row.nm_dokter || "",
           tgl_masuk: row.tgl_masuk,
           tgl_keluar: row.tgl_keluar,
@@ -728,11 +764,14 @@ export const rawatInapRouter = router({
 
       const processedResult = filteredResults.map((row) => {
         const tarif = csvTarifMap.get(row.no_sep || "") || 0;
+        const jnsPerawatanRadiologiArray =
+          filteredRadiologiMap.get(row.no_rawat) || [];
         const calculation = calculateRawatInapFinancials({
           tarif,
           total_permintaan_lab: row.total_permintaan_lab || 0,
           total_permintaan_radiologi: row.total_permintaan_radiologi || 0,
           jns_perawatan: row.jns_perawatan || "[]",
+          jns_perawatan_radiologi: jnsPerawatanRadiologiArray,
           nm_dokter: row.nm_dokter || "",
           tgl_masuk: row.tgl_masuk,
           tgl_keluar: row.tgl_keluar,
@@ -773,11 +812,14 @@ export const rawatInapRouter = router({
       // Calculate totals using the filtered results
       const totals = filteredResults.reduce((acc, row) => {
         const tarif = csvTarifMap.get(row.no_sep || "") || 0;
+        const jnsPerawatanRadiologiArray =
+          filteredRadiologiMap.get(row.no_rawat) || [];
         const calculation = calculateRawatInapFinancials({
           tarif,
           total_permintaan_lab: row.total_permintaan_lab || 0,
           total_permintaan_radiologi: row.total_permintaan_radiologi || 0,
           jns_perawatan: row.jns_perawatan || "[]",
+          jns_perawatan_radiologi: jnsPerawatanRadiologiArray,
           nm_dokter: row.nm_dokter || "",
           tgl_masuk: row.tgl_masuk,
           tgl_keluar: row.tgl_keluar,

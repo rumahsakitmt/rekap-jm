@@ -238,6 +238,7 @@ export interface RawatInapCalculationInput {
   tarif: number;
   total_permintaan_lab: number;
   total_permintaan_radiologi: number;
+  jns_perawatan_radiologi: RadiologiData[];
   jns_perawatan: string;
   nm_dokter: string;
   tgl_masuk: Date | null;
@@ -316,7 +317,6 @@ export function extractRawatInapVisiteData(
       perawatan.nm_perawatan.toLowerCase() === "visite dokter"
   );
 
-  console.log("visiteDokterUmum", visiteDokterUmum);
   let finalVisiteKonsul1 = visiteKonsul1;
   let finalVisiteKonsul2 = visiteKonsul2;
   let finalVisiteKonsul3 = visiteKonsul3;
@@ -359,6 +359,7 @@ export function calculateRawatInapFinancials(
     tgl_keluar,
     has_operasi,
     selectedSupport,
+    jns_perawatan_radiologi,
   } = input;
 
   const visiteData = extractRawatInapVisiteData(
@@ -370,7 +371,14 @@ export function calculateRawatInapFinancials(
   );
 
   const remun_lab = (total_permintaan_lab || 0) * 5000;
-  const remun_rad = (total_permintaan_radiologi || 0) * 15000;
+
+  const usgCount =
+    jns_perawatan_radiologi.filter(
+      (item) =>
+        item.nm_perawatan && item.nm_perawatan.toLowerCase().includes("usg")
+    ).length || 0;
+  const nonUsgCount = (total_permintaan_radiologi || 0) - usgCount;
+  const remun_rad = usgCount * 80000 + nonUsgCount * 15000;
   const alokasi = tarif * 0.2 - remun_lab - remun_rad;
   const remun_dokter_umum = (visiteData.visiteDokterUmum.length || 0) * 20000;
   const dpjp_ranap = alokasi - remun_dokter_umum;

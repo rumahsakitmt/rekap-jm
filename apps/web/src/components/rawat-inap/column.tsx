@@ -366,12 +366,16 @@ export const createColumns = (
               {Array.from(
                 new Set(
                   jns_perawatan_radiologi
-                    ?.map((item) => item.nm_dokter)
+                    ?.map((item) => ({
+                      dokter: item.nm_dokter,
+                      perawatan: item.nm_perawatan,
+                    }))
                     .filter(Boolean)
                 )
-              ).map((doctorName, index) => (
+              ).map((rad, index) => (
                 <div key={index}>
-                  <div>{doctorName as string}</div>
+                  <div>{rad.dokter as string}</div>
+                  <div>{rad.perawatan as string}</div>
                 </div>
               ))}
             </TooltipContent>
