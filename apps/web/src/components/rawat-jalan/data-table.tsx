@@ -33,10 +33,10 @@ import {
 import { cn } from "@/lib/utils";
 import { DataTableFilters } from "./data-table-filters";
 import { TotalsDisplay } from "./totals-display";
-import { Brackets, Columns, Download, Slash } from "lucide-react";
+import { Columns } from "lucide-react";
 import { DataTablePagination } from "./pagination";
-import { useFilterStore } from "@/stores/filter-store";
 import { CsvAnalysis } from "../csv-analysis";
+import { Route } from "@/routes/index";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -79,7 +79,8 @@ export function DataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-  const { selectedCsvFile, dateFrom, dateTo } = useFilterStore();
+  const searchParams = Route.useSearch();
+  const { selectedCsvFile, dateFrom, dateTo } = searchParams;
 
   const table = useReactTable({
     data,
@@ -116,11 +117,11 @@ export function DataTable<TData, TValue>({
             </p>
             <span>]::</span>
           </div>
-          {selectedCsvFile && (
+          {searchParams.selectedCsvFile && (
             <CsvAnalysis
-              filename={selectedCsvFile}
-              dateFrom={dateFrom}
-              dateTo={dateTo}
+              filename={searchParams.selectedCsvFile}
+              dateFrom={dateFrom ? new Date(dateFrom) : undefined}
+              dateTo={dateTo ? new Date(dateTo) : undefined}
               type="rawat-jalan"
             />
           )}
@@ -181,7 +182,7 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      <DataTablePagination pagination={pagination} />
+      <DataTablePagination from="/" pagination={pagination} />
     </div>
   );
 }

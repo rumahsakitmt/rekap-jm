@@ -7,6 +7,7 @@ import { csvUploadRouter } from "./csv-upload";
 import { dokterRouter } from "./dokter";
 import { poliklinikRouter } from "./poliklinik";
 import { rawatInapRouter } from "./rawat-inap";
+import { kamarRouter } from "./kamar";
 
 export const appRouter = router({
   healthCheck: publicProcedure.query(async () => {
@@ -27,5 +28,6 @@ export const appRouter = router({
   csvUpload: csvUploadRouter,
   dokter: dokterRouter,
   poliklinik: poliklinikRouter,
+  kamar: kamarRouter,
 });
 export type AppRouter = typeof appRouter;

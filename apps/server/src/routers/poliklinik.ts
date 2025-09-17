@@ -37,10 +37,13 @@ export const poliklinikRouter = router({
           status: poliklinik.status,
         })
         .from(poliklinik)
-        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .where(
+          conditions.length > 0
+            ? and(...conditions, eq(poliklinik.status, "1"))
+            : undefined
+        )
         .orderBy(asc(poliklinik.nm_poli))
-        .offset(input.offset || 0)
-        .limit(input.limit || 1000);
+        .offset(input.offset || 0);
 
       return {
         data: result,

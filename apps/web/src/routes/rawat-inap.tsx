@@ -1,56 +1,47 @@
-import { trpc } from "@/utils/trpc";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { DataTable, createColumns } from "@/components/rawat-inap";
-import { useFilterStore, useUIState } from "@/stores/filter-store";
+import { z } from "zod";
+import { zodValidator } from "@tanstack/zod-adapter";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-import { FileText, Download } from "lucide-react";
+import { FileText, Download, Share } from "lucide-react";
 import UploadCSVSheet from "@/components/upload-csv-sheet";
 import { Button } from "@/components/ui/button";
+import { startOfMonth, endOfMonth } from "date-fns";
+import TableRawatInap from "@/components/rawat-inap/table";
+
+const defaultDateFrom = startOfMonth(new Date()).toISOString();
+const defaultDateTo = endOfMonth(new Date()).toISOString();
+
+const rawatInapSearchSchema = z.object({
+  search: z.string().default(""),
+  limit: z.number().default(50),
+  offset: z.number().default(0),
+  page: z.number().default(1),
+  dateFrom: z.string().default(defaultDateFrom),
+  dateTo: z.string().default(defaultDateTo),
+  selectedCsvFile: z.string().default(""),
+  selectedDoctor: z.string().default(""),
+  selectedSupport: z.string().default(""),
+  selectedKamar: z.string().default(""),
+});
 
 export const Route = createFileRoute("/rawat-inap")({
   component: RouteComponent,
+  validateSearch: zodValidator(rawatInapSearchSchema),
 });
 
 function RouteComponent() {
-  const {
-    search,
-    limit,
-    offset,
-    dateFrom,
-    dateTo,
-    selectedDoctor,
-    selectedPoliklinik,
-    selectedCsvFile,
-  } = useFilterStore();
+  const searchParams = Route.useSearch();
 
-  const { data, isLoading } = useQuery(
-    trpc.rawatInap.getRawatInap.queryOptions({
-      search: search || undefined,
-      ...(limit && { limit }),
-      ...(offset > 0 && { offset }),
-      filename: selectedCsvFile || undefined,
-      dateFrom: dateFrom || undefined,
-      dateTo: dateTo || undefined,
-      kd_dokter: selectedDoctor || undefined,
-      kd_poli: selectedPoliklinik || undefined,
-      includeTotals: true,
-    })
-  );
+  const { dateFrom, dateTo, selectedDoctor, selectedCsvFile, selectedKamar } =
+    searchParams;
 
-  const { copiedItems, addCopiedItem, removeCopiedItem } = useUIState();
-
-  const handleCopy = async (text: string, id: string) => {
+  const handleShare = async () => {
     try {
-      await navigator.clipboard.writeText(text);
-      addCopiedItem(id);
-      setTimeout(() => {
-        removeCopiedItem(id);
-      }, 2000);
+      await navigator.clipboard.writeText(window.location.href);
     } catch (err) {
-      console.error("Failed to copy: ", err);
+      console.error("Failed to copy link: ", err);
     }
   };
 
@@ -59,8 +50,19 @@ function RouteComponent() {
       <div className="flex justify-end gap-2">
         {selectedCsvFile !== "" && (
           <>
+            <Button variant="outline" onClick={handleShare}>
+              <Share />
+              Bagikan
+            </Button>
             <Link
               to="/report-rawat-inap-detailed"
+              search={{
+                dateFrom,
+                dateTo,
+                selectedCsvFile,
+                selectedDoctor,
+                selectedKamar,
+              }}
               className={cn(buttonVariants({ variant: "default" }))}
             >
               <FileText />
@@ -74,16 +76,7 @@ function RouteComponent() {
         )}
         <UploadCSVSheet />
       </div>
-      <DataTable
-        columns={createColumns(copiedItems, handleCopy, selectedCsvFile !== "")}
-        data={(data?.data || []).map((item: any) => ({
-          ...item,
-          jns_perawatan: item.jns_perawatan || [],
-        }))}
-        pagination={data?.pagination}
-        totals={data?.totals}
-        isCsvMode={selectedCsvFile !== ""}
-      />
+      <TableRawatInap />
     </div>
   );
 }

@@ -6,7 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useFilterStore } from "@/stores/filter-store";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 
 interface DataTablePaginationProps<TData> {
   pagination?: {
@@ -16,19 +16,47 @@ interface DataTablePaginationProps<TData> {
     page: number;
     totalPages: number;
   };
+  from: "/rawat-inap" | "/";
 }
 
 export function DataTablePagination<TData>({
   pagination,
+  from,
 }: DataTablePaginationProps<TData>) {
-  const { limit, setLimit, page, setPage } = useFilterStore();
+  const searchParams = useSearch({ from });
+  const navigate = useNavigate({ from });
+  const { limit, page } = searchParams;
   if (!pagination) {
     return null;
   }
 
   const { total, totalPages } = pagination;
-  const canPreviousPage = page > 1;
-  const canNextPage = page < totalPages;
+  const currentPage = page || 1;
+  const currentLimit = limit || 50;
+  const canPreviousPage = currentPage > 1;
+  const canNextPage = currentPage < totalPages;
+
+  const handleLimitChange = (newLimit: number) => {
+    navigate({
+      search: (prev: any) => ({
+        ...prev,
+        limit: newLimit,
+        offset: 0,
+        page: 1,
+      }),
+    });
+  };
+
+  const handlePageChange = (newPage: number) => {
+    const newOffset = (newPage - 1) * currentLimit;
+    navigate({
+      search: (prev: any) => ({
+        ...prev,
+        page: newPage,
+        offset: newOffset,
+      }),
+    });
+  };
 
   return (
     <div className="flex items-center justify-between px-2">
@@ -41,8 +69,8 @@ export function DataTablePagination<TData>({
         <div className="flex items-center space-x-2">
           <p className="text-sm font-medium">Rows per page</p>
           <Select
-            value={limit?.toString()}
-            onValueChange={(value) => setLimit(Number(value))}
+            value={currentLimit.toString()}
+            onValueChange={(value) => handleLimitChange(Number(value))}
           >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Theme" />
@@ -56,13 +84,13 @@ export function DataTablePagination<TData>({
           </Select>
         </div>
         <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Page {page} of {totalPages}
+          Page {currentPage} of {totalPages}
         </div>
         <div className="flex items-center space-x-2">
           <Button
             variant="outline"
             className="hidden h-8 w-8 p-0 lg:flex"
-            onClick={() => setPage(1)}
+            onClick={() => handlePageChange(1)}
             disabled={!canPreviousPage}
           >
             <span className="sr-only">Go to first page</span>
@@ -83,7 +111,7 @@ export function DataTablePagination<TData>({
           <Button
             variant="outline"
             className="h-8 w-8 p-0"
-            onClick={() => setPage(page - 1)}
+            onClick={() => handlePageChange(currentPage - 1)}
             disabled={!canPreviousPage}
           >
             <span className="sr-only">Go to previous page</span>
@@ -104,7 +132,7 @@ export function DataTablePagination<TData>({
           <Button
             variant="outline"
             className="h-8 w-8 p-0"
-            onClick={() => setPage(page + 1)}
+            onClick={() => handlePageChange(currentPage + 1)}
             disabled={!canNextPage}
           >
             <span className="sr-only">Go to next page</span>
@@ -125,7 +153,7 @@ export function DataTablePagination<TData>({
           <Button
             variant="outline"
             className="hidden h-8 w-8 p-0 lg:flex"
-            onClick={() => setPage(totalPages)}
+            onClick={() => handlePageChange(totalPages)}
             disabled={!canNextPage}
           >
             <span className="sr-only">Go to last page</span>

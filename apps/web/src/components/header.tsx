@@ -7,11 +7,6 @@ export default function Header() {
     { to: "/rawat-inap", label: "Rawat Inap" },
   ] as const;
 
-  const reportLinks = [
-    { to: "/report-rawat-jalan", label: "Laporan Rawat Jalan" },
-    { to: "/report-rawat-inap-detailed", label: "Laporan Detail Rawat Inap" },
-  ] as const;
-
   return (
     <div className="w-full border-y border-dashed">
       <div className="flex flex-row items-center justify-between px-2 py-4 container mx-auto border-x border-dashed">
@@ -19,19 +14,6 @@ export default function Header() {
           {links.map(({ to, label }) => {
             return (
               <Link key={to} to={to}>
-                {label}
-              </Link>
-            );
-          })}
-        </nav>
-        <nav className="flex gap-4">
-          {reportLinks.map(({ to, label }) => {
-            return (
-              <Link
-                key={to}
-                to={to}
-                className="text-sm text-muted-foreground hover:text-foreground"
-              >
                 {label}
               </Link>
             );

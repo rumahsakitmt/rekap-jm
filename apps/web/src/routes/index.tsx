@@ -7,9 +7,28 @@ import { Download, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
 import UploadCSVSheet from "@/components/upload-csv-sheet";
+import { zodValidator } from "@tanstack/zod-adapter";
+import { z } from "zod";
+import { startOfMonth, endOfMonth } from "date-fns";
 
+const defaultDateFrom = startOfMonth(new Date()).toISOString();
+const defaultDateTo = endOfMonth(new Date()).toISOString();
+
+const rawatInapSearchSchema = z.object({
+  limit: z.number().default(50),
+  offset: z.number().default(0),
+  page: z.number().default(1),
+  dateFrom: z.string().default(defaultDateFrom),
+  dateTo: z.string().default(defaultDateTo),
+  search: z.string().default(""),
+  selectedCsvFile: z.string().default(""),
+  selectedDoctor: z.string().default(""),
+  selectedPoliklinik: z.string().default(""),
+  selectedSupport: z.string().default(""),
+});
 export const Route = createFileRoute("/")({
   component: HomeComponent,
+  validateSearch: zodValidator(rawatInapSearchSchema),
 });
 
 function HomeComponent() {

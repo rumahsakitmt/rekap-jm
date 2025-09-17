@@ -1,50 +1,27 @@
-import { Input } from "@/components/ui/input";
-import { DatePicker } from "../date-picker";
-import { useFilterStore } from "@/stores/filter-store";
 import SelectFileSEP from "../rawat-jalan/select-file-sep";
-import { Button } from "../ui/button";
-import SelectDPJP from "./select-dpjp";
-import SelectPoliklinik from "../rawat-jalan/select-poliklinik";
+import SelectDPJP from "../select-dpjp";
+import { SupportFilter } from "../rawat-jalan/support-filter";
+import SearchInput from "../search-input";
+import { SelectKamar } from "./select-kamar";
+import { DateFilter } from "../date-filter";
+import { ClearFilter } from "../clear-filter";
 
-interface DataTableFiltersProps {
-  table: any;
-}
-
-export function DataTableFilters({ table }: DataTableFiltersProps) {
-  const {
-    dateFrom,
-    setDateFrom,
-    dateTo,
-    setDateTo,
-    clearFilters,
-    search,
-    setSearch,
-  } = useFilterStore();
-
-  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(event.target.value);
-  };
-
+export function DataTableFilters() {
   return (
     <div className="p-2">
       <div className="space-y-2 py-2">
-        <Input
-          placeholder="Cari berdasarkan nama pasien/no rm/no rawat/sep..."
-          value={search}
-          onChange={handleSearch}
-          className="w-full"
-        />
-        <div className="grid grid-cols-3 gap-2">
-          <DatePicker date={dateFrom} setDate={setDateFrom} />
-          <DatePicker date={dateTo} setDate={setDateTo} />
-          <SelectFileSEP />
-        </div>
+        <SearchInput from="/rawat-inap" />
         <div className="grid grid-cols-2 gap-2">
-          <SelectDPJP />
-          <SelectPoliklinik />
+          <DateFilter from="/rawat-inap" />
+          <SelectFileSEP from="/rawat-inap" />
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <SelectDPJP from="/rawat-inap" />
+          <SelectKamar />
+          <SupportFilter from="/rawat-inap" />
         </div>
         <div className="flex justify-end">
-          <Button onClick={clearFilters}>Hapus filter</Button>
+          <ClearFilter from="/rawat-inap" />
         </div>
       </div>
     </div>

@@ -24,7 +24,7 @@ export interface FilterState {
   // Doctor and Poliklinik selection
   selectedDoctor: string;
   selectedPoliklinik: string | undefined;
-
+  selectedSupport: string | undefined;
   // Konsul filters
   konsulFilters: KonsulFilter[];
 
@@ -52,7 +52,7 @@ export interface FilterActions {
   // Doctor and Poliklinik actions
   setSelectedDoctor: (doctorId: string) => void;
   setSelectedPoliklinik: (poliklinikId: string) => void;
-
+  setSelectedSupport: (support: string) => void;
   // Konsul filter actions
   addKonsulFilter: (filter: KonsulFilter) => void;
   updateKonsulFilter: (index: number, filter: KonsulFilter) => void;
@@ -82,6 +82,7 @@ const defaultState: FilterState = {
   selectedCsvFile: "",
   selectedDoctor: "",
   selectedPoliklinik: "",
+  selectedSupport: "",
   konsulFilters: [],
   showCsvAnalysis: false,
   copiedItems: new Set(),
@@ -120,6 +121,10 @@ export const useFilterStore = create<FilterStore>((set, get) => ({
     set({ selectedDoctor, offset: 0, page: 1 }),
   setSelectedPoliklinik: (selectedPoliklinik: string) =>
     set({ selectedPoliklinik, offset: 0, page: 1 }),
+
+  // Support filter actions
+  setSelectedSupport: (selectedSupport: string) =>
+    set({ selectedSupport, offset: 0, page: 1 }),
 
   // Konsul filter actions
   addKonsulFilter: (filter: KonsulFilter) =>
@@ -169,6 +174,7 @@ export const useFilterStore = create<FilterStore>((set, get) => ({
       selectedCsvFile: "",
       selectedDoctor: "",
       selectedPoliklinik: "",
+      selectedSupport: "",
       konsulFilters: [],
       showCsvAnalysis: false,
       dateFrom: startOfMonth(new Date()),
@@ -191,6 +197,7 @@ export const useSearchFilters = () => {
   const selectedPoliklinik = useFilterStore(
     (state) => state.selectedPoliklinik
   );
+  const selectedSupport = useFilterStore((state) => state.selectedSupport);
   const konsulFilters = useFilterStore((state) => state.konsulFilters);
   return {
     search,
@@ -202,6 +209,7 @@ export const useSearchFilters = () => {
     selectedCsvFile,
     selectedDoctor,
     selectedPoliklinik,
+    selectedSupport,
     konsulFilters,
   };
 };

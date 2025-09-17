@@ -1,23 +1,33 @@
 import { PDFViewer } from "@react-pdf/renderer";
 import { createFileRoute } from "@tanstack/react-router";
 import { RawatInapDetailedMonthlyReportPDF } from "@/components/rawat-inap-detailed-monthly-report-pdf";
-import { useFilterStore } from "@/stores/filter-store";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 import { Loader2 } from "lucide-react";
+import { zodValidator } from "@tanstack/zod-adapter";
+import { z } from "zod";
+import { startOfMonth, endOfMonth } from "date-fns";
+
+const defaultDateFrom = startOfMonth(new Date()).toISOString();
+const defaultDateTo = endOfMonth(new Date()).toISOString();
+
+const rawatInapSearchSchema = z.object({
+  dateFrom: z.string().default(defaultDateFrom),
+  dateTo: z.string().default(defaultDateTo),
+  selectedCsvFile: z.string().default(""),
+  selectedDoctor: z.string().default(""),
+  selectedKamar: z.string().default(""),
+});
 
 export const Route = createFileRoute("/report-rawat-inap-detailed")({
   component: RouteComponent,
+  validateSearch: zodValidator(rawatInapSearchSchema),
 });
 
 function RouteComponent() {
-  const {
-    dateFrom,
-    dateTo,
-    selectedCsvFile,
-    selectedDoctor,
-    selectedPoliklinik,
-  } = useFilterStore();
+  const searchParams = Route.useSearch();
+  const { dateFrom, dateTo, selectedCsvFile, selectedDoctor, selectedKamar } =
+    searchParams;
 
   const {
     data: detailedReportData,
@@ -25,11 +35,11 @@ function RouteComponent() {
     error,
   } = useQuery(
     trpc.rawatInap.getDetailedMonthlyReport.queryOptions({
-      dateFrom,
+      dateFrom: new Date(dateFrom),
       dateTo,
       filename: selectedCsvFile || undefined,
       kd_dokter: selectedDoctor || undefined,
-      kd_bangsal: selectedPoliklinik || undefined,
+      kd_bangsal: selectedKamar || undefined,
     })
   );
 
@@ -92,14 +102,18 @@ function RouteComponent() {
               radTotal: 0,
               rekapBulanan: [],
               grandTotal: 0,
+              konsulAnastesi: [],
+              konsulAnastesiTotal: 0,
+              anestesi: [],
+              anestesiTotal: 0,
             }
           }
           filters={{
-            dateFrom: dateFrom?.toISOString(),
-            dateTo: dateTo?.toISOString(),
+            dateFrom: new Date(dateFrom)?.toISOString(),
+            dateTo: new Date(dateTo)?.toISOString(),
             selectedCsvFile,
             selectedDoctor,
-            selectedPoliklinik,
+            selectedKamar,
           }}
         />
       </PDFViewer>

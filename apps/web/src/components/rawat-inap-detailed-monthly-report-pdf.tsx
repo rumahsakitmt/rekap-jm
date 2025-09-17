@@ -78,12 +78,11 @@ const styles = StyleSheet.create({
     fontSize: 9,
   },
   grid: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: "column",
     flexWrap: "wrap",
   },
   gridItem: {
-    width: "48%",
+    width: "100%",
     marginBottom: 8,
   },
   fullWidth: {
@@ -98,6 +97,8 @@ const styles = StyleSheet.create({
 });
 
 interface DetailedMonthlyReportData {
+  anestesi: Array<{ name: string; total: number }>;
+  anestesiTotal: number;
   dpjp: Array<{ name: string; total: number }>;
   dpjpTotal: number;
   konsulAnastesi: Array<{ name: string; total: number }>;
@@ -129,7 +130,7 @@ interface RawatInapDetailedMonthlyReportPDFProps {
     dateTo?: string;
     selectedCsvFile?: string;
     selectedDoctor?: string;
-    selectedPoliklinik?: string;
+    selectedKamar?: string;
   };
 }
 
@@ -143,7 +144,7 @@ export function RawatInapDetailedMonthlyReportPDF({
 
   return (
     <Document>
-      <Page size="A4" orientation="landscape" style={styles.page} wrap>
+      <Page size="LEGAL" orientation="portrait" style={styles.page} wrap>
         <View style={styles.header}>
           <Text style={styles.title}>
             REKAPAN {monthName.toUpperCase()} - RSUD MAMUJU TENGAH
@@ -163,9 +164,9 @@ export function RawatInapDetailedMonthlyReportPDF({
               Dokter: {filters.selectedDoctor}
             </Text>
           )}
-          {filters.selectedPoliklinik && (
+          {filters.selectedKamar && (
             <Text style={styles.subtitle}>
-              Bangsal: {filters.selectedPoliklinik}
+              Bangsal: {filters.selectedKamar}
             </Text>
           )}
         </View>
@@ -214,7 +215,7 @@ export function RawatInapDetailedMonthlyReportPDF({
               <View style={styles.table}>
                 <View style={[styles.tableRow, styles.tableHeader]}>
                   <Text style={styles.tableCell}>Nama Dokter</Text>
-                  <Text style={[styles.tableCell, styles.tableCellCenter]}>
+                  <Text style={[styles.tableCell, styles.tableCellRight]}>
                     Total
                   </Text>
                 </View>
@@ -222,7 +223,7 @@ export function RawatInapDetailedMonthlyReportPDF({
                   data.konsulAnastesi.map((item, index) => (
                     <View key={index} style={styles.tableRow}>
                       <Text style={styles.tableCell}>{item.name}</Text>
-                      <Text style={[styles.tableCell, styles.tableCellCenter]}>
+                      <Text style={[styles.tableCell, styles.tableCellRight]}>
                         {item.total > 0 ? formatCurrency(item.total) : "-"}
                       </Text>
                     </View>
@@ -236,7 +237,7 @@ export function RawatInapDetailedMonthlyReportPDF({
                 )}
                 <View style={[styles.tableRow, styles.totalRow]}>
                   <Text style={styles.tableCell}>Total</Text>
-                  <Text style={[styles.tableCell, styles.tableCellCenter]}>
+                  <Text style={[styles.tableCell, styles.tableCellRight]}>
                     {formatCurrency(data.konsulTotal)}
                   </Text>
                 </View>
@@ -256,9 +257,6 @@ export function RawatInapDetailedMonthlyReportPDF({
                   <Text style={[styles.tableCell, styles.tableCellCenter]}>
                     Konsul 2
                   </Text>
-                  <Text style={[styles.tableCell, styles.tableCellCenter]}>
-                    Konsul 3
-                  </Text>
                   <Text style={[styles.tableCell, styles.tableCellRight]}>
                     Total
                   </Text>
@@ -267,9 +265,6 @@ export function RawatInapDetailedMonthlyReportPDF({
                   data.konsul.map((item, index) => (
                     <View key={index} style={styles.tableRow}>
                       <Text style={styles.tableCell}>{item.name}</Text>
-                      <Text style={[styles.tableCell, styles.tableCellCenter]}>
-                        {item.konsul1 > 0 ? formatCurrency(item.konsul1) : "-"}
-                      </Text>
                       <Text style={[styles.tableCell, styles.tableCellCenter]}>
                         {item.konsul2 > 0 ? formatCurrency(item.konsul2) : "-"}
                       </Text>
@@ -299,7 +294,7 @@ export function RawatInapDetailedMonthlyReportPDF({
           </View>
         </View>
 
-        <View style={styles.grid}>
+        <View>
           {/* Rekap dr. Umum */}
           <View style={styles.gridItem}>
             <View style={styles.section}>
@@ -340,7 +335,7 @@ export function RawatInapDetailedMonthlyReportPDF({
           {/* Remun Operator */}
           <View style={styles.gridItem}>
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Remun Operator</Text>
+              <Text style={styles.sectionTitle}>Remun Operator Operasi</Text>
               <View style={styles.table}>
                 <View style={[styles.tableRow, styles.tableHeader]}>
                   <Text style={styles.tableCell}>Nama Dokter</Text>
@@ -371,6 +366,37 @@ export function RawatInapDetailedMonthlyReportPDF({
                   </Text>
                 </View>
               </View>
+            </View>
+          </View>
+
+          {/* Remun Anestesi */}
+          <View style={styles.gridItem}>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Remun Anestesi Operasi</Text>
+              <View style={styles.table}>
+                <View style={[styles.tableRow, styles.tableHeader]}>
+                  <Text style={styles.tableCell}>Nama Dokter</Text>
+                  <Text style={[styles.tableCell, styles.tableCellRight]}>
+                    Total
+                  </Text>
+                </View>
+              </View>
+              {data.anestesi.length > 0 ? (
+                data.anestesi.map((item, index) => (
+                  <View key={index} style={styles.tableRow}>
+                    <Text style={styles.tableCell}>{item.name}</Text>
+                    <Text style={[styles.tableCell, styles.tableCellRight]}>
+                      {formatCurrency(item.total)}
+                    </Text>
+                  </View>
+                ))
+              ) : (
+                <View style={styles.tableRow}>
+                  <Text style={[styles.tableCell, styles.emptyState]}>
+                    Tidak ada data Anestesi
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
         </View>
@@ -429,7 +455,7 @@ export function RawatInapDetailedMonthlyReportPDF({
       </Page>
 
       {/* Second page for REKAPAN MEI */}
-      <Page size="A4" orientation="landscape" style={styles.page} wrap>
+      <Page size="LEGAL" orientation="portrait" style={styles.page} wrap>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
             REKAPAN {monthName.toUpperCase()}

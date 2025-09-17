@@ -33,10 +33,11 @@ import {
 import { cn } from "@/lib/utils";
 import { DataTableFilters } from "./data-table-filters";
 import { DataTablePagination } from "../rawat-jalan/pagination";
-import { Columns } from "lucide-react";
+import { Columns, Loader2 } from "lucide-react";
 import { TotalDisplay } from "./total-display";
-import { useFilterStore } from "@/stores/filter-store";
 import { CsvAnalysis } from "../csv-analysis";
+import { useSearch } from "@tanstack/react-router";
+import { Skeleton } from "../ui/skeleton";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -62,6 +63,7 @@ interface DataTableProps<TData, TValue> {
     | null
     | undefined;
   isCsvMode?: boolean;
+  loading?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -70,8 +72,10 @@ export function DataTable<TData, TValue>({
   pagination,
   totals,
   isCsvMode,
+  loading,
 }: DataTableProps<TData, TValue>) {
-  const { selectedCsvFile, dateFrom, dateTo } = useFilterStore();
+  const searchParams = useSearch({ from: "/rawat-inap" });
+  const { selectedCsvFile, dateFrom, dateTo } = searchParams;
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -102,7 +106,6 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="w-full space-y-2">
-      <DataTableFilters table={table} />
       <div className="p-2 space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-muted-foreground">
@@ -119,8 +122,8 @@ export function DataTable<TData, TValue>({
           {selectedCsvFile && (
             <CsvAnalysis
               filename={selectedCsvFile}
-              dateFrom={dateFrom}
-              dateTo={dateTo}
+              dateFrom={dateFrom ? new Date(dateFrom) : undefined}
+              dateTo={dateTo ? new Date(dateTo) : undefined}
               type="rawat-inap"
             />
           )}
@@ -150,38 +153,58 @@ export function DataTable<TData, TValue>({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row, i) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className={cn(i % 2 !== 0 && "bg-muted")}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
+          {loading ? (
+            <TableBody>
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No results.
+                <TableCell colSpan={columns.length}>
+                  <Skeleton className="h-12 w-full" />
                 </TableCell>
               </TableRow>
-            )}
-          </TableBody>
+              <TableRow>
+                <TableCell colSpan={columns.length}>
+                  <Skeleton className="h-12 w-full opacity-70" />
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell colSpan={columns.length}>
+                  <Skeleton className="h-12 w-full opacity-10" />
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          ) : (
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row, i) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className={cn(i % 2 !== 0 && "bg-muted")}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          )}
         </Table>
       </div>
-      <DataTablePagination pagination={pagination} />
+      <DataTablePagination from="/rawat-inap" pagination={pagination} />
     </div>
   );
 }

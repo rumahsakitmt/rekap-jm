@@ -34,6 +34,7 @@ const rawatInapFilterSchema = z.object({
   kd_poli: z.string().optional(),
   kd_bangsal: z.string().optional(),
   includeTotals: z.boolean().optional(),
+  selectedSupport: z.string().optional(),
 });
 
 export const rawatInapRouter = router({
@@ -73,6 +74,7 @@ export const rawatInapRouter = router({
             tgl_masuk: row.tgl_masuk,
             tgl_keluar: row.tgl_keluar,
             has_operasi: row.has_operasi || false,
+            selectedSupport: input?.selectedSupport || undefined,
           });
           return accumulateTotals(acc, tarif, calculation);
         }, createEmptyTotals());
@@ -122,7 +124,8 @@ export const rawatInapRouter = router({
           item.jns_perawatan || "[]",
           item.nm_dokter || "",
           item.tgl_masuk,
-          item.tgl_keluar
+          item.tgl_keluar,
+          input?.selectedSupport || undefined
         );
 
         const calculation = calculateRawatInapFinancials({
@@ -134,6 +137,7 @@ export const rawatInapRouter = router({
           tgl_masuk: item.tgl_masuk,
           tgl_keluar: item.tgl_keluar,
           has_operasi: item.has_operasi || false,
+          selectedSupport: input?.selectedSupport || undefined,
         });
 
         return {
@@ -185,6 +189,7 @@ export const rawatInapRouter = router({
         filename: z.string().optional(),
         kd_dokter: z.string().optional(),
         kd_bangsal: z.string().optional(),
+        selectedSupport: z.string().optional(),
       })
     )
     .query(async ({ input }) => {
@@ -247,6 +252,7 @@ export const rawatInapRouter = router({
       >();
       const dokterUmumMap = new Map<string, { name: string; total: number }>();
       const operatorMap = new Map<string, { name: string; total: number }>();
+      const anestesiMap = new Map<string, { name: string; total: number }>();
       const penunjangMap = new Map<string, { name: string; total: number }>();
 
       let labTotal = 0;
@@ -260,7 +266,8 @@ export const rawatInapRouter = router({
           row.jns_perawatan || "[]",
           row.nm_dokter || "",
           row.tgl_masuk,
-          row.tgl_keluar
+          row.tgl_keluar,
+          input?.selectedSupport || undefined
         );
 
         const {
@@ -282,6 +289,7 @@ export const rawatInapRouter = router({
           tgl_masuk: row.tgl_masuk,
           tgl_keluar: row.tgl_keluar,
           has_operasi: row.has_operasi || false,
+          selectedSupport: input?.selectedSupport || undefined,
         });
 
         // DPJP Utama
@@ -401,9 +409,9 @@ export const rawatInapRouter = router({
         }
 
         // Operator
-        if (remun_operator > 0) {
-          const operatorKey = dpjpKey; // Operator is usually the main doctor
-          const operatorName = dpjpName;
+        if (remun_operator > 0 && row.operator) {
+          const operatorKey = row.operator; // Use the actual operator from the query
+          const operatorName = row.operator;
 
           if (operatorMap.has(operatorKey)) {
             operatorMap.get(operatorKey)!.total += remun_operator;
@@ -411,6 +419,21 @@ export const rawatInapRouter = router({
             operatorMap.set(operatorKey, {
               name: operatorName,
               total: remun_operator,
+            });
+          }
+        }
+
+        // Anestesi
+        if (remun_anestesi > 0 && row.anestesi) {
+          const anestesiKey = row.anestesi;
+          const anestesiName = row.anestesi;
+
+          if (anestesiMap.has(anestesiKey)) {
+            anestesiMap.get(anestesiKey)!.total += remun_anestesi;
+          } else {
+            anestesiMap.set(anestesiKey, {
+              name: anestesiName,
+              total: remun_anestesi,
             });
           }
         }
@@ -523,6 +546,14 @@ export const rawatInapRouter = router({
           total: Math.round(item.total),
         }));
 
+      const anestesiTotals = Array.from(anestesiMap.values())
+        .filter((item) => item.total > 0)
+        .sort((a, b) => b.total - a.total)
+        .map((item) => ({
+          name: item.name,
+          total: Math.round(item.total),
+        }));
+
       const penunjangTotals = Array.from(penunjangMap.values())
         .filter((item) => item.total > 0)
         .sort((a, b) => b.total - a.total)
@@ -558,11 +589,27 @@ export const rawatInapRouter = router({
         );
       }
 
-      // Add Operator
+      // Add Anestesi
+      for (const anestesi of konsulAnastesiTotals) {
+        rekapBulanan.set(
+          anestesi.name,
+          (rekapBulanan.get(anestesi.name) || 0) + anestesi.total
+        );
+      }
+
+      // Add Operator Operasi
       for (const operator of operatorTotals) {
         rekapBulanan.set(
           operator.name,
           (rekapBulanan.get(operator.name) || 0) + operator.total
+        );
+      }
+
+      // Add Anestesi Operasi
+      for (const anestesi of anestesiTotals) {
+        rekapBulanan.set(
+          anestesi.name,
+          (rekapBulanan.get(anestesi.name) || 0) + anestesi.total
         );
       }
 
@@ -598,6 +645,11 @@ export const rawatInapRouter = router({
           (sum, item) => sum + item.total,
           0
         ),
+        anestesi: anestesiTotals,
+        anestesiTotal: anestesiTotals.reduce(
+          (sum, item) => sum + item.total,
+          0
+        ),
         penunjang: penunjangTotals,
         penunjangTotal: penunjangTotals.reduce(
           (sum, item) => sum + item.total,
@@ -619,6 +671,7 @@ export const rawatInapRouter = router({
         filename: z.string().min(1, "CSV filename is required for download"),
         kd_dokter: z.string().optional(),
         kd_bangsal: z.string().optional(),
+        selectedSupport: z.string().optional(),
       })
     )
     .query(async ({ input }) => {
@@ -684,6 +737,7 @@ export const rawatInapRouter = router({
           tgl_masuk: row.tgl_masuk,
           tgl_keluar: row.tgl_keluar,
           has_operasi: row.has_operasi || false,
+          selectedSupport: input?.selectedSupport || undefined,
         });
 
         // Create calculation result in the format expected by the CSV
@@ -728,6 +782,7 @@ export const rawatInapRouter = router({
           tgl_masuk: row.tgl_masuk,
           tgl_keluar: row.tgl_keluar,
           has_operasi: row.has_operasi || false,
+          selectedSupport: input?.selectedSupport || undefined,
         });
         return accumulateTotals(acc, tarif, calculation);
       }, createEmptyTotals());

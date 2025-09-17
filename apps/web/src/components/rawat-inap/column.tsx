@@ -218,7 +218,7 @@ export const createColumns = (
         const value = row.original.visite_konsul_1;
         return (
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger asChild>
               <Button variant="ghost" size="sm">
                 {value?.length || ""}
               </Button>
@@ -242,7 +242,7 @@ export const createColumns = (
         const value = row.original.visite_konsul_2;
         return (
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger asChild>
               <Button variant="ghost" size="sm">
                 {value?.length || ""}
               </Button>
@@ -266,7 +266,7 @@ export const createColumns = (
         const value = row.original.visite_konsul_3;
         return (
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger asChild>
               <Button variant="ghost" size="sm">
                 {value?.length || ""}
               </Button>
@@ -290,7 +290,7 @@ export const createColumns = (
         const value = row.original.visite_dokter_umum;
         return (
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger asChild>
               <Button variant="ghost" size="sm" className="mx-auto">
                 {value?.length || ""}
               </Button>

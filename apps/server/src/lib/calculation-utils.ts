@@ -243,6 +243,7 @@ export interface RawatInapCalculationInput {
   tgl_masuk: Date | null;
   tgl_keluar: Date | null;
   has_operasi: boolean;
+  selectedSupport: string | undefined;
 }
 
 export interface RawatInapVisiteData {
@@ -261,7 +262,8 @@ export function extractRawatInapVisiteData(
   jns_perawatan: string,
   nm_dokter: string,
   tgl_masuk: Date | null,
-  tgl_keluar: Date | null
+  tgl_keluar: Date | null,
+  selectedSupport: string | undefined
 ): RawatInapVisiteData {
   const jnsPerawatanArray = JSON.parse(jns_perawatan || "[]");
   const mainDoctor = nm_dokter;
@@ -314,6 +316,7 @@ export function extractRawatInapVisiteData(
       perawatan.nm_perawatan.toLowerCase() === "visite dokter"
   );
 
+  console.log("visiteDokterUmum", visiteDokterUmum);
   let finalVisiteKonsul1 = visiteKonsul1;
   let finalVisiteKonsul2 = visiteKonsul2;
   let finalVisiteKonsul3 = visiteKonsul3;
@@ -355,13 +358,15 @@ export function calculateRawatInapFinancials(
     tgl_masuk,
     tgl_keluar,
     has_operasi,
+    selectedSupport,
   } = input;
 
   const visiteData = extractRawatInapVisiteData(
     jns_perawatan,
     nm_dokter,
     tgl_masuk,
-    tgl_keluar
+    tgl_keluar,
+    selectedSupport
   );
 
   const remun_lab = (total_permintaan_lab || 0) * 5000;

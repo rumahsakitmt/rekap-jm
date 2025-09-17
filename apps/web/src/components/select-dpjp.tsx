@@ -5,25 +5,49 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useFilterStore } from "@/stores/filter-store";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
-import { Button } from "../ui/button";
+import { Button } from "./ui/button";
 import { X } from "lucide-react";
+import { getRouteApi } from "@tanstack/react-router";
 
-const SelectDoctor = () => {
-  const { selectedDoctor, setSelectedDoctor } = useFilterStore();
+const SelectDPJP = ({ from }: { from: "/rawat-inap" | "/" }) => {
+  const route = getRouteApi(from);
+  const { selectedDoctor } = route.useSearch();
+  const navigate = route.useNavigate();
   const doctors = useQuery(
     trpc.dokter.getDoctor.queryOptions({
       limit: 1000,
     })
   );
 
+  const handleValueChange = (value: string) => {
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        selectedDoctor: value,
+        offset: 0,
+        page: 1,
+      }),
+    });
+  };
+
+  const handleClear = () => {
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        selectedDoctor: "",
+        offset: 0,
+        page: 1,
+      }),
+    });
+  };
+
   return (
-    <div className="relative">
-      <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
+    <div className="relative flex items-center gap-2">
+      <Select value={selectedDoctor || ""} onValueChange={handleValueChange}>
         <SelectTrigger className="w-full">
-          <SelectValue placeholder="Pilih dokter..." />
+          <SelectValue placeholder="Pilih DPJP..." />
         </SelectTrigger>
         <SelectContent>
           {doctors.data?.data?.map((doctor) => (
@@ -40,7 +64,7 @@ const SelectDoctor = () => {
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();
-            setSelectedDoctor("");
+            handleClear();
           }}
           className="z-50"
         >
@@ -51,4 +75,4 @@ const SelectDoctor = () => {
   );
 };
 
-export default SelectDoctor;
+export default SelectDPJP;

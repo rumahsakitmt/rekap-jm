@@ -183,6 +183,16 @@ export function createRawatInapSummaryQuery(whereCondition?: SQL) {
         WHERE ${permintaan_lab.no_rawat} = ${kamarInap.no_rawat}
       )`,
       has_operasi: sql<boolean>`CASE WHEN ${operasi.no_rawat} IS NOT NULL THEN true ELSE false END`,
+      operator: sql<string>`(
+        SELECT d.nm_dokter 
+        FROM dokter d 
+        WHERE d.kd_dokter = ${operasi.operator1}
+      )`,
+      anestesi: sql<string>`(
+        SELECT d.nm_dokter 
+        FROM dokter d 
+        WHERE d.kd_dokter = ${operasi.dokter_anestesi}
+      )`,
       no_sep: bridging_sep.no_sep,
     })
     .from(kamarInap)

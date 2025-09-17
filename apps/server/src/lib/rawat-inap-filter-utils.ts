@@ -3,8 +3,11 @@ import { reg_periksa } from "../db/schema/reg_periksa";
 import { bridging_sep } from "../db/schema/bridging_sep";
 import { pasien } from "../db/schema/pasien";
 import { jns_perawatan_inap } from "../db/schema/jns_perawatan_inap";
-import { kamarInap } from "@/db/schema/kamar_inap";
 import { dpjp_ranap } from "../db/schema/dpjp_ranap";
+import { permintaan_lab } from "../db/schema/permintaan_lab";
+import { permintaan_radiologi } from "../db/schema/permintaan_radiologi";
+import { kamarInap } from "../db/schema/kamar_inap";
+import { bangsal } from "../db/schema/bangsal";
 
 export interface RawatInapFilterInput {
   search?: string;
@@ -14,6 +17,7 @@ export interface RawatInapFilterInput {
   kd_poli?: string;
   csvSepNumbers?: string[];
   kd_bangsal?: string;
+  selectedSupport?: string;
 }
 
 export function buildRawatInapFilterConditions(input: RawatInapFilterInput) {
@@ -42,11 +46,31 @@ export function buildRawatInapFilterConditions(input: RawatInapFilterInput) {
   }
 
   if (input.kd_bangsal) {
-    whereConditions.push(eq(jns_perawatan_inap.kd_bangsal, input.kd_bangsal));
+    whereConditions.push(eq(bangsal.kd_bangsal, input.kd_bangsal));
   }
 
   if (input.csvSepNumbers && input.csvSepNumbers.length > 0) {
     whereConditions.push(inArray(bridging_sep.no_sep, input.csvSepNumbers));
+  }
+
+  if (input.selectedSupport) {
+    if (input.selectedSupport === "lab") {
+      whereConditions.push(
+        sql`(
+          SELECT COUNT(*) 
+          FROM ${permintaan_lab} 
+          WHERE ${permintaan_lab.no_rawat} = ${kamarInap.no_rawat}
+        ) > 0`
+      );
+    } else if (input.selectedSupport === "radiologi") {
+      whereConditions.push(
+        sql`(
+          SELECT COUNT(*) 
+          FROM ${permintaan_radiologi} 
+          WHERE ${permintaan_radiologi.no_rawat} = ${kamarInap.no_rawat}
+        ) > 0`
+      );
+    }
   }
 
   return {
