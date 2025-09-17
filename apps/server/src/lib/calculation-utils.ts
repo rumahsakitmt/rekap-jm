@@ -2,7 +2,7 @@ import { differenceInDays } from "date-fns";
 
 export interface RadiologiData {
   kd_jenis_prw: string;
-  nm_perawatan: string;
+  nm_perawatan: string | null;
   noorder: string;
 }
 
@@ -271,6 +271,7 @@ export function extractRawatInapVisiteData(
   const emergencyCount = jnsPerawatanArray.filter(
     (perawatan: any) =>
       perawatan?.nm_dokter === mainDoctor &&
+      perawatan.nm_perawatan &&
       perawatan.nm_perawatan.toLowerCase().includes("emergency")
   ).length;
 
@@ -281,13 +282,16 @@ export function extractRawatInapVisiteData(
 
   const visiteKonsul1 = jnsPerawatanArray.filter(
     (perawatan: any) =>
-      perawatan && perawatan.nm_perawatan.toLowerCase().includes("anastesi")
+      perawatan &&
+      perawatan.nm_perawatan &&
+      perawatan.nm_perawatan.toLowerCase().includes("anastesi")
   );
 
   const visiteKonsul2 = jnsPerawatanArray.filter(
     (perawatan: any) =>
       perawatan &&
       perawatan.nm_dokter !== mainDoctor &&
+      perawatan.nm_perawatan &&
       !perawatan.nm_perawatan.toLowerCase().includes("anastesi") &&
       !visiteKonsul1.some(
         (konsul: any) => konsul.nm_dokter === perawatan.nm_dokter
@@ -306,6 +310,7 @@ export function extractRawatInapVisiteData(
       !visiteKonsul2.some(
         (konsul: any) => konsul.nm_dokter === perawatan.nm_dokter
       ) &&
+      perawatan.nm_perawatan &&
       perawatan.nm_perawatan.toLowerCase() !== "visite dokter" &&
       perawatan.nm_perawatan.toLowerCase().includes("visite dokter")
   );
@@ -314,6 +319,7 @@ export function extractRawatInapVisiteData(
     (perawatan: any) =>
       perawatan &&
       perawatan.nm_dokter !== mainDoctor &&
+      perawatan.nm_perawatan &&
       perawatan.nm_perawatan.toLowerCase() === "visite dokter"
   );
 
