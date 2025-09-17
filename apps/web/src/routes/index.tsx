@@ -41,9 +41,7 @@ function HomeComponent() {
     selectedCsvFile,
     selectedDoctor,
     selectedPoliklinik,
-    konsulFilters,
-  } = useFilterStore();
-
+  } = Route.useSearch();
   const { copiedItems, addCopiedItem, removeCopiedItem } = useUIState();
 
   const { data: csvData, isLoading: isLoadingCsv } = useQuery({
@@ -104,7 +102,7 @@ function HomeComponent() {
       ...(selectedCsvFile && { filename: selectedCsvFile }),
       ...(selectedDoctor && { kd_dokter: selectedDoctor }),
       ...(selectedPoliklinik && { kd_poli: selectedPoliklinik }),
-      ...(konsulFilters.length > 0 && { konsulFilters }),
+      // ...(konsulFilters.length > 0 && { konsulFilters }),
     })
   );
 
@@ -116,6 +114,13 @@ function HomeComponent() {
             <Link
               to="/report-rawat-jalan"
               className={cn(buttonVariants({ variant: "default" }))}
+              search={{
+                dateFrom,
+                dateTo,
+                selectedCsvFile,
+                selectedDoctor,
+                selectedPoliklinik,
+              }}
             >
               <FileText />
               Report Rawat Jalan

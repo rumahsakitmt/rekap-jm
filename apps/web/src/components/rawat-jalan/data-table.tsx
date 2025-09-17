@@ -36,7 +36,6 @@ import { TotalsDisplay } from "./totals-display";
 import { Columns } from "lucide-react";
 import { DataTablePagination } from "./pagination";
 import { CsvAnalysis } from "../csv-analysis";
-import { Route } from "@/routes/index";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -79,8 +78,6 @@ export function DataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-  const searchParams = Route.useSearch();
-  const { selectedCsvFile, dateFrom, dateTo } = searchParams;
 
   const table = useReactTable({
     data,
@@ -104,7 +101,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="w-full space-y-2 ">
-      <DataTableFilters table={table} />
+      <DataTableFilters />
       <div className="p-2 space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-muted-foreground">
@@ -117,14 +114,7 @@ export function DataTable<TData, TValue>({
             </p>
             <span>]::</span>
           </div>
-          {searchParams.selectedCsvFile && (
-            <CsvAnalysis
-              filename={searchParams.selectedCsvFile}
-              dateFrom={dateFrom ? new Date(dateFrom) : undefined}
-              dateTo={dateTo ? new Date(dateTo) : undefined}
-              type="rawat-jalan"
-            />
-          )}
+          <CsvAnalysis from="/" />
         </div>
         <TotalsDisplay totals={totals} isCsvMode={isCsvMode} />
       </div>

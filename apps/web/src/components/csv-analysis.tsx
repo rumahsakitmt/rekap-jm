@@ -1,40 +1,30 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 import {
   FileText,
   AlertCircle,
-  ChevronRight,
-  ChevronsLeftRight,
   ChevronsLeftRightEllipsis,
   SearchCheck,
 } from "lucide-react";
 import { DialogNotFoundSep } from "./rawat-jalan/dialog-not-found-sep";
 import { Button } from "./ui/button";
+import { getRouteApi } from "@tanstack/react-router";
 
-interface CsvAnalysisProps {
-  filename: string;
-  dateFrom?: Date;
-  dateTo?: Date;
-  type: "rawat-jalan" | "rawat-inap";
-}
+export function CsvAnalysis({ from }: { from: "/" | "/rawat-inap" }) {
+  const route = getRouteApi(from);
 
-export function CsvAnalysis({
-  filename,
-  dateFrom,
-  dateTo,
-  type,
-}: CsvAnalysisProps) {
+  const { selectedCsvFile, dateFrom, dateTo } = route.useSearch();
   const analysis = useQuery({
     ...trpc.csvUpload.analyzeCsvRawatInap.queryOptions({
-      filename,
-      dateFrom,
-      dateTo,
+      filename: selectedCsvFile,
+      dateFrom: dateFrom ? new Date(dateFrom) : undefined,
+      dateTo: dateTo ? new Date(dateTo) : undefined,
     }),
-    enabled: !!filename,
+    enabled: !!selectedCsvFile,
   });
+
+  if (!selectedCsvFile) return null;
 
   if (analysis.isLoading) {
     return (

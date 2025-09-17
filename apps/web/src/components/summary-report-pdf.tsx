@@ -95,8 +95,8 @@ interface SummaryReportPDFProps {
     radTotal?: number;
   };
   filters: {
-    dateFrom?: string;
-    dateTo?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
     selectedCsvFile?: string;
     selectedDoctor?: string;
     selectedPoliklinik?: string;
@@ -113,11 +113,11 @@ export function SummaryReportPDF({ data, filters }: SummaryReportPDFProps) {
           </Text>
           <Text style={styles.subtitle}>
             Pasien Rawat Jalan, Pediode tanggal{" "}
-            {format(new Date(filters.dateFrom || ""), "dd MMMM yyyy", {
+            {format(filters.dateFrom || new Date(), "dd MMMM yyyy", {
               locale: id,
             })}{" "}
             s/d{" "}
-            {format(new Date(filters.dateTo || ""), "dd MMMM yyyy", {
+            {format(filters.dateTo || new Date(), "dd MMMM yyyy", {
               locale: id,
             })}
           </Text>

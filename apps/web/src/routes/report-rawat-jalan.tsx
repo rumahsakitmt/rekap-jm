@@ -1,13 +1,27 @@
 import { PDFViewer } from "@react-pdf/renderer";
 import { createFileRoute } from "@tanstack/react-router";
 import { SummaryReportPDF } from "@/components/summary-report-pdf";
-import { useFilterStore } from "@/stores/filter-store";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 import { Loader2 } from "lucide-react";
+import { z } from "zod";
+import { endOfMonth, startOfMonth } from "date-fns";
+import { zodValidator } from "@tanstack/zod-adapter";
+
+const defaultDateFrom = startOfMonth(new Date()).toISOString();
+const defaultDateTo = endOfMonth(new Date()).toISOString();
+
+const reportRawatJalanSearchSchema = z.object({
+  dateFrom: z.string().default(defaultDateFrom),
+  dateTo: z.string().default(defaultDateTo),
+  selectedCsvFile: z.string().default(""),
+  selectedDoctor: z.string().default(""),
+  selectedPoliklinik: z.string().default(""),
+});
 
 export const Route = createFileRoute("/report-rawat-jalan")({
   component: RouteComponent,
+  validateSearch: zodValidator(reportRawatJalanSearchSchema),
 });
 
 function RouteComponent() {
@@ -17,7 +31,7 @@ function RouteComponent() {
     selectedCsvFile,
     selectedDoctor,
     selectedPoliklinik,
-  } = useFilterStore();
+  } = Route.useSearch();
 
   const {
     data: summaryData,
@@ -90,8 +104,8 @@ function RouteComponent() {
             }
           }
           filters={{
-            dateFrom: dateFrom?.toISOString(),
-            dateTo: dateTo?.toISOString(),
+            dateFrom: dateFrom ? new Date(dateFrom) : undefined,
+            dateTo: dateTo ? new Date(dateTo) : undefined,
             selectedCsvFile,
             selectedDoctor,
             selectedPoliklinik,

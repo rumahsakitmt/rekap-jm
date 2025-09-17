@@ -119,14 +119,7 @@ export function DataTable<TData, TValue>({
             <span>]::</span>
           </div>
 
-          {selectedCsvFile && (
-            <CsvAnalysis
-              filename={selectedCsvFile}
-              dateFrom={dateFrom ? new Date(dateFrom) : undefined}
-              dateTo={dateTo ? new Date(dateTo) : undefined}
-              type="rawat-inap"
-            />
-          )}
+          <CsvAnalysis from="/rawat-inap" />
         </div>
       </div>
       <TotalDisplay totals={totals} />
