@@ -41,6 +41,7 @@ function HomeComponent() {
     selectedCsvFile,
     selectedDoctor,
     selectedPoliklinik,
+    selectedSupport,
   } = Route.useSearch();
   const { copiedItems, addCopiedItem, removeCopiedItem } = useUIState();
 
@@ -102,7 +103,7 @@ function HomeComponent() {
       ...(selectedCsvFile && { filename: selectedCsvFile }),
       ...(selectedDoctor && { kd_dokter: selectedDoctor }),
       ...(selectedPoliklinik && { kd_poli: selectedPoliklinik }),
-      // ...(konsulFilters.length > 0 && { konsulFilters }),
+      ...(selectedSupport && { selectedSupport }),
     })
   );
 

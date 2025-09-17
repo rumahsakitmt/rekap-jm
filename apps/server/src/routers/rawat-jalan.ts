@@ -29,6 +29,7 @@ export const rawatJalanRouter = router({
             })
           )
           .optional(),
+        selectedSupport: z.string().optional(),
       })
     )
     .query(async ({ input }) => {

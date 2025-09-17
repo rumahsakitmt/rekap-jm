@@ -15,6 +15,8 @@ import { reg_periksa } from "../db/schema/reg_periksa";
 import { bridging_sep } from "../db/schema/bridging_sep";
 import { pasien } from "../db/schema/pasien";
 import { jns_perawatan } from "@/db/schema/jns_perawatan";
+import { permintaan_lab } from "../db/schema/permintaan_lab";
+import { permintaan_radiologi } from "../db/schema/permintaan_radiologi";
 
 export interface KonsulFilter {
   field: string;
@@ -30,6 +32,7 @@ export interface FilterInput {
   kd_poli?: string;
   csvSepNumbers?: string[];
   konsulFilters?: KonsulFilter[];
+  selectedSupport?: string;
 }
 
 export function buildFilterConditions(input: FilterInput) {
@@ -60,6 +63,26 @@ export function buildFilterConditions(input: FilterInput) {
 
   if (input.csvSepNumbers && input.csvSepNumbers.length > 0) {
     whereConditions.push(inArray(bridging_sep.no_sep, input.csvSepNumbers));
+  }
+
+  if (input.selectedSupport) {
+    if (input.selectedSupport === "lab") {
+      whereConditions.push(
+        sql`(
+          SELECT COUNT(*) 
+          FROM ${permintaan_lab} 
+          WHERE ${permintaan_lab.no_rawat} = ${reg_periksa.no_rawat}
+        ) > 0`
+      );
+    } else if (input.selectedSupport === "radiologi") {
+      whereConditions.push(
+        sql`(
+          SELECT COUNT(*) 
+          FROM ${permintaan_radiologi} 
+          WHERE ${permintaan_radiologi.no_rawat} = ${reg_periksa.no_rawat}
+        ) > 0`
+      );
+    }
   }
 
   if (input.konsulFilters && input.konsulFilters.length > 0) {
