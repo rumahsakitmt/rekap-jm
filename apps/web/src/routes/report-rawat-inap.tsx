@@ -19,7 +19,7 @@ const rawatInapSearchSchema = z.object({
   selectedKamar: z.string().default(""),
 });
 
-export const Route = createFileRoute("/report-rawat-inap-detailed")({
+export const Route = createFileRoute("/report-rawat-inap")({
   component: RouteComponent,
   validateSearch: zodValidator(rawatInapSearchSchema),
 });

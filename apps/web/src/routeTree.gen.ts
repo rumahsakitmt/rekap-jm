@@ -10,7 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ReportRawatJalanRouteImport } from './routes/report-rawat-jalan'
-import { Route as ReportRawatInapDetailedRouteImport } from './routes/report-rawat-inap-detailed'
+import { Route as ReportRawatInapRouteImport } from './routes/report-rawat-inap'
 import { Route as RawatInapRouteImport } from './routes/rawat-inap'
 import { Route as BridgingRouteImport } from './routes/bridging'
 import { Route as IndexRouteImport } from './routes/index'
@@ -20,9 +20,9 @@ const ReportRawatJalanRoute = ReportRawatJalanRouteImport.update({
   path: '/report-rawat-jalan',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ReportRawatInapDetailedRoute = ReportRawatInapDetailedRouteImport.update({
-  id: '/report-rawat-inap-detailed',
-  path: '/report-rawat-inap-detailed',
+const ReportRawatInapRoute = ReportRawatInapRouteImport.update({
+  id: '/report-rawat-inap',
+  path: '/report-rawat-inap',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RawatInapRoute = RawatInapRouteImport.update({
@@ -45,14 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/bridging': typeof BridgingRoute
   '/rawat-inap': typeof RawatInapRoute
-  '/report-rawat-inap-detailed': typeof ReportRawatInapDetailedRoute
+  '/report-rawat-inap': typeof ReportRawatInapRoute
   '/report-rawat-jalan': typeof ReportRawatJalanRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/bridging': typeof BridgingRoute
   '/rawat-inap': typeof RawatInapRoute
-  '/report-rawat-inap-detailed': typeof ReportRawatInapDetailedRoute
+  '/report-rawat-inap': typeof ReportRawatInapRoute
   '/report-rawat-jalan': typeof ReportRawatJalanRoute
 }
 export interface FileRoutesById {
@@ -60,7 +60,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/bridging': typeof BridgingRoute
   '/rawat-inap': typeof RawatInapRoute
-  '/report-rawat-inap-detailed': typeof ReportRawatInapDetailedRoute
+  '/report-rawat-inap': typeof ReportRawatInapRoute
   '/report-rawat-jalan': typeof ReportRawatJalanRoute
 }
 export interface FileRouteTypes {
@@ -69,21 +69,21 @@ export interface FileRouteTypes {
     | '/'
     | '/bridging'
     | '/rawat-inap'
-    | '/report-rawat-inap-detailed'
+    | '/report-rawat-inap'
     | '/report-rawat-jalan'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/bridging'
     | '/rawat-inap'
-    | '/report-rawat-inap-detailed'
+    | '/report-rawat-inap'
     | '/report-rawat-jalan'
   id:
     | '__root__'
     | '/'
     | '/bridging'
     | '/rawat-inap'
-    | '/report-rawat-inap-detailed'
+    | '/report-rawat-inap'
     | '/report-rawat-jalan'
   fileRoutesById: FileRoutesById
 }
@@ -91,7 +91,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BridgingRoute: typeof BridgingRoute
   RawatInapRoute: typeof RawatInapRoute
-  ReportRawatInapDetailedRoute: typeof ReportRawatInapDetailedRoute
+  ReportRawatInapRoute: typeof ReportRawatInapRoute
   ReportRawatJalanRoute: typeof ReportRawatJalanRoute
 }
 
@@ -104,11 +104,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReportRawatJalanRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/report-rawat-inap-detailed': {
-      id: '/report-rawat-inap-detailed'
-      path: '/report-rawat-inap-detailed'
-      fullPath: '/report-rawat-inap-detailed'
-      preLoaderRoute: typeof ReportRawatInapDetailedRouteImport
+    '/report-rawat-inap': {
+      id: '/report-rawat-inap'
+      path: '/report-rawat-inap'
+      fullPath: '/report-rawat-inap'
+      preLoaderRoute: typeof ReportRawatInapRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rawat-inap': {
@@ -139,7 +139,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BridgingRoute: BridgingRoute,
   RawatInapRoute: RawatInapRoute,
-  ReportRawatInapDetailedRoute: ReportRawatInapDetailedRoute,
+  ReportRawatInapRoute: ReportRawatInapRoute,
   ReportRawatJalanRoute: ReportRawatJalanRoute,
 }
 export const routeTree = rootRouteImport

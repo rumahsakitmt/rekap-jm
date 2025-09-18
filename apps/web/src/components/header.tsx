@@ -13,7 +13,12 @@ export default function Header() {
         <nav className="flex gap-4">
           {links.map(({ to, label }) => {
             return (
-              <Link key={to} to={to}>
+              <Link
+                key={to}
+                to={to}
+                className="text-muted-foreground"
+                activeProps={{ className: "text-primary font-bold" }}
+              >
                 {label}
               </Link>
             );

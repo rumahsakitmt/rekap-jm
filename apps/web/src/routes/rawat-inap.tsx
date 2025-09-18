@@ -4,11 +4,12 @@ import { zodValidator } from "@tanstack/zod-adapter";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-import { FileText, Download, Share } from "lucide-react";
+import { FileText, Share } from "lucide-react";
 import UploadCSVSheet from "@/components/upload-csv-sheet";
 import { Button } from "@/components/ui/button";
 import { startOfMonth, endOfMonth } from "date-fns";
 import TableRawatInap from "@/components/rawat-inap/table";
+import { DownloadReport } from "@/components/rawat-inap/download-report";
 
 const defaultDateFrom = startOfMonth(new Date()).toISOString();
 const defaultDateTo = endOfMonth(new Date()).toISOString();
@@ -55,7 +56,7 @@ function RouteComponent() {
               Bagikan
             </Button>
             <Link
-              to="/report-rawat-inap-detailed"
+              to="/report-rawat-inap"
               search={{
                 dateFrom,
                 dateTo,
@@ -68,10 +69,7 @@ function RouteComponent() {
               <FileText />
               Report Rawat Inap
             </Link>
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Download CSV
-            </Button>
+            <DownloadReport />
           </>
         )}
         <UploadCSVSheet />

@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 import { DataTable, createColumns } from "@/components/rawat-jalan";
-import { useFilterStore, useUIState } from "@/stores/filter-store";
+import { useUIState } from "@/stores/filter-store";
 import { Download, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
