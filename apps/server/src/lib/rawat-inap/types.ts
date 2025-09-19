@@ -158,28 +158,27 @@ export interface RawatInapResponse {
 }
 
 export interface DetailedReportResponse {
-  dpjp: Array<{ name: string; total: number }>;
+  dpjp: Array<{ name: string; visite: number; total: number }>;
   dpjpTotal: number;
-  konsulAnastesi: Array<{ name: string; total: number }>;
+  konsulAnastesi: Array<{ name: string; visite: number; total: number }>;
   konsulAnastesiTotal: number;
   konsul: Array<{
     name: string;
-    konsul1: number;
-    konsul2: number;
+    visite: number;
     total: number;
   }>;
   konsulTotal: number;
-  dokterUmum: Array<{ name: string; total: number }>;
+  dokterUmum: Array<{ name: string; visite: number; total: number }>;
   dokterUmumTotal: number;
-  operator: Array<{ name: string; total: number }>;
+  operator: Array<{ name: string; visite: number; total: number }>;
   operatorTotal: number;
-  anestesi: Array<{ name: string; total: number }>;
+  anestesi: Array<{ name: string; visite: number; total: number }>;
   anestesiTotal: number;
-  penunjang: Array<{ name: string; total: number }>;
+  penunjang: Array<{ name: string; visite: number; total: number }>;
   penunjangTotal: number;
   labTotal: number;
   radTotal: number;
-  rekapBulanan: Array<{ name: string; total: number }>;
+  rekapBulanan: Array<{ name: string; visite: number; total: number }>;
   grandTotal: number;
 }
 

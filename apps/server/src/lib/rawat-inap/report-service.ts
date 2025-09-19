@@ -16,19 +16,14 @@ import type {
 export class RawatInapReportService {
   private calculationService = new RawatInapCalculationService();
 
-  /**
-   * Generate detailed monthly report
-   */
   async generateDetailedMonthlyReport(
     input: RawatInapFilterInput
   ): Promise<DetailedReportResponse> {
-    // Load CSV data if filename provided
     let csvData: CsvData[] = [];
     if (input?.filename) {
       csvData = await readCsvFile(input.filename);
     }
 
-    // Build filter conditions
     const filterConditions = buildRawatInapFilterConditions({
       ...input,
       csvSepNumbers: csvData.map((item) => item.no_sep),
@@ -38,7 +33,6 @@ export class RawatInapReportService {
     const results = await query;
     const csvTarifMap = createCsvTarifMap(csvData);
 
-    // Get radiologi and lab data
     const noRawatList = results
       .map((item) => item.no_rawat)
       .filter((id): id is string => id !== null);
@@ -48,39 +42,50 @@ export class RawatInapReportService {
       getLabData(noRawatList),
     ]);
 
-    // Create maps for quick lookup
     const radiologiMap = this.createDataMap(radiologiData, "no_rawat");
     const labMap = this.createDataMap(labData, "no_rawat");
 
-    // Initialize aggregation maps
-    const dpjpMap = new Map<string, { name: string; total: number }>();
+    const dpjpMap = new Map<
+      string,
+      { name: string; visite: number; total: number }
+    >();
     const konsulAnastesiMap = new Map<
       string,
-      { name: string; total: number }
+      { name: string; visite: number; total: number }
     >();
     const konsulMap = new Map<
       string,
       {
         name: string;
-        konsul1: number;
-        konsul2: number;
+        visite: number;
         total: number;
       }
     >();
-    const dokterUmumMap = new Map<string, { name: string; total: number }>();
-    const operatorMap = new Map<string, { name: string; total: number }>();
-    const anestesiMap = new Map<string, { name: string; total: number }>();
+    const dokterUmumMap = new Map<
+      string,
+      { name: string; visite: number; total: number }
+    >();
+    const operatorMap = new Map<
+      string,
+      { name: string; visite: number; total: number }
+    >();
+    const anestesiMap = new Map<
+      string,
+      { name: string; visite: number; total: number }
+    >();
     const anestesiPenggantiMap = new Map<
       string,
-      { name: string; total: number }
+      { name: string; visite: number; total: number }
     >();
-    const penunjangMap = new Map<string, { name: string; total: number }>();
+    const penunjangMap = new Map<
+      string,
+      { name: string; visite: number; total: number }
+    >();
 
     let labTotal = 0;
     let radTotal = 0;
     let grandTotal = 0;
 
-    // Process each result
     for (const row of results) {
       const tarif = csvTarifMap.get(row.no_sep || "") || 0;
       const jnsPerawatanRadiologiArray = radiologiMap.get(row.no_rawat) || [];
@@ -94,7 +99,12 @@ export class RawatInapReportService {
       const visiteData = this.calculationService.calculateVisiteData(row);
 
       // Aggregate DPJP Utama
-      this.aggregateDpjpUtama(dpjpMap, row, calculation.remun_dpjp_utama);
+      this.aggregateDpjpUtama(
+        dpjpMap,
+        row,
+        calculation.remun_dpjp_utama,
+        visiteData
+      );
 
       // Aggregate Konsul Anastesi
       this.aggregateKonsulAnastesi(
@@ -103,7 +113,7 @@ export class RawatInapReportService {
         calculation.remun_konsul_anastesi
       );
 
-      // Aggregate Konsul 2
+      // Aggregate Visite Antar Spesialis
       this.aggregateKonsul2(konsulMap, visiteData, calculation.remun_konsul_2);
 
       // Aggregate Dokter Umum
@@ -124,13 +134,13 @@ export class RawatInapReportService {
         calculation.remun_anastesi_pengganti
       );
 
-      // Aggregate Penunjang
       this.aggregatePenunjang(
         penunjangMap,
         radiologiMap,
         labMap,
         row,
-        calculation.remun_lab + calculation.remun_rad
+        calculation.remun_lab,
+        calculation.remun_rad
       );
 
       labTotal += calculation.remun_lab;
@@ -203,24 +213,32 @@ export class RawatInapReportService {
   }
 
   private aggregateDpjpUtama(
-    dpjpMap: Map<string, { name: string; total: number }>,
+    dpjpMap: Map<string, { name: string; visite: number; total: number }>,
     row: RawatInapSummaryData,
-    remun_dpjp_utama: number
+    remun_dpjp_utama: number,
+    visiteData: any
   ) {
     const dpjpKey = row.kd_dokter || "Unknown";
     const dpjpName = row.nm_dokter || "Unknown";
+    const visiteDpjp = visiteData.visiteDpjpUtama;
     if (dpjpMap.has(dpjpKey)) {
-      dpjpMap.get(dpjpKey)!.total += remun_dpjp_utama;
+      const existing = dpjpMap.get(dpjpKey)!;
+      existing.visite += visiteDpjp;
+      existing.total += remun_dpjp_utama;
     } else {
       dpjpMap.set(dpjpKey, {
         name: dpjpName,
+        visite: visiteDpjp,
         total: remun_dpjp_utama,
       });
     }
   }
 
   private aggregateKonsulAnastesi(
-    konsulAnastesiMap: Map<string, { name: string; total: number }>,
+    konsulAnastesiMap: Map<
+      string,
+      { name: string; visite: number; total: number }
+    >,
     visiteData: any,
     remun_konsul_anastesi: number
   ) {
@@ -234,13 +252,16 @@ export class RawatInapReportService {
         const konsulKey = doctor.kd_dokter;
         const konsulName = doctor.nm_dokter;
 
+        const visiteKonsul1 = visiteData.visiteKonsul1.length;
         if (konsulAnastesiMap.has(konsulKey)) {
           const existing = konsulAnastesiMap.get(konsulKey)!;
-          existing.total += remun_konsul_anastesi;
+          existing.visite += visiteKonsul1;
+          existing.total += remun_konsul_anastesi / anastesiDoctors.length;
         } else {
           konsulAnastesiMap.set(konsulKey, {
             name: konsulName,
-            total: remun_konsul_anastesi,
+            visite: visiteKonsul1,
+            total: remun_konsul_anastesi / anastesiDoctors.length,
           });
         }
       }
@@ -262,15 +283,15 @@ export class RawatInapReportService {
         const konsulKey = doctor.kd_dokter;
         const konsulName = doctor.nm_dokter;
 
+        const visiteKonsul2 = visiteData.visiteKonsul2.length;
         if (konsulMap.has(konsulKey)) {
           const existing = konsulMap.get(konsulKey)!;
-          existing.konsul2 += remun_konsul_2 / konsul2Doctors.length;
+          existing.visite += visiteKonsul2;
           existing.total += remun_konsul_2 / konsul2Doctors.length;
         } else {
           konsulMap.set(konsulKey, {
             name: konsulName,
-            konsul1: 0,
-            konsul2: remun_konsul_2 / konsul2Doctors.length,
+            visite: visiteKonsul2,
             total: remun_konsul_2 / konsul2Doctors.length,
           });
         }
@@ -279,7 +300,7 @@ export class RawatInapReportService {
   }
 
   private aggregateDokterUmum(
-    dokterUmumMap: Map<string, { name: string; total: number }>,
+    dokterUmumMap: Map<string, { name: string; visite: number; total: number }>,
     visiteData: any,
     remun_dokter_umum: number
   ) {
@@ -293,12 +314,15 @@ export class RawatInapReportService {
         const umumKey = doctor.kd_dokter;
         const umumName = doctor.nm_dokter;
 
+        const visiteDokterUmum = remun_dokter_umum / umumDoctors.length / 20000;
         if (dokterUmumMap.has(umumKey)) {
-          dokterUmumMap.get(umumKey)!.total +=
-            remun_dokter_umum / umumDoctors.length;
+          const existing = dokterUmumMap.get(umumKey)!;
+          existing.visite += visiteDokterUmum;
+          existing.total += remun_dokter_umum / umumDoctors.length;
         } else {
           dokterUmumMap.set(umumKey, {
             name: umumName,
+            visite: visiteDokterUmum,
             total: remun_dokter_umum / umumDoctors.length,
           });
         }
@@ -307,7 +331,7 @@ export class RawatInapReportService {
   }
 
   private aggregateOperator(
-    operatorMap: Map<string, { name: string; total: number }>,
+    operatorMap: Map<string, { name: string; visite: number; total: number }>,
     row: RawatInapSummaryData,
     remun_operator: number
   ) {
@@ -316,10 +340,13 @@ export class RawatInapReportService {
       const operatorName = row.operator;
 
       if (operatorMap.has(operatorKey)) {
-        operatorMap.get(operatorKey)!.total += remun_operator;
+        const existing = operatorMap.get(operatorKey)!;
+        existing.visite += 1;
+        existing.total += remun_operator;
       } else {
         operatorMap.set(operatorKey, {
           name: operatorName,
+          visite: 1,
           total: remun_operator,
         });
       }
@@ -327,7 +354,7 @@ export class RawatInapReportService {
   }
 
   private aggregateAnestesi(
-    anestesiMap: Map<string, { name: string; total: number }>,
+    anestesiMap: Map<string, { name: string; visite: number; total: number }>,
     row: RawatInapSummaryData,
     remun_anestesi: number,
     remun_anastesi_pengganti: number
@@ -345,86 +372,93 @@ export class RawatInapReportService {
         : remun_anestesi;
 
       if (anestesiMap.has(anestesiKey)) {
-        anestesiMap.get(anestesiKey)!.total += remun;
+        const existing = anestesiMap.get(anestesiKey)!;
+        existing.visite += 1;
+        existing.total += remun;
       } else {
         anestesiMap.set(anestesiKey, {
           name: anestesiName,
+          visite: 1,
           total: remun,
         });
       }
     }
   }
 
-  private aggregateAnestesiPengganti(
-    anestesiPenggantiMap: Map<string, { name: string; total: number }>,
-    row: RawatInapSummaryData,
-    remun_anastesi_pengganti: number
-  ) {
-    if (remun_anastesi_pengganti > 0 && row.anestesi) {
-      const anestesiName = row.anestesi.split(":")[1];
-
-      if (anestesiPenggantiMap.has(anestesiName)) {
-        anestesiPenggantiMap.get(anestesiName)!.total +=
-          remun_anastesi_pengganti;
-      } else {
-        anestesiPenggantiMap.set(anestesiName, {
-          name: anestesiName,
-          total: remun_anastesi_pengganti,
-        });
-      }
-    }
-  }
-
   private aggregatePenunjang(
-    penunjangMap: Map<string, { name: string; total: number }>,
+    penunjangMap: Map<string, { name: string; visite: number; total: number }>,
     radiologiMap: Map<string, any[]>,
     labMap: Map<string, any[]>,
     row: RawatInapSummaryData,
-    penunjangRemun: number
+    labRemun: number,
+    radRemun: number
   ) {
-    const penunjangDoctors: { kd_dokter: string; nm_dokter: string }[] = [];
+    const radiologiDoctors: { kd_dokter: string; nm_dokter: string }[] = [];
+    const labDoctors: { kd_dokter: string; nm_dokter: string }[] = [];
 
-    // Get doctors from radiologi data
     const radiologiRecords = radiologiMap.get(row.no_rawat) || [];
     radiologiRecords.forEach((rad: any) => {
       if (rad.kd_dokter && rad.nm_dokter) {
-        penunjangDoctors.push({
+        radiologiDoctors.push({
           kd_dokter: rad.kd_dokter,
           nm_dokter: rad.nm_dokter,
         });
       }
     });
 
-    // Get doctors from lab data
     const labRecords = labMap.get(row.no_rawat) || [];
     labRecords.forEach((lab: any) => {
       if (lab.kd_dokter && lab.nm_dokter) {
-        penunjangDoctors.push({
+        labDoctors.push({
           kd_dokter: lab.kd_dokter,
           nm_dokter: lab.nm_dokter,
         });
       }
     });
 
-    // Remove duplicates based on kd_dokter
-    const uniquePenunjangDoctors = penunjangDoctors.filter(
+    const uniqueRadiologiDoctors = radiologiDoctors.filter(
       (doctor, index, self) =>
         index === self.findIndex((d) => d.kd_dokter === doctor.kd_dokter)
     );
 
-    // Distribute penunjang remuneration
-    if (penunjangRemun > 0 && uniquePenunjangDoctors.length > 0) {
-      for (const doctor of uniquePenunjangDoctors) {
+    const uniqueLabDoctors = labDoctors.filter(
+      (doctor, index, self) =>
+        index === self.findIndex((d) => d.kd_dokter === doctor.kd_dokter)
+    );
+
+    if (radRemun > 0 && uniqueRadiologiDoctors.length > 0) {
+      for (const doctor of uniqueRadiologiDoctors) {
         const penunjangKey = doctor.kd_dokter;
         const penunjangName = doctor.nm_dokter;
 
         if (penunjangMap.has(penunjangKey)) {
-          penunjangMap.get(penunjangKey)!.total +=
-            penunjangRemun / uniquePenunjangDoctors.length;
+          const existing = penunjangMap.get(penunjangKey)!;
+          existing.visite += 1;
+          existing.total += radRemun / uniqueRadiologiDoctors.length;
         } else {
           penunjangMap.set(penunjangKey, {
             name: penunjangName,
-            total: penunjangRemun / uniquePenunjangDoctors.length,
+            visite: 1,
+            total: radRemun / uniqueRadiologiDoctors.length,
+          });
+        }
+      }
+    }
+
+    if (labRemun > 0 && uniqueLabDoctors.length > 0) {
+      for (const doctor of uniqueLabDoctors) {
+        const penunjangKey = doctor.kd_dokter;
+        const penunjangName = doctor.nm_dokter;
+
+        if (penunjangMap.has(penunjangKey)) {
+          const existing = penunjangMap.get(penunjangKey)!;
+          existing.visite += 1;
+          existing.total += labRemun / uniqueLabDoctors.length;
+        } else {
+          penunjangMap.set(penunjangKey, {
+            name: penunjangName,
+            visite: 1,
+            total: labRemun / uniqueLabDoctors.length,
           });
         }
       }
@@ -449,21 +483,21 @@ export class RawatInapReportService {
   }
 
   private convertMapToSortedArray(
-    map: Map<string, { name: string; total: number }>
-  ): Array<{ name: string; total: number }> {
+    map: Map<string, { name: string; visite: number; total: number }>
+  ): Array<{ name: string; visite: number; total: number }> {
     return Array.from(map.values())
       .filter((item) => item.total > 0)
       .sort((a, b) => b.total - a.total)
       .map((item) => ({
         name: item.name,
+        visite: Math.round(item.visite),
         total: Math.round(item.total),
       }));
   }
 
   private convertKonsulMapToSortedArray(map: Map<string, any>): Array<{
     name: string;
-    konsul1: number;
-    konsul2: number;
+    visite: number;
     total: number;
   }> {
     return Array.from(map.values())
@@ -471,26 +505,30 @@ export class RawatInapReportService {
       .sort((a, b) => b.total - a.total)
       .map((item) => ({
         name: item.name,
-        konsul1: Math.round(item.konsul1),
-        konsul2: Math.round(item.konsul2),
+        visite: Math.round(item.visite),
         total: Math.round(item.total),
       }));
   }
 
   private createMonthlySummary(
-    allTotals: Array<{ name: string; total: number }>
-  ): Array<{ name: string; total: number }> {
-    const rekapBulanan = new Map<string, number>();
+    allTotals: Array<{ name: string; visite: number; total: number }>
+  ): Array<{ name: string; visite: number; total: number }> {
+    const rekapBulanan = new Map<string, { visite: number; total: number }>();
 
     for (const item of allTotals) {
-      rekapBulanan.set(
-        item.name,
-        (rekapBulanan.get(item.name) || 0) + item.total
-      );
+      const existing = rekapBulanan.get(item.name) || { visite: 0, total: 0 };
+      rekapBulanan.set(item.name, {
+        visite: existing.visite + item.visite,
+        total: existing.total + item.total,
+      });
     }
 
     return Array.from(rekapBulanan.entries())
-      .map(([name, total]) => ({ name, total: Math.round(total) }))
+      .map(([name, data]) => ({
+        name,
+        visite: Math.round(data.visite),
+        total: Math.round(data.total),
+      }))
       .sort((a, b) => b.total - a.total);
   }
 }

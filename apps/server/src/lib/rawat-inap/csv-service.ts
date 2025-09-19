@@ -75,10 +75,7 @@ export class RawatInapCsvService {
         input?.selectedSupport
       );
 
-      const visiteData = this.calculationService.calculateVisiteData(
-        row,
-        input?.selectedSupport
-      );
+      const visiteData = this.calculationService.calculateVisiteData(row);
 
       return {
         ...row,

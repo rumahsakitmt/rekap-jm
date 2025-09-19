@@ -1,6 +1,6 @@
 import { PDFViewer } from "@react-pdf/renderer";
 import { createFileRoute } from "@tanstack/react-router";
-import { RawatInapDetailedMonthlyReportPDF } from "@/components/rawat-inap-detailed-monthly-report-pdf";
+import { RawatInapDetailedMonthlyReportPDF } from "@/components/rawat-inap/rawat-inap-report-pdf";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 import { Loader2 } from "lucide-react";

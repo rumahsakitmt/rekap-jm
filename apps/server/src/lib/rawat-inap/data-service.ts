@@ -26,19 +26,13 @@ import type {
 } from "./types";
 
 export class RawatInapDataService {
-  /**
-   * Get rawat inap data with filtering and pagination
-   */
   async getRawatInapData(
     input: RawatInapFilterInput
   ): Promise<RawatInapResponse> {
-    // Load CSV data if filename provided
     let csvData: CsvData[] = [];
     if (input?.filename) {
       csvData = await readCsvFile(input.filename);
     }
-
-    // Build filter conditions
     const filterConditions = buildRawatInapFilterConditions({
       ...input,
       csvSepNumbers: csvData.map((item) => item.no_sep),
@@ -47,16 +41,13 @@ export class RawatInapDataService {
     const baseQuery = createRawatInapQuery(and(filterConditions.where));
     const csvTarifMap = createCsvTarifMap(csvData);
 
-    // Get total count for pagination
     const totalCount = await baseQuery.then((results) => results.length);
 
-    // Calculate pagination
     const limit = input?.limit || 50;
     const offset = input?.offset || 0;
     const page = Math.floor(offset / limit) + 1;
     const totalPages = Math.ceil(totalCount / limit);
 
-    // Calculate totals if requested
     let totals: TotalsAccumulator | null = null;
     if (input?.includeTotals) {
       totals = await this.calculateTotals(
@@ -66,10 +57,8 @@ export class RawatInapDataService {
       );
     }
 
-    // Get paginated data
     const rawatInap = await baseQuery.offset(offset).limit(limit);
 
-    // Process the data
     const processedData = await this.processRawatInapData(
       rawatInap,
       csvTarifMap,
@@ -172,7 +161,6 @@ export class RawatInapDataService {
         visite_dpjp_utama: visiteData.visiteDpjpUtama,
         visite_konsul_1: visiteData.finalVisiteKonsul1,
         visite_konsul_2: visiteData.finalVisiteKonsul2,
-        visite_konsul_3: visiteData.finalVisiteKonsul3,
         visite_dokter_umum: visiteData.visiteDokterUmum,
         jns_perawatan: jnsPerawatanArray,
         jns_perawatan_radiologi: jnsPerawatanRadiologiArray,

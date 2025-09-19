@@ -344,7 +344,6 @@ export function calculateRawatInapFinancials(
     tgl_masuk,
     tgl_keluar,
     has_operasi,
-    selectedSupport,
     jns_perawatan_radiologi,
     dokter_anestesi,
   } = input;
@@ -367,7 +366,7 @@ export function calculateRawatInapFinancials(
   const remun_rad = usgCount * 80000 + nonUsgCount * 15000;
   const alokasi = tarif * 0.2 - remun_lab - remun_rad;
   const remun_dokter_umum = (visiteData.visiteDokterUmum.length || 0) * 20000;
-  const dpjp_ranap = alokasi - remun_dokter_umum;
+  const dpjp_ranap = alokasi * (has_operasi ? 0.3 : 1) - remun_dokter_umum;
   const remun_dpjp_utama =
     (visiteData.visiteDpjpUtama / visiteData.totalVisite) * dpjp_ranap;
   const remun_konsul_anastesi =
@@ -376,10 +375,8 @@ export function calculateRawatInapFinancials(
     (visiteData.visiteKonsul2.length / visiteData.totalVisite) * dpjp_ranap;
   const remun_operator = has_operasi ? alokasi * 0.7 * 0.7 : 0;
   const remun_anestesi = has_operasi ? alokasi * 0.7 * 0.3 : 0;
-  const remun_anastesi_pengganti = dokter_anestesi ? remun_anestesi * 0.3 : 0;
-  const remun_dokter_anestesi = dokter_anestesi
-    ? remun_anestesi - remun_anastesi_pengganti
-    : remun_anestesi;
+  const remun_anastesi_pengganti = !dokter_anestesi ? remun_anestesi * 0.3 : 0;
+  const remun_dokter_anestesi = remun_anestesi - remun_anastesi_pengganti;
 
   const yang_terbagi =
     remun_dpjp_utama +
