@@ -14,14 +14,6 @@ export class RawatInapCalculationService {
     jnsPerawatanRadiologiArray: any[],
     selectedSupport?: string
   ) {
-    const visiteData = extractRawatInapVisiteData(
-      row.jns_perawatan || "[]",
-      row.nm_dokter || "",
-      row.tgl_masuk,
-      row.tgl_keluar,
-      selectedSupport
-    );
-
     return calculateRawatInapFinancials({
       tarif,
       total_permintaan_lab: row.total_permintaan_lab || 0,
@@ -33,22 +25,19 @@ export class RawatInapCalculationService {
       tgl_keluar: row.tgl_keluar,
       has_operasi: row.has_operasi || false,
       selectedSupport,
+      dokter_anestesi: row.anestesi || "",
     });
   }
 
   /**
    * Calculate visite data for a single rawat inap record
    */
-  calculateVisiteData(
-    row: RawatInapData | RawatInapSummaryData,
-    selectedSupport?: string
-  ) {
+  calculateVisiteData(row: RawatInapData | RawatInapSummaryData) {
     return extractRawatInapVisiteData(
       row.jns_perawatan || "[]",
       row.nm_dokter || "",
       row.tgl_masuk,
-      row.tgl_keluar,
-      selectedSupport
+      row.tgl_keluar
     );
   }
 

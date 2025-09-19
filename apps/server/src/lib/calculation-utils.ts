@@ -120,6 +120,7 @@ export interface TotalsAccumulator {
   totalRemunRadiologi: number;
   totalRemunOperator: number;
   totalRemunAnestesi: number;
+  totalRemunAnastesiPengganti: number;
   totalYangTerbagi: number;
   totalPercentDariKlaim: number;
   count: number;
@@ -139,6 +140,7 @@ export function createEmptyTotals(): TotalsAccumulator {
     totalRemunRadiologi: 0,
     totalRemunOperator: 0,
     totalRemunAnestesi: 0,
+    totalRemunAnastesiPengganti: 0,
     totalYangTerbagi: 0,
     totalPercentDariKlaim: 0,
     count: 0,
@@ -157,6 +159,7 @@ export interface RawatInapCalculationResult {
   remun_rad: number;
   remun_operator: number;
   remun_anestesi: number;
+  remun_anastesi_pengganti: number;
   yang_terbagi: number;
   percent_dari_klaim: number;
 }
@@ -182,6 +185,8 @@ export function accumulateTotals(
     totalRemunRadiologi: acc.totalRemunRadiologi + calculation.remun_rad,
     totalRemunOperator: acc.totalRemunOperator + calculation.remun_operator,
     totalRemunAnestesi: acc.totalRemunAnestesi + calculation.remun_anestesi,
+    totalRemunAnastesiPengganti:
+      acc.totalRemunAnastesiPengganti + calculation.remun_anastesi_pengganti,
     totalYangTerbagi: acc.totalYangTerbagi + calculation.yang_terbagi,
     totalPercentDariKlaim:
       acc.totalPercentDariKlaim + calculation.percent_dari_klaim,
@@ -245,6 +250,7 @@ export interface RawatInapCalculationInput {
   tgl_keluar: Date | null;
   has_operasi: boolean;
   selectedSupport: string | undefined;
+  dokter_anestesi: string;
 }
 
 export interface RawatInapVisiteData {
@@ -263,8 +269,7 @@ export function extractRawatInapVisiteData(
   jns_perawatan: string,
   nm_dokter: string,
   tgl_masuk: Date | null,
-  tgl_keluar: Date | null,
-  selectedSupport: string | undefined
+  tgl_keluar: Date | null
 ): RawatInapVisiteData {
   const jnsPerawatanArray = JSON.parse(jns_perawatan || "[]");
   const mainDoctor = nm_dokter;
@@ -272,7 +277,7 @@ export function extractRawatInapVisiteData(
     (perawatan: any) =>
       perawatan?.nm_dokter === mainDoctor &&
       perawatan.nm_perawatan &&
-      perawatan.nm_perawatan.toLowerCase().includes("emergency")
+      perawatan.nm_perawatan.toLowerCase().includes("darurat")
   ).length;
 
   const visiteDpjpUtama =
@@ -297,6 +302,7 @@ export function extractRawatInapVisiteData(
         (konsul: any) => konsul.nm_dokter === perawatan.nm_dokter
       ) &&
       perawatan.nm_perawatan.toLowerCase() !== "visite dokter" &&
+      !perawatan.nm_perawatan.toLowerCase().includes("emergency") &&
       perawatan.nm_perawatan.toLowerCase().includes("visite dokter")
   );
 
@@ -312,14 +318,16 @@ export function extractRawatInapVisiteData(
       ) &&
       perawatan.nm_perawatan &&
       perawatan.nm_perawatan.toLowerCase() !== "visite dokter" &&
+      !perawatan.nm_perawatan.toLowerCase().includes("emergency") &&
       perawatan.nm_perawatan.toLowerCase().includes("visite dokter")
   );
 
   const visiteDokterUmum = jnsPerawatanArray.filter(
     (perawatan: any) =>
-      perawatan &&
-      perawatan.nm_dokter !== mainDoctor &&
-      perawatan.nm_perawatan &&
+      (perawatan &&
+        perawatan.nm_dokter !== mainDoctor &&
+        perawatan.nm_perawatan &&
+        perawatan.nm_perawatan.toLowerCase().includes("emergency")) ||
       perawatan.nm_perawatan.toLowerCase() === "visite dokter"
   );
 
@@ -366,14 +374,14 @@ export function calculateRawatInapFinancials(
     has_operasi,
     selectedSupport,
     jns_perawatan_radiologi,
+    dokter_anestesi,
   } = input;
 
   const visiteData = extractRawatInapVisiteData(
     jns_perawatan,
     nm_dokter,
     tgl_masuk,
-    tgl_keluar,
-    selectedSupport
+    tgl_keluar
   );
 
   const remun_lab = (total_permintaan_lab || 0) * 5000;
@@ -398,6 +406,10 @@ export function calculateRawatInapFinancials(
     (visiteData.visiteKonsul3.length / visiteData.totalVisite) * dpjp_ranap;
   const remun_operator = has_operasi ? alokasi * 0.7 * 0.7 : 0;
   const remun_anestesi = has_operasi ? alokasi * 0.7 * 0.3 : 0;
+  const remun_anastesi_pengganti = dokter_anestesi ? remun_anestesi * 0.3 : 0;
+  const remun_dokter_anestesi = dokter_anestesi
+    ? remun_anestesi - remun_anastesi_pengganti
+    : remun_anestesi;
 
   const yang_terbagi =
     remun_dpjp_utama +
@@ -406,7 +418,7 @@ export function calculateRawatInapFinancials(
     remun_konsul_3 +
     remun_dokter_umum +
     remun_operator +
-    remun_anestesi +
+    remun_dokter_anestesi +
     remun_lab +
     remun_rad;
   const percent_dari_klaim =
@@ -423,7 +435,8 @@ export function calculateRawatInapFinancials(
     remun_lab,
     remun_rad,
     remun_operator,
-    remun_anestesi,
+    remun_anestesi: remun_dokter_anestesi,
+    remun_anastesi_pengganti,
     yang_terbagi,
     percent_dari_klaim,
   };

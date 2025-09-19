@@ -122,7 +122,7 @@ export function DataTable<TData, TValue>({
           <CsvAnalysis from="/rawat-inap" />
         </div>
       </div>
-      <TotalDisplay totals={totals} />
+      <TotalDisplay from="/rawat-inap" totals={totals} />
       <div className="uppercase">
         <Table>
           <TableHeader>

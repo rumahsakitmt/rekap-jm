@@ -17,6 +17,7 @@ const rawatInapSearchSchema = z.object({
   selectedCsvFile: z.string().default(""),
   selectedDoctor: z.string().default(""),
   selectedKamar: z.string().default(""),
+  operation: z.boolean().optional(),
 });
 
 export const Route = createFileRoute("/report-rawat-inap")({

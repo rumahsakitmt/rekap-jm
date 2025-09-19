@@ -1,5 +1,5 @@
 import { formatCurrency } from "@/lib/utils";
-import { useFilterStore } from "@/stores/filter-store";
+import { getRouteApi } from "@tanstack/react-router";
 
 interface TotalsData {
   totalTarif?: number;
@@ -20,10 +20,12 @@ interface TotalsData {
 
 interface TotalDisplayProps {
   totals: TotalsData | null | undefined;
+  from: "/rawat-inap" | "/";
 }
 
-export function TotalDisplay({ totals }: TotalDisplayProps) {
-  const { selectedCsvFile } = useFilterStore();
+export function TotalDisplay({ totals, from }: TotalDisplayProps) {
+  const route = getRouteApi(from);
+  const { selectedCsvFile } = route.useSearch();
   if (!totals || selectedCsvFile === "") return null;
 
   const formatValue = (value: number | undefined) => {

@@ -1,19 +1,19 @@
-import { db } from "../db";
-import { kamarInap } from "../db/schema/kamar_inap";
-import { reg_periksa } from "../db/schema/reg_periksa";
-import { pasien } from "../db/schema/pasien";
-import { kamar } from "../db/schema/kamar";
-import { bangsal } from "../db/schema/bangsal";
-import { penjab } from "../db/schema/penjab";
-import { bridging_sep } from "../db/schema/bridging_sep";
-import { dokter } from "../db/schema/dokter";
-import { permintaan_lab } from "../db/schema/permintaan_lab";
-import { periksa_lab } from "../db/schema/periksa_lab";
-import { permintaan_radiologi } from "../db/schema/permintaan_radiologi";
-import { periksa_radiologi } from "../db/schema/periksa_radiologi";
-import { permintaan_pemeriksaan_radiologi } from "../db/schema/permintaan_pemeriksaan_radiologi";
-import { jns_perawatan_radiologi } from "../db/schema/jns_perawatan_radiologi";
-import { jns_perawatan } from "../db/schema/jns_perawatan";
+import { db } from "../../db";
+import { kamarInap } from "../../db/schema/kamar_inap";
+import { reg_periksa } from "../../db/schema/reg_periksa";
+import { pasien } from "../../db/schema/pasien";
+import { kamar } from "../../db/schema/kamar";
+import { bangsal } from "../../db/schema/bangsal";
+import { penjab } from "../../db/schema/penjab";
+import { bridging_sep } from "../../db/schema/bridging_sep";
+import { dokter } from "../../db/schema/dokter";
+import { permintaan_lab } from "../../db/schema/permintaan_lab";
+import { periksa_lab } from "../../db/schema/periksa_lab";
+import { permintaan_radiologi } from "../../db/schema/permintaan_radiologi";
+import { periksa_radiologi } from "../../db/schema/periksa_radiologi";
+import { permintaan_pemeriksaan_radiologi } from "../../db/schema/permintaan_pemeriksaan_radiologi";
+import { jns_perawatan_radiologi } from "../../db/schema/jns_perawatan_radiologi";
+import { jns_perawatan } from "../../db/schema/jns_perawatan";
 import { sql, eq, asc, inArray } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import { dpjp_ranap } from "@/db/schema/dpjp_ranap";
@@ -110,11 +110,13 @@ export function createRawatInapQuery(whereCondition?: SQL) {
         SELECT COUNT(*) 
         FROM ${permintaan_radiologi} 
         WHERE ${permintaan_radiologi.no_rawat} = ${kamarInap.no_rawat}
+        AND ${permintaan_radiologi.tgl_hasil} != '0000-00-00'
       )`,
       total_permintaan_lab: sql<number>`(
         SELECT COUNT(*)
         FROM ${permintaan_lab} 
         WHERE ${permintaan_lab.no_rawat} = ${kamarInap.no_rawat}
+        AND ${permintaan_lab.tgl_hasil} != '0000-00-00'
       )`,
       has_operasi: sql<boolean>`CASE WHEN ${operasi.no_rawat} IS NOT NULL THEN true ELSE false END`,
       operator: sql<string>`(
@@ -123,9 +125,24 @@ export function createRawatInapQuery(whereCondition?: SQL) {
         WHERE d.kd_dokter = ${operasi.operator1}
       )`,
       anestesi: sql<string>`(
-        SELECT d.nm_dokter 
-        FROM dokter d 
-        WHERE d.kd_dokter = ${operasi.dokter_anestesi}
+        SELECT CASE 
+          WHEN ${operasi.dokter_anestesi} != '-' THEN
+            (SELECT d.nm_dokter FROM dokter d WHERE d.kd_dokter = ${operasi.dokter_anestesi})
+          WHEN ${operasi.asisten_anestesi} IS NOT NULL AND ${operasi.asisten_anestesi} != '-' THEN
+            CASE 
+              WHEN ${operasi.asisten_anestesi} LIKE 'GANTI-%' THEN
+                CONCAT(
+                  COALESCE((SELECT d.nm_dokter FROM dokter d WHERE d.kd_dokter = TRIM(SUBSTRING(${operasi.asisten_anestesi}, 7))), ''),
+                  CASE 
+                    WHEN (SELECT p.nama FROM petugas p WHERE p.nip = ${operasi.asisten_anestesi}) IS NOT NULL 
+                    THEN CONCAT(':', (SELECT p.nama FROM petugas p WHERE p.nip = ${operasi.asisten_anestesi}))
+                    ELSE ''
+                  END
+                )
+              ELSE ${operasi.asisten_anestesi}
+            END
+          ELSE NULL
+        END
       )`,
     })
     .from(kamarInap)
@@ -176,11 +193,13 @@ export function createRawatInapSummaryQuery(whereCondition?: SQL) {
         SELECT COUNT(*) 
         FROM ${permintaan_radiologi} 
         WHERE ${permintaan_radiologi.no_rawat} = ${kamarInap.no_rawat}
+        AND ${permintaan_radiologi.tgl_hasil} != '0000-00-00'
       )`,
       total_permintaan_lab: sql<number>`(
         SELECT COUNT(*)
         FROM ${permintaan_lab} 
         WHERE ${permintaan_lab.no_rawat} = ${kamarInap.no_rawat}
+        AND ${permintaan_lab.tgl_hasil} != '0000-00-00'
       )`,
       has_operasi: sql<boolean>`CASE WHEN ${operasi.no_rawat} IS NOT NULL THEN true ELSE false END`,
       operator: sql<string>`(
@@ -189,9 +208,24 @@ export function createRawatInapSummaryQuery(whereCondition?: SQL) {
         WHERE d.kd_dokter = ${operasi.operator1}
       )`,
       anestesi: sql<string>`(
-        SELECT d.nm_dokter 
-        FROM dokter d 
-        WHERE d.kd_dokter = ${operasi.dokter_anestesi}
+        SELECT CASE 
+          WHEN ${operasi.dokter_anestesi} != '-' THEN
+            (SELECT d.nm_dokter FROM dokter d WHERE d.kd_dokter = ${operasi.dokter_anestesi})
+          WHEN ${operasi.asisten_anestesi} IS NOT NULL AND ${operasi.asisten_anestesi} != '-' THEN
+            CASE 
+              WHEN ${operasi.asisten_anestesi} LIKE 'GANTI-%' THEN
+                CONCAT(
+                  COALESCE((SELECT d.nm_dokter FROM dokter d WHERE d.kd_dokter = TRIM(SUBSTRING(${operasi.asisten_anestesi}, 7))), ''),
+                  CASE 
+                    WHEN (SELECT p.nama FROM petugas p WHERE p.nip = ${operasi.asisten_anestesi}) IS NOT NULL 
+                    THEN CONCAT(':', (SELECT p.nama FROM petugas p WHERE p.nip = ${operasi.asisten_anestesi}))
+                    ELSE ''
+                  END
+                )
+              ELSE ${operasi.asisten_anestesi}
+            END
+          ELSE NULL
+        END
       )`,
       no_sep: bridging_sep.no_sep,
     })

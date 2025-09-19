@@ -116,7 +116,7 @@ export function DataTable<TData, TValue>({
           </div>
           <CsvAnalysis from="/" />
         </div>
-        <TotalsDisplay totals={totals} isCsvMode={isCsvMode} />
+        <TotalsDisplay totals={totals} />
       </div>
       <div className=" uppercase">
         <Table>

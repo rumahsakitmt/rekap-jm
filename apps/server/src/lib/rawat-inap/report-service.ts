@@ -4,7 +4,7 @@ import {
   createRawatInapSummaryQuery,
   getRadiologiData,
   getLabData,
-} from "@/lib/rawat-inap-query-builder";
+} from "@/lib/rawat-inap/rawat-inap-query-builder";
 import { readCsvFile, createCsvTarifMap, type CsvData } from "@/lib/csv-utils";
 import { RawatInapCalculationService } from "./calculation-service";
 import type {
@@ -71,6 +71,10 @@ export class RawatInapReportService {
     const dokterUmumMap = new Map<string, { name: string; total: number }>();
     const operatorMap = new Map<string, { name: string; total: number }>();
     const anestesiMap = new Map<string, { name: string; total: number }>();
+    const anestesiPenggantiMap = new Map<
+      string,
+      { name: string; total: number }
+    >();
     const penunjangMap = new Map<string, { name: string; total: number }>();
 
     let labTotal = 0;
@@ -85,14 +89,10 @@ export class RawatInapReportService {
       const calculation = this.calculationService.calculateFinancials(
         row,
         tarif,
-        jnsPerawatanRadiologiArray,
-        input?.selectedSupport
+        jnsPerawatanRadiologiArray
       );
 
-      const visiteData = this.calculationService.calculateVisiteData(
-        row,
-        input?.selectedSupport
-      );
+      const visiteData = this.calculationService.calculateVisiteData(row);
 
       // Aggregate DPJP Utama
       this.aggregateDpjpUtama(dpjpMap, row, calculation.remun_dpjp_utama);
@@ -121,7 +121,12 @@ export class RawatInapReportService {
       this.aggregateOperator(operatorMap, row, calculation.remun_operator);
 
       // Aggregate Anestesi
-      this.aggregateAnestesi(anestesiMap, row, calculation.remun_anestesi);
+      this.aggregateAnestesi(
+        anestesiMap,
+        row,
+        calculation.remun_anestesi,
+        calculation.remun_anastesi_pengganti
+      );
 
       // Aggregate Penunjang
       this.aggregatePenunjang(
@@ -142,6 +147,7 @@ export class RawatInapReportService {
         calculation.remun_dokter_umum +
         calculation.remun_operator +
         calculation.remun_anestesi +
+        calculation.remun_anastesi_pengganti +
         calculation.remun_lab +
         calculation.remun_rad;
     }
@@ -154,6 +160,8 @@ export class RawatInapReportService {
     const dokterUmumTotals = this.convertMapToSortedArray(dokterUmumMap);
     const operatorTotals = this.convertMapToSortedArray(operatorMap);
     const anestesiTotals = this.convertMapToSortedArray(anestesiMap);
+    const anestesiPenggantiTotals =
+      this.convertMapToSortedArray(anestesiPenggantiMap);
     const penunjangTotals = this.convertMapToSortedArray(penunjangMap);
 
     // Create monthly summary
@@ -164,6 +172,7 @@ export class RawatInapReportService {
       ...konsulAnastesiTotals,
       ...operatorTotals,
       ...anestesiTotals,
+      ...anestesiPenggantiTotals,
       ...penunjangTotals,
     ]);
 
@@ -358,18 +367,47 @@ export class RawatInapReportService {
   private aggregateAnestesi(
     anestesiMap: Map<string, { name: string; total: number }>,
     row: RawatInapSummaryData,
-    remun_anestesi: number
+    remun_anestesi: number,
+    remun_anastesi_pengganti: number
   ) {
     if (remun_anestesi > 0 && row.anestesi) {
-      const anestesiKey = row.anestesi;
-      const anestesiName = row.anestesi;
+      const isAnestesiPengganti = row.anestesi.includes(":");
+      const anestesiKey = isAnestesiPengganti
+        ? row.anestesi.split(":")[1]
+        : row.anestesi;
+      const anestesiName = isAnestesiPengganti
+        ? row.anestesi.split(":")[1]
+        : row.anestesi;
+      const remun = isAnestesiPengganti
+        ? remun_anastesi_pengganti
+        : remun_anestesi;
 
       if (anestesiMap.has(anestesiKey)) {
-        anestesiMap.get(anestesiKey)!.total += remun_anestesi;
+        anestesiMap.get(anestesiKey)!.total += remun;
       } else {
         anestesiMap.set(anestesiKey, {
           name: anestesiName,
-          total: remun_anestesi,
+          total: remun,
+        });
+      }
+    }
+  }
+
+  private aggregateAnestesiPengganti(
+    anestesiPenggantiMap: Map<string, { name: string; total: number }>,
+    row: RawatInapSummaryData,
+    remun_anastesi_pengganti: number
+  ) {
+    if (remun_anastesi_pengganti > 0 && row.anestesi) {
+      const anestesiName = row.anestesi.split(":")[1];
+
+      if (anestesiPenggantiMap.has(anestesiName)) {
+        anestesiPenggantiMap.get(anestesiName)!.total +=
+          remun_anastesi_pengganti;
+      } else {
+        anestesiPenggantiMap.set(anestesiName, {
+          name: anestesiName,
+          total: remun_anastesi_pengganti,
         });
       }
     }

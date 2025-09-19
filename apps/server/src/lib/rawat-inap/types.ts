@@ -13,6 +13,8 @@ export const rawatInapFilterSchema = z.object({
   kd_bangsal: z.string().optional(),
   includeTotals: z.boolean().optional(),
   selectedSupport: z.string().optional(),
+  operation: z.boolean().optional(),
+  generalDoctor: z.boolean().optional(),
 });
 
 export const detailedReportSchema = z.object({
@@ -122,6 +124,7 @@ export interface ProcessedRawatInapData
   remun_rad: number;
   remun_operator: number;
   remun_anestesi: number;
+  remun_anastesi_pengganti: number;
   yang_terbagi: number;
   percent_dari_klaim: number;
 }
@@ -141,6 +144,7 @@ export interface RawatInapResponse {
     totalRemunRadiologi: number;
     totalRemunOperator: number;
     totalRemunAnestesi: number;
+    totalRemunAnastesiPengganti: number;
     totalYangTerbagi: number;
     totalPercentDariKlaim: number;
     count: number;

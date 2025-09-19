@@ -19,6 +19,8 @@ const TableRawatInap = () => {
     selectedCsvFile,
     selectedSupport,
     search,
+    operation,
+    generalDoctor,
   } = searchParams;
 
   const { data, isLoading } = useQuery(
@@ -33,6 +35,8 @@ const TableRawatInap = () => {
       kd_bangsal: selectedKamar || undefined,
       includeTotals: true,
       selectedSupport: selectedSupport || undefined,
+      operation: operation || undefined,
+      generalDoctor: generalDoctor || undefined,
     })
   );
 

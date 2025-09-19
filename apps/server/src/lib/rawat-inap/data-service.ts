@@ -5,7 +5,7 @@ import {
   createRawatInapSummaryQuery,
   getRadiologiData,
   getLabData,
-} from "@/lib/rawat-inap-query-builder";
+} from "@/lib/rawat-inap/rawat-inap-query-builder";
 import { readCsvFile, createCsvTarifMap, type CsvData } from "@/lib/csv-utils";
 import { differenceInDays } from "date-fns";
 import {
@@ -150,8 +150,7 @@ export class RawatInapDataService {
         item.jns_perawatan || "[]",
         item.nm_dokter || "",
         item.tgl_masuk,
-        item.tgl_keluar,
-        selectedSupport
+        item.tgl_keluar
       );
 
       const calculation = calculateRawatInapFinancials({
@@ -165,6 +164,7 @@ export class RawatInapDataService {
         tgl_keluar: item.tgl_keluar,
         has_operasi: item.has_operasi || false,
         selectedSupport,
+        dokter_anestesi: item.anestesi || "",
       });
 
       return {
@@ -222,6 +222,7 @@ export class RawatInapDataService {
         tgl_keluar: row.tgl_keluar,
         has_operasi: row.has_operasi || false,
         selectedSupport,
+        dokter_anestesi: row.anestesi || "",
       });
       return accumulateTotals(acc, tarif, calculation);
     }, createEmptyTotals());

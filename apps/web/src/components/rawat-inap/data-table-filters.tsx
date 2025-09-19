@@ -5,6 +5,8 @@ import SearchInput from "../search-input";
 import { SelectKamar } from "./select-kamar";
 import { DateFilter } from "../date-filter";
 import { ClearFilter } from "../clear-filter";
+import { OperationSwitch } from "./operation-switch";
+import { GeneralDoctorSwitch } from "./general-doctor-switch";
 
 export function DataTableFilters() {
   return (
@@ -19,6 +21,10 @@ export function DataTableFilters() {
           <SelectDPJP from="/rawat-inap" />
           <SelectKamar />
           <SupportFilter from="/rawat-inap" />
+        </div>
+        <div className="flex items-center gap-2">
+          <OperationSwitch />
+          <GeneralDoctorSwitch />
         </div>
         <div className="flex justify-end">
           <ClearFilter from="/rawat-inap" />

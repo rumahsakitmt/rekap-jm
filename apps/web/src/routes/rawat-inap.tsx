@@ -25,6 +25,8 @@ const rawatInapSearchSchema = z.object({
   selectedDoctor: z.string().default(""),
   selectedSupport: z.string().default(""),
   selectedKamar: z.string().default(""),
+  operation: z.boolean().optional(),
+  generalDoctor: z.boolean().optional(),
 });
 
 export const Route = createFileRoute("/rawat-inap")({
@@ -35,8 +37,14 @@ export const Route = createFileRoute("/rawat-inap")({
 function RouteComponent() {
   const searchParams = Route.useSearch();
 
-  const { dateFrom, dateTo, selectedDoctor, selectedCsvFile, selectedKamar } =
-    searchParams;
+  const {
+    dateFrom,
+    dateTo,
+    selectedDoctor,
+    selectedCsvFile,
+    selectedKamar,
+    operation,
+  } = searchParams;
 
   const handleShare = async () => {
     try {
@@ -63,6 +71,7 @@ function RouteComponent() {
                 selectedCsvFile,
                 selectedDoctor,
                 selectedKamar,
+                operation,
               }}
               className={cn(buttonVariants({ variant: "default" }))}
             >

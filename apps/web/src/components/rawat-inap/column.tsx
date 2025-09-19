@@ -64,6 +64,7 @@ export type RawatInapData = {
   remun_dokter_umum: number | null;
   remun_dpjp_utama: number | null;
   remun_konsul_anastesi: number | null;
+  remun_anastesi_pengganti: number | null;
   remun_konsul_2: number | null;
   remun_konsul_3: number | null;
   remun_operator: number | null;
@@ -203,7 +204,7 @@ export const createColumns = (
     },
     {
       accessorKey: "visite_dpjp_utama",
-      header: "Visite DPJP Utama",
+      header: "Visite DPJP",
       cell: ({ row }) => {
         const value = row.original.visite_dpjp_utama;
         return (
@@ -213,97 +214,80 @@ export const createColumns = (
     },
     {
       accessorKey: "visite_anastesi",
-      header: "Visite Konsul Anastesi",
+      header: "Visite Anastesi",
       cell: ({ row }) => {
         const value = row.original.visite_konsul_1;
         return (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm">
-                {value?.length || ""}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="bg-background text-foreground">
-              {value?.map((item) => (
-                <div key={item.kd_jenis_prw}>
-                  <div>{item.nm_perawatan}</div>
-                  <div className="font-bold">{item.nm_dokter}</div>
-                </div>
-              ))}
-            </TooltipContent>
-          </Tooltip>
+          <div className="flex items-center justify-center">
+            <Tooltip>
+              <TooltipTrigger asChild className="text-center">
+                <Button variant="ghost" size="sm">
+                  {value?.length || ""}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="bg-background text-foreground">
+                {value?.map((item) => (
+                  <div key={item.kd_jenis_prw}>
+                    <div>{item.nm_perawatan}</div>
+                    <div className="font-bold">{item.nm_dokter}</div>
+                  </div>
+                ))}
+              </TooltipContent>
+            </Tooltip>
+          </div>
         );
       },
     },
     {
       accessorKey: "visite_konsul_2",
-      header: "Visite Konsul 1",
+      header: "Visite",
       cell: ({ row }) => {
         const value = row.original.visite_konsul_2;
         return (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm">
-                {value?.length || ""}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="bg-background text-foreground">
-              {value?.map((item) => (
-                <div key={item.kd_jenis_prw}>
-                  <div>{item.nm_perawatan}</div>
-                  <div className="font-bold">{item.nm_dokter}</div>
-                </div>
-              ))}
-            </TooltipContent>
-          </Tooltip>
+          <div className="flex items-center w-full">
+            <Tooltip>
+              <TooltipTrigger asChild className="text-center">
+                <Button variant="ghost" size="sm">
+                  {value?.length || ""}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="bg-background text-foreground">
+                {value?.map((item) => (
+                  <div key={item.kd_jenis_prw}>
+                    <div>{item.nm_perawatan}</div>
+                    <div className="font-bold">{item.nm_dokter}</div>
+                  </div>
+                ))}
+              </TooltipContent>
+            </Tooltip>
+          </div>
         );
       },
     },
-    {
-      accessorKey: "visite_konsul_3",
-      header: "Visite Konsul 2",
-      cell: ({ row }) => {
-        const value = row.original.visite_konsul_3;
-        return (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm">
-                {value?.length || ""}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="bg-background text-foreground">
-              {value?.map((item) => (
-                <div key={item.kd_jenis_prw}>
-                  <div>{item.nm_perawatan}</div>
-                  <div className="font-bold">{item.nm_dokter}</div>
-                </div>
-              ))}
-            </TooltipContent>
-          </Tooltip>
-        );
-      },
-    },
+
     {
       accessorKey: "visite_dokter_umum",
       header: "Visite Dokter Umum",
       cell: ({ row }) => {
         const value = row.original.visite_dokter_umum;
         return (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm" className="mx-auto">
-                {value?.length || ""}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="bg-background text-foreground">
-              {value?.map((item) => (
-                <div key={item.kd_jenis_prw}>
-                  <div>{item.nm_perawatan}</div>
-                  <div className="font-bold">{item.nm_dokter}</div>
-                </div>
-              ))}
-            </TooltipContent>
-          </Tooltip>
+          <div className="flex items-center w-full">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" className="mx-auto">
+                  {value?.length || ""}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="bg-background text-foreground">
+                {value?.map((item) => (
+                  <div key={item.kd_jenis_prw}>
+                    <div>{item.nm_perawatan}</div>
+                    <div className="font-bold">{item.nm_dokter}</div>
+                  </div>
+                ))}
+              </TooltipContent>
+            </Tooltip>
+          </div>
         );
       },
     },
@@ -387,7 +371,7 @@ export const createColumns = (
       header: "Total Visite",
       cell: ({ row }) => {
         const value = row.original.totalVisite;
-        return <div className="text-sm">{value || "-"}</div>;
+        return <div className="text-sm text-center">{value || "-"}</div>;
       },
     },
     {
@@ -550,6 +534,18 @@ export const createColumns = (
             header: "Remun Anestesi",
             cell: ({ row }) => {
               const value = row.original.remun_anestesi;
+              return (
+                <div className="text-sm">
+                  {value ? formatCurrency(value) : "-"}
+                </div>
+              );
+            },
+          },
+
+          {
+            header: "Remun Anestesi Pengganti",
+            cell: ({ row }) => {
+              const value = row.original.remun_anastesi_pengganti;
               return (
                 <div className="text-sm">
                   {value ? formatCurrency(value) : "-"}

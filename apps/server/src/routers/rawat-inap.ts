@@ -8,7 +8,6 @@ import {
   csvDownloadSchema,
 } from "@/lib/rawat-inap/types";
 
-// Initialize services
 const dataService = new RawatInapDataService();
 const reportService = new RawatInapReportService();
 const csvService = new RawatInapCsvService();
@@ -19,13 +18,11 @@ export const rawatInapRouter = router({
     .query(async ({ input }) => {
       return await dataService.getRawatInapData(input || {});
     }),
-
   getDetailedMonthlyReport: publicProcedure
     .input(detailedReportSchema)
     .query(async ({ input }) => {
       return await reportService.generateDetailedMonthlyReport(input);
     }),
-
   downloadCsv: publicProcedure
     .input(csvDownloadSchema)
     .query(async ({ input }) => {

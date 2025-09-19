@@ -274,11 +274,13 @@ export function createSummaryReportQuery(
         SELECT COUNT(*) 
         FROM ${permintaan_radiologi} 
         WHERE ${permintaan_radiologi.no_rawat} = ${reg_periksa.no_rawat}
+        AND ${permintaan_radiologi.tgl_hasil} != '0000-00-00'
       )`,
       total_permintaan_lab: sql<number>`(
         SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
         FROM ${permintaan_lab} 
         WHERE ${permintaan_lab.no_rawat} = ${reg_periksa.no_rawat}
+        AND ${permintaan_lab.tgl_hasil} != '0000-00-00'
       )`,
       nm_dokter: sql<string>`CASE 
         WHEN ${poliklinik.nm_poli} = 'IGD' AND (

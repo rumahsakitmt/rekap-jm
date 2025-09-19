@@ -4,7 +4,7 @@ import {
   createRawatInapQuery,
   getRadiologiData,
   getLabData,
-} from "@/lib/rawat-inap-query-builder";
+} from "@/lib/rawat-inap/rawat-inap-query-builder";
 import {
   readCsvFile,
   createCsvTarifMap,

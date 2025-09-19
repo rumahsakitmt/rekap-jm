@@ -1,5 +1,5 @@
 import { formatCurrency } from "@/lib/utils";
-import { useFilterStore } from "@/stores/filter-store";
+import { Route } from "@/routes";
 
 interface TotalsData {
   totalTarif?: number;
@@ -14,14 +14,10 @@ interface TotalsData {
 
 interface TotalsDisplayProps {
   totals: TotalsData | null | undefined;
-  isCsvMode?: boolean;
 }
 
-export function TotalsDisplay({
-  totals,
-  isCsvMode = false,
-}: TotalsDisplayProps) {
-  const { selectedCsvFile } = useFilterStore();
+export function TotalsDisplay({ totals }: TotalsDisplayProps) {
+  const { selectedCsvFile } = Route.useSearch();
   if (!totals || selectedCsvFile === "") return null;
 
   const formatValue = (value: number | undefined) => {

@@ -2,12 +2,12 @@ import { sql, and, gte, lte, eq, inArray, ne } from "drizzle-orm";
 import { reg_periksa } from "../db/schema/reg_periksa";
 import { bridging_sep } from "../db/schema/bridging_sep";
 import { pasien } from "../db/schema/pasien";
-import { jns_perawatan_inap } from "../db/schema/jns_perawatan_inap";
 import { dpjp_ranap } from "../db/schema/dpjp_ranap";
 import { permintaan_lab } from "../db/schema/permintaan_lab";
 import { permintaan_radiologi } from "../db/schema/permintaan_radiologi";
 import { kamarInap } from "../db/schema/kamar_inap";
 import { bangsal } from "../db/schema/bangsal";
+import { operasi } from "../db/schema/operasi";
 
 export interface RawatInapFilterInput {
   search?: string;
@@ -18,6 +18,8 @@ export interface RawatInapFilterInput {
   csvSepNumbers?: string[];
   kd_bangsal?: string;
   selectedSupport?: string;
+  operation?: boolean;
+  generalDoctor?: boolean;
 }
 
 export function buildRawatInapFilterConditions(input: RawatInapFilterInput) {
@@ -71,6 +73,23 @@ export function buildRawatInapFilterConditions(input: RawatInapFilterInput) {
         ) > 0`
       );
     }
+  }
+
+  if (input.operation) {
+    whereConditions.push(eq(operasi.no_rawat, kamarInap.no_rawat));
+  }
+
+  if (input.generalDoctor) {
+    whereConditions.push(
+      sql`(
+        SELECT COUNT(*) 
+        FROM rawat_inap_drpr rid
+        INNER JOIN jns_perawatan_inap jpi ON rid.kd_jenis_prw = jpi.kd_jenis_prw 
+        INNER JOIN dokter d ON rid.kd_dokter = d.kd_dokter
+        WHERE rid.no_rawat = ${kamarInap.no_rawat}
+        AND (jpi.nm_perawatan LIKE '%emergency%' OR jpi.nm_perawatan = 'visite dokter')
+      ) > 0`
+    );
   }
 
   return {
