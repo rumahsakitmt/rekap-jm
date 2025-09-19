@@ -5,7 +5,6 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import { db } from "../db";
 import { bridging_sep } from "../db/schema/bridging_sep";
-import { rawatInapDrpr } from "../db/schema/rawat_inap_drpr";
 import { reg_periksa } from "../db/schema/reg_periksa";
 import { inArray, notInArray, and, gte, lte, eq } from "drizzle-orm";
 import { pasien } from "../db/schema/pasien";
@@ -35,17 +34,15 @@ export const csvUploadRouter = router({
           });
         }
 
-        const timestamp = Date.now();
-        const uniqueFilename = `${timestamp}_${filename}`;
-        const filepath = join(process.cwd(), "uploads", uniqueFilename);
+        const filepath = join(process.cwd(), "uploads", filename);
 
         const buffer = Buffer.from(content, "base64");
         await Bun.write(filepath, buffer);
 
         return {
           success: true,
-          filename: uniqueFilename,
-          filepath: `/uploads/${uniqueFilename}`,
+          filename: filename,
+          filepath: `/uploads/${filename}`,
           size: buffer.length,
         };
       } catch (error) {
@@ -69,7 +66,7 @@ export const csvUploadRouter = router({
         const csvContent = readFileSync(filepath, "utf-8");
 
         const lines = csvContent.split("\n");
-        const csvData: { no_sep: string; tarif: number }[] = [];
+        const csvData: { no_sep: string; no_rm: string; tarif: number }[] = [];
 
         for (const line of lines) {
           const trimmedLine = line.trim();
@@ -83,11 +80,12 @@ export const csvUploadRouter = router({
 
             const columns = trimmedLine.split(",");
             const noSep = columns[0]?.trim();
-            const tarifStr = columns[1]?.trim();
+            const noRm = columns[1]?.trim() || "";
+            const tarifStr = columns[2]?.trim();
 
             if (noSep && noSep.length > 0) {
               const tarif = tarifStr ? parseFloat(tarifStr) || 0 : 0;
-              csvData.push({ no_sep: noSep, tarif });
+              csvData.push({ no_sep: noSep, no_rm: noRm, tarif });
             }
           }
         }
@@ -144,13 +142,11 @@ export const csvUploadRouter = router({
         const csvContent = readFileSync(filepath, "utf-8");
 
         const lines = csvContent.split("\n");
-        const csvData: { no_sep: string; tarif: number }[] = [];
+        const csvData: { no_sep: string; no_rm: string; tarif: number }[] = [];
 
-        // Parse CSV data
         for (const line of lines) {
           const trimmedLine = line.trim();
           if (trimmedLine) {
-            // Skip header row
             if (
               trimmedLine.toLowerCase().includes("no_sep") ||
               trimmedLine.toLowerCase().includes("sep")
@@ -160,18 +156,18 @@ export const csvUploadRouter = router({
 
             const columns = trimmedLine.split(",");
             const noSep = columns[0]?.trim();
-            const tarifStr = columns[1]?.trim();
+            const noRm = columns[1]?.trim() || "";
+            const tarifStr = columns[2]?.trim();
 
             if (noSep && noSep.length > 0) {
               const tarif = tarifStr ? parseFloat(tarifStr) || 0 : 0;
-              csvData.push({ no_sep: noSep, tarif });
+              csvData.push({ no_sep: noSep, no_rm: noRm, tarif });
             }
           }
         }
 
         const csvSepNumbers = csvData.map((item) => item.no_sep);
 
-        // Build date range conditions
         const conditions = [];
         if (input.dateFrom) {
           conditions.push(gte(bridging_sep.tglsep, input.dateFrom));
@@ -180,7 +176,6 @@ export const csvUploadRouter = router({
           conditions.push(lte(bridging_sep.tglsep, input.dateTo));
         }
 
-        // Get SEPs from database that match CSV
         const foundInDb = await db
           .select({
             no_sep: bridging_sep.no_sep,
@@ -195,7 +190,6 @@ export const csvUploadRouter = router({
               : inArray(bridging_sep.no_sep, csvSepNumbers)
           );
 
-        // Get SEPs from database that are NOT in CSV
         const notInCsv = await db
           .select({
             no_sep: bridging_sep.no_sep,
@@ -239,6 +233,7 @@ export const csvUploadRouter = router({
           stats,
           notFoundInDb: notFoundInDb.map((item) => ({
             no_sep: item.no_sep,
+            no_rm: item.no_rm,
             tarif: item.tarif,
           })),
           foundInDb: foundInDb,
@@ -261,7 +256,7 @@ export const csvUploadRouter = router({
         const csvContent = readFileSync(filepath, "utf-8");
 
         const lines = csvContent.split("\n");
-        const csvData: { no_sep: string; tarif: number }[] = [];
+        const csvData: { no_sep: string; no_rm: string; tarif: number }[] = [];
 
         for (const line of lines) {
           const trimmedLine = line.trim();
@@ -275,11 +270,12 @@ export const csvUploadRouter = router({
 
             const columns = trimmedLine.split(",");
             const noSep = columns[0]?.trim();
-            const tarifStr = columns[1]?.trim();
+            const noRm = columns[1]?.trim() || "";
+            const tarifStr = columns[2]?.trim();
 
             if (noSep && noSep.length > 0) {
               const tarif = tarifStr ? parseFloat(tarifStr) || 0 : 0;
-              csvData.push({ no_sep: noSep, tarif });
+              csvData.push({ no_sep: noSep, no_rm: noRm, tarif });
             }
           }
         }
@@ -381,6 +377,7 @@ export const csvUploadRouter = router({
           stats,
           notFoundInDb: notFoundInDb.map((item) => ({
             no_sep: item.no_sep,
+            no_rm: item.no_rm,
             tarif: item.tarif,
           })),
           foundInDb: foundInDb,

@@ -21,6 +21,7 @@ export const DialogNotFoundSep = ({
   notFoundInDb: {
     no_sep: string;
     tarif: number;
+    no_rm: string;
   }[];
 }) => {
   return (
@@ -53,6 +54,7 @@ export const DialogNotFoundSep = ({
             {notFoundInDb.map((item) => (
               <div key={item.no_sep} className="grid grid-cols-2  gap-2">
                 <p>{item.no_sep}</p>
+                <p>{item.no_rm}</p>
               </div>
             ))}
           </ScrollArea>

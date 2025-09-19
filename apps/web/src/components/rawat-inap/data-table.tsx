@@ -74,8 +74,6 @@ export function DataTable<TData, TValue>({
   isCsvMode,
   loading,
 }: DataTableProps<TData, TValue>) {
-  const searchParams = useSearch({ from: "/rawat-inap" });
-  const { selectedCsvFile, dateFrom, dateTo } = searchParams;
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []

@@ -5,6 +5,7 @@ import csv from "csv-parser";
 
 export interface CsvData {
   no_sep: string;
+  no_rm: string;
   tarif: number;
 }
 
@@ -26,11 +27,12 @@ export function readCsvFile(filename: string): Promise<CsvData[]> {
           }
 
           const noSep = row.no_sep?.trim();
+          const noRm = row.no_rm?.trim() || "";
           const tarifStr = row.tarif?.trim();
 
           if (noSep && noSep.length > 0) {
             const tarif = tarifStr ? parseFloat(tarifStr) || 0 : 0;
-            csvData.push({ no_sep: noSep, tarif });
+            csvData.push({ no_sep: noSep, no_rm: noRm, tarif });
           }
         })
         .on("end", () => {

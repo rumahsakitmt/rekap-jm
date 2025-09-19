@@ -173,12 +173,6 @@ export function CsvUpload() {
             </Button>
           )}
         </div>
-
-        {showAnalysis && uploadedFilename && (
-          <div className="mt-6">
-            <CsvAnalysis filename={uploadedFilename} />
-          </div>
-        )}
       </CardContent>
     </Card>
   );
