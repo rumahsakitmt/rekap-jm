@@ -105,7 +105,6 @@ export interface ProcessedRawatInapData
   visite_dpjp_utama: number;
   visite_konsul_1: any[];
   visite_konsul_2: any[];
-  visite_konsul_3: any[];
   visite_dokter_umum: any[];
   jns_perawatan: string;
   jns_perawatan_radiologi: any[];
@@ -118,7 +117,6 @@ export interface ProcessedRawatInapData
   remun_dpjp_utama: number;
   remun_konsul_anastesi: number;
   remun_konsul_2: number;
-  remun_konsul_3: number;
   remun_dokter_umum: number;
   remun_lab: number;
   remun_rad: number;
@@ -168,7 +166,6 @@ export interface DetailedReportResponse {
     name: string;
     konsul1: number;
     konsul2: number;
-    konsul3: number;
     total: number;
   }>;
   konsulTotal: number;

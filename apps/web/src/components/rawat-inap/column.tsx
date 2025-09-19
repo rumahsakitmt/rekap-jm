@@ -29,12 +29,6 @@ export type RawatInapData = {
     nm_dokter: string;
     nm_bangsal: string;
   }> | null;
-  visite_konsul_3: Array<{
-    kd_jenis_prw: string;
-    nm_perawatan: string;
-    nm_dokter: string;
-    nm_bangsal: string;
-  }> | null;
   visite_dokter_umum: Array<{
     kd_jenis_prw: string;
     nm_perawatan: string;
@@ -66,7 +60,6 @@ export type RawatInapData = {
   remun_konsul_anastesi: number | null;
   remun_anastesi_pengganti: number | null;
   remun_konsul_2: number | null;
-  remun_konsul_3: number | null;
   remun_operator: number | null;
   remun_anestesi: number | null;
   yang_terbagi: number | null;
@@ -468,17 +461,6 @@ export const createColumns = (
             header: "Remun Konsul 1",
             cell: ({ row }) => {
               const value = row.original.remun_konsul_2;
-              return (
-                <div className="text-sm">
-                  {value ? formatCurrency(value) : "-"}
-                </div>
-              );
-            },
-          },
-          {
-            header: "Remun Konsul 2",
-            cell: ({ row }) => {
-              const value = row.original.remun_konsul_3;
               return (
                 <div className="text-sm">
                   {value ? formatCurrency(value) : "-"}

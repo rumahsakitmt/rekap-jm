@@ -52,10 +52,7 @@ export class RawatInapCalculationService {
       laboratorium: calculation.remun_lab,
       radiologi: calculation.remun_rad,
       dpjp_utama: calculation.remun_dpjp_utama,
-      konsul:
-        calculation.remun_konsul_anastesi +
-        calculation.remun_konsul_2 +
-        calculation.remun_konsul_3,
+      konsul: calculation.remun_konsul_anastesi + calculation.remun_konsul_2,
       yang_terbagi: calculation.yang_terbagi,
       percent_dari_klaim: calculation.percent_dari_klaim,
     };

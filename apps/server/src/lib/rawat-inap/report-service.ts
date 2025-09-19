@@ -64,7 +64,6 @@ export class RawatInapReportService {
         name: string;
         konsul1: number;
         konsul2: number;
-        konsul3: number;
         total: number;
       }
     >();
@@ -107,9 +106,6 @@ export class RawatInapReportService {
       // Aggregate Konsul 2
       this.aggregateKonsul2(konsulMap, visiteData, calculation.remun_konsul_2);
 
-      // Aggregate Konsul 3
-      this.aggregateKonsul3(konsulMap, visiteData, calculation.remun_konsul_3);
-
       // Aggregate Dokter Umum
       this.aggregateDokterUmum(
         dokterUmumMap,
@@ -143,7 +139,6 @@ export class RawatInapReportService {
         calculation.remun_dpjp_utama +
         calculation.remun_konsul_anastesi +
         calculation.remun_konsul_2 +
-        calculation.remun_konsul_3 +
         calculation.remun_dokter_umum +
         calculation.remun_operator +
         calculation.remun_anestesi +
@@ -276,40 +271,7 @@ export class RawatInapReportService {
             name: konsulName,
             konsul1: 0,
             konsul2: remun_konsul_2 / konsul2Doctors.length,
-            konsul3: 0,
             total: remun_konsul_2 / konsul2Doctors.length,
-          });
-        }
-      }
-    }
-  }
-
-  private aggregateKonsul3(
-    konsulMap: Map<string, any>,
-    visiteData: any,
-    remun_konsul_3: number
-  ) {
-    if (remun_konsul_3 > 0) {
-      const konsul3Doctors = visiteData.finalVisiteKonsul3.map((k: any) => ({
-        kd_dokter: k.kd_dokter,
-        nm_dokter: k.nm_dokter,
-      }));
-
-      for (const doctor of konsul3Doctors) {
-        const konsulKey = doctor.kd_dokter;
-        const konsulName = doctor.nm_dokter;
-
-        if (konsulMap.has(konsulKey)) {
-          const existing = konsulMap.get(konsulKey)!;
-          existing.konsul3 += remun_konsul_3 / konsul3Doctors.length;
-          existing.total += remun_konsul_3 / konsul3Doctors.length;
-        } else {
-          konsulMap.set(konsulKey, {
-            name: konsulName,
-            konsul1: 0,
-            konsul2: 0,
-            konsul3: remun_konsul_3 / konsul3Doctors.length,
-            total: remun_konsul_3 / konsul3Doctors.length,
           });
         }
       }
@@ -502,7 +464,6 @@ export class RawatInapReportService {
     name: string;
     konsul1: number;
     konsul2: number;
-    konsul3: number;
     total: number;
   }> {
     return Array.from(map.values())
@@ -512,7 +473,6 @@ export class RawatInapReportService {
         name: item.name,
         konsul1: Math.round(item.konsul1),
         konsul2: Math.round(item.konsul2),
-        konsul3: Math.round(item.konsul3),
         total: Math.round(item.total),
       }));
   }

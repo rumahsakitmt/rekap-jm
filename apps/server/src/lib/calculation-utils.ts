@@ -153,7 +153,6 @@ export interface RawatInapCalculationResult {
   remun_dpjp_utama: number;
   remun_konsul_anastesi: number;
   remun_konsul_2: number;
-  remun_konsul_3: number;
   remun_dokter_umum: number;
   remun_lab: number;
   remun_rad: number;
@@ -257,11 +256,9 @@ export interface RawatInapVisiteData {
   visiteDpjpUtama: number;
   visiteKonsul1: any[];
   visiteKonsul2: any[];
-  visiteKonsul3: any[];
   visiteDokterUmum: any[];
   finalVisiteKonsul1: any[];
   finalVisiteKonsul2: any[];
-  finalVisiteKonsul3: any[];
   totalVisite: number;
 }
 
@@ -306,22 +303,6 @@ export function extractRawatInapVisiteData(
       perawatan.nm_perawatan.toLowerCase().includes("visite dokter")
   );
 
-  const visiteKonsul3 = jnsPerawatanArray.filter(
-    (perawatan: any) =>
-      perawatan &&
-      perawatan.nm_dokter !== mainDoctor &&
-      !visiteKonsul1.some(
-        (konsul: any) => konsul.nm_dokter === perawatan.nm_dokter
-      ) &&
-      !visiteKonsul2.some(
-        (konsul: any) => konsul.nm_dokter === perawatan.nm_dokter
-      ) &&
-      perawatan.nm_perawatan &&
-      perawatan.nm_perawatan.toLowerCase() !== "visite dokter" &&
-      !perawatan.nm_perawatan.toLowerCase().includes("emergency") &&
-      perawatan.nm_perawatan.toLowerCase().includes("visite dokter")
-  );
-
   const visiteDokterUmum = jnsPerawatanArray.filter(
     (perawatan: any) =>
       (perawatan &&
@@ -333,29 +314,20 @@ export function extractRawatInapVisiteData(
 
   let finalVisiteKonsul1 = visiteKonsul1;
   let finalVisiteKonsul2 = visiteKonsul2;
-  let finalVisiteKonsul3 = visiteKonsul3;
-
-  if (finalVisiteKonsul2.length === 0 && finalVisiteKonsul3.length > 0) {
-    finalVisiteKonsul2 = finalVisiteKonsul3;
-    finalVisiteKonsul3 = [];
-  }
 
   const totalVisite =
     visiteDpjpUtama +
     visiteKonsul1.length +
     visiteKonsul2.length +
-    visiteKonsul3.length +
     visiteDokterUmum.length;
 
   return {
     visiteDpjpUtama,
     visiteKonsul1,
     visiteKonsul2,
-    visiteKonsul3,
     visiteDokterUmum,
     finalVisiteKonsul1,
     finalVisiteKonsul2,
-    finalVisiteKonsul3,
     totalVisite,
   };
 }
@@ -402,8 +374,6 @@ export function calculateRawatInapFinancials(
     (visiteData.visiteKonsul1.length / visiteData.totalVisite) * dpjp_ranap;
   const remun_konsul_2 =
     (visiteData.visiteKonsul2.length / visiteData.totalVisite) * dpjp_ranap;
-  const remun_konsul_3 =
-    (visiteData.visiteKonsul3.length / visiteData.totalVisite) * dpjp_ranap;
   const remun_operator = has_operasi ? alokasi * 0.7 * 0.7 : 0;
   const remun_anestesi = has_operasi ? alokasi * 0.7 * 0.3 : 0;
   const remun_anastesi_pengganti = dokter_anestesi ? remun_anestesi * 0.3 : 0;
@@ -415,7 +385,6 @@ export function calculateRawatInapFinancials(
     remun_dpjp_utama +
     remun_konsul_anastesi +
     remun_konsul_2 +
-    remun_konsul_3 +
     remun_dokter_umum +
     remun_operator +
     remun_dokter_anestesi +
@@ -430,7 +399,6 @@ export function calculateRawatInapFinancials(
     remun_dpjp_utama,
     remun_konsul_anastesi,
     remun_konsul_2,
-    remun_konsul_3,
     remun_dokter_umum,
     remun_lab,
     remun_rad,
