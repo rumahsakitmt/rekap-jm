@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from "react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { getRouteApi } from "@tanstack/react-router";
 
 const SearchInput = ({ from }: { from: "/rawat-inap" | "/" }) => {
@@ -60,6 +60,7 @@ const SearchInput = ({ from }: { from: "/rawat-inap" | "/" }) => {
         )}
       </div>
       <Button disabled={localSearch === ""} type="submit">
+        <Search />
         Cari
       </Button>
     </form>

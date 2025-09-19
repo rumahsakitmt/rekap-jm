@@ -15,6 +15,8 @@ export const rawatInapFilterSchema = z.object({
   selectedSupport: z.string().optional(),
   operation: z.boolean().optional(),
   generalDoctor: z.boolean().optional(),
+  viisiteAnesthesia: z.boolean().optional(),
+  visiteDokterSpesialis: z.boolean().optional(),
 });
 
 export const detailedReportSchema = z.object({

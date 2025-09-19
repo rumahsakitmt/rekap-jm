@@ -1,13 +1,13 @@
 import { sql, and, gte, lte, eq, inArray, ne } from "drizzle-orm";
-import { reg_periksa } from "../db/schema/reg_periksa";
-import { bridging_sep } from "../db/schema/bridging_sep";
-import { pasien } from "../db/schema/pasien";
-import { dpjp_ranap } from "../db/schema/dpjp_ranap";
-import { permintaan_lab } from "../db/schema/permintaan_lab";
-import { permintaan_radiologi } from "../db/schema/permintaan_radiologi";
-import { kamarInap } from "../db/schema/kamar_inap";
-import { bangsal } from "../db/schema/bangsal";
-import { operasi } from "../db/schema/operasi";
+import { reg_periksa } from "../../db/schema/reg_periksa";
+import { bridging_sep } from "../../db/schema/bridging_sep";
+import { pasien } from "../../db/schema/pasien";
+import { dpjp_ranap } from "../../db/schema/dpjp_ranap";
+import { permintaan_lab } from "../../db/schema/permintaan_lab";
+import { permintaan_radiologi } from "../../db/schema/permintaan_radiologi";
+import { kamarInap } from "../../db/schema/kamar_inap";
+import { bangsal } from "../../db/schema/bangsal";
+import { operasi } from "../../db/schema/operasi";
 
 export interface RawatInapFilterInput {
   search?: string;
@@ -20,6 +20,8 @@ export interface RawatInapFilterInput {
   selectedSupport?: string;
   operation?: boolean;
   generalDoctor?: boolean;
+  viisiteAnesthesia?: boolean;
+  visiteDokterSpesialis?: boolean;
 }
 
 export function buildRawatInapFilterConditions(input: RawatInapFilterInput) {
@@ -91,7 +93,33 @@ export function buildRawatInapFilterConditions(input: RawatInapFilterInput) {
       ) > 0`
     );
   }
-
+  if (input.viisiteAnesthesia) {
+    whereConditions.push(
+      sql`(
+        SELECT COUNT(*) 
+        FROM rawat_inap_drpr rid
+        INNER JOIN jns_perawatan_inap jpi ON rid.kd_jenis_prw = jpi.kd_jenis_prw 
+        WHERE rid.no_rawat = ${kamarInap.no_rawat}
+        AND jpi.nm_perawatan LIKE '%anastesi%'
+      ) > 0`
+    );
+  }
+  if (input.visiteDokterSpesialis) {
+    whereConditions.push(
+      sql`(
+        SELECT COUNT(*) 
+        FROM rawat_inap_drpr rid
+        INNER JOIN jns_perawatan_inap jpi ON rid.kd_jenis_prw = jpi.kd_jenis_prw 
+        INNER JOIN dpjp_ranap dpjp ON rid.no_rawat = dpjp.no_rawat
+        WHERE rid.no_rawat = ${kamarInap.no_rawat}
+        AND rid.kd_dokter != dpjp.kd_dokter
+        AND jpi.nm_perawatan LIKE '%visite dokter%'
+        AND jpi.nm_perawatan NOT LIKE '%anastesi%'
+        AND jpi.nm_perawatan != 'visite dokter'
+        AND jpi.nm_perawatan NOT LIKE '%emergency%'
+      ) > 0`
+    );
+  }
   return {
     where: whereConditions.length > 0 ? and(...whereConditions) : undefined,
   };

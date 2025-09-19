@@ -13,7 +13,12 @@ export const appRouter = router({
   healthCheck: publicProcedure.query(async () => {
     try {
       await db.execute(sql`SELECT 1`);
-      return { status: "OK", database: "connected" };
+      const result = await db.execute(sql`SELECT VERSION() as version`);
+      return {
+        status: "OK",
+        database: "connected",
+        version: result,
+      };
     } catch (error) {
       return {
         status: "ERROR",

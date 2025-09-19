@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/select";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 
-interface DataTablePaginationProps<TData> {
+interface DataTablePaginationProps {
   pagination?: {
     total: number;
     limit: number;
@@ -19,10 +19,10 @@ interface DataTablePaginationProps<TData> {
   from: "/rawat-inap" | "/";
 }
 
-export function DataTablePagination<TData>({
+export function DataTablePagination({
   pagination,
   from,
-}: DataTablePaginationProps<TData>) {
+}: DataTablePaginationProps) {
   const searchParams = useSearch({ from });
   const navigate = useNavigate({ from });
   const { limit, page } = searchParams;
@@ -61,30 +61,30 @@ export function DataTablePagination<TData>({
   return (
     <div className="flex items-center justify-between px-2">
       <div className="flex-1 text-sm text-muted-foreground">
-        Showing {pagination.offset + 1} to{" "}
-        {Math.min(pagination.offset + pagination.limit, total)} of {total}{" "}
-        entries
+        Menampilkan {pagination.offset + 1} sampai{" "}
+        {Math.min(pagination.offset + pagination.limit, total)} dari {total}{" "}
+        data
       </div>
       <div className="flex items-center space-x-6 lg:space-x-8">
         <div className="flex items-center space-x-2">
-          <p className="text-sm font-medium">Rows per page</p>
+          <p className="text-sm font-medium">Baris per halaman</p>
           <Select
             value={currentLimit.toString()}
             onValueChange={(value) => handleLimitChange(Number(value))}
           >
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Theme" />
+              <SelectValue placeholder="Baris per halaman" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="50">50</SelectItem>
               <SelectItem value="100">100</SelectItem>
               <SelectItem value="500">500</SelectItem>
-              <SelectItem value="2000">2000</SelectItem>
+              <SelectItem value="1000">1000</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Page {currentPage} of {totalPages}
+        <div className="flex w-[150px] items-center justify-center text-sm font-medium">
+          Halaman {currentPage} dari {totalPages}
         </div>
         <div className="flex items-center space-x-2">
           <Button
@@ -93,7 +93,7 @@ export function DataTablePagination<TData>({
             onClick={() => handlePageChange(1)}
             disabled={!canPreviousPage}
           >
-            <span className="sr-only">Go to first page</span>
+            <span className="sr-only">Ke halaman pertama</span>
             <svg
               className="h-4 w-4"
               fill="none"
@@ -114,7 +114,7 @@ export function DataTablePagination<TData>({
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={!canPreviousPage}
           >
-            <span className="sr-only">Go to previous page</span>
+            <span className="sr-only">Ke halaman sebelumnya</span>
             <svg
               className="h-4 w-4"
               fill="none"
@@ -135,7 +135,7 @@ export function DataTablePagination<TData>({
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={!canNextPage}
           >
-            <span className="sr-only">Go to next page</span>
+            <span className="sr-only">Ke halaman selanjutnya</span>
             <svg
               className="h-4 w-4"
               fill="none"
@@ -156,7 +156,7 @@ export function DataTablePagination<TData>({
             onClick={() => handlePageChange(totalPages)}
             disabled={!canNextPage}
           >
-            <span className="sr-only">Go to last page</span>
+            <span className="sr-only">Ke halaman terakhir</span>
             <svg
               className="h-4 w-4"
               fill="none"

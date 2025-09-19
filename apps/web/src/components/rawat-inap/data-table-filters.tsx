@@ -5,8 +5,7 @@ import SearchInput from "../search-input";
 import { SelectKamar } from "./select-kamar";
 import { DateFilter } from "../date-filter";
 import { ClearFilter } from "../clear-filter";
-import { OperationSwitch } from "./operation-switch";
-import { GeneralDoctorSwitch } from "./general-doctor-switch";
+import { FilterSwitch } from "./filter-switch";
 
 export function DataTableFilters() {
   return (
@@ -22,9 +21,17 @@ export function DataTableFilters() {
           <SelectKamar />
           <SupportFilter from="/rawat-inap" />
         </div>
-        <div className="flex items-center gap-2">
-          <OperationSwitch />
-          <GeneralDoctorSwitch />
+        <div className="flex items-center gap-2 py-4">
+          <FilterSwitch
+            label="Visite Anastesi"
+            searchParam="viisiteAnesthesia"
+          />
+          <FilterSwitch
+            label="Visite Antar Dokter Spesialis"
+            searchParam="visiteDokterSpesialis"
+          />
+          <FilterSwitch label="Dokter Umum" searchParam="generalDoctor" />
+          <FilterSwitch label="Operasi" searchParam="operation" />
         </div>
         <div className="flex justify-end">
           <ClearFilter from="/rawat-inap" />

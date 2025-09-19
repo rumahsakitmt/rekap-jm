@@ -1,5 +1,5 @@
 import { and } from "drizzle-orm";
-import { buildRawatInapFilterConditions } from "@/lib/rawat-inap-filter-utils";
+import { buildRawatInapFilterConditions } from "@/lib/rawat-inap/rawat-inap-filter-utils";
 import {
   createRawatInapSummaryQuery,
   getRadiologiData,

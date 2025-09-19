@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ReportRawatJalanRouteImport } from './routes/report-rawat-jalan'
 import { Route as ReportRawatInapRouteImport } from './routes/report-rawat-inap'
 import { Route as RawatInapRouteImport } from './routes/rawat-inap'
+import { Route as ConnectRouteImport } from './routes/connect'
 import { Route as BridgingRouteImport } from './routes/bridging'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -30,6 +31,11 @@ const RawatInapRoute = RawatInapRouteImport.update({
   path: '/rawat-inap',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConnectRoute = ConnectRouteImport.update({
+  id: '/connect',
+  path: '/connect',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BridgingRoute = BridgingRouteImport.update({
   id: '/bridging',
   path: '/bridging',
@@ -44,6 +50,7 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/bridging': typeof BridgingRoute
+  '/connect': typeof ConnectRoute
   '/rawat-inap': typeof RawatInapRoute
   '/report-rawat-inap': typeof ReportRawatInapRoute
   '/report-rawat-jalan': typeof ReportRawatJalanRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/bridging': typeof BridgingRoute
+  '/connect': typeof ConnectRoute
   '/rawat-inap': typeof RawatInapRoute
   '/report-rawat-inap': typeof ReportRawatInapRoute
   '/report-rawat-jalan': typeof ReportRawatJalanRoute
@@ -59,6 +67,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/bridging': typeof BridgingRoute
+  '/connect': typeof ConnectRoute
   '/rawat-inap': typeof RawatInapRoute
   '/report-rawat-inap': typeof ReportRawatInapRoute
   '/report-rawat-jalan': typeof ReportRawatJalanRoute
@@ -68,6 +77,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/bridging'
+    | '/connect'
     | '/rawat-inap'
     | '/report-rawat-inap'
     | '/report-rawat-jalan'
@@ -75,6 +85,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/bridging'
+    | '/connect'
     | '/rawat-inap'
     | '/report-rawat-inap'
     | '/report-rawat-jalan'
@@ -82,6 +93,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/bridging'
+    | '/connect'
     | '/rawat-inap'
     | '/report-rawat-inap'
     | '/report-rawat-jalan'
@@ -90,6 +102,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BridgingRoute: typeof BridgingRoute
+  ConnectRoute: typeof ConnectRoute
   RawatInapRoute: typeof RawatInapRoute
   ReportRawatInapRoute: typeof ReportRawatInapRoute
   ReportRawatJalanRoute: typeof ReportRawatJalanRoute
@@ -118,6 +131,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RawatInapRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/connect': {
+      id: '/connect'
+      path: '/connect'
+      fullPath: '/connect'
+      preLoaderRoute: typeof ConnectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/bridging': {
       id: '/bridging'
       path: '/bridging'
@@ -138,6 +158,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BridgingRoute: BridgingRoute,
+  ConnectRoute: ConnectRoute,
   RawatInapRoute: RawatInapRoute,
   ReportRawatInapRoute: ReportRawatInapRoute,
   ReportRawatJalanRoute: ReportRawatJalanRoute,

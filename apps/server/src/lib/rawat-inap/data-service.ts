@@ -1,5 +1,5 @@
 import { and } from "drizzle-orm";
-import { buildRawatInapFilterConditions } from "@/lib/rawat-inap-filter-utils";
+import { buildRawatInapFilterConditions } from "@/lib/rawat-inap/rawat-inap-filter-utils";
 import {
   createRawatInapQuery,
   createRawatInapSummaryQuery,
@@ -189,9 +189,8 @@ export class RawatInapDataService {
       .map((item) => item.no_rawat)
       .filter((id): id is string => id !== null);
 
-    const [radiologiData, labData] = await Promise.all([
+    const [radiologiData] = await Promise.all([
       getRadiologiData(noRawatList) as Promise<RadiologiData[]>,
-      getLabData(noRawatList) as Promise<LabData[]>,
     ]);
 
     const radiologiMap = this.createDataMap(radiologiData, "no_rawat");

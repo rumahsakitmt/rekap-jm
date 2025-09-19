@@ -21,6 +21,8 @@ const TableRawatInap = () => {
     search,
     operation,
     generalDoctor,
+    viisiteAnesthesia,
+    visiteDokterSpesialis,
   } = searchParams;
 
   const { data, isLoading } = useQuery(
@@ -37,6 +39,8 @@ const TableRawatInap = () => {
       selectedSupport: selectedSupport || undefined,
       operation: operation || undefined,
       generalDoctor: generalDoctor || undefined,
+      viisiteAnesthesia: viisiteAnesthesia || undefined,
+      visiteDokterSpesialis: visiteDokterSpesialis || undefined,
     })
   );
 
