@@ -30,6 +30,13 @@ const rawatInapSearchSchema = z.object({
 });
 
 export const Route = createFileRoute("/rawat-inap")({
+  head: () => ({
+    meta: [
+      {
+        title: "Rekap JM | Rawat Inap",
+      },
+    ],
+  }),
   component: RouteComponent,
   validateSearch: zodValidator(rawatInapSearchSchema),
 });
