@@ -32,7 +32,7 @@ export function TotalsDisplay({ totals }: TotalsDisplayProps) {
 
   return (
     <div className="p-2 bg-secondary">
-      <div className="grid grid-cols-2 md:grid-cols-9 gap-4">
+      <div className="grid grid-cols-4 xl:grid-cols-9 gap-4">
         <div className="space-y-1">
           <p className="text-sm font-medium text-muted-foreground">
             Total Tarif

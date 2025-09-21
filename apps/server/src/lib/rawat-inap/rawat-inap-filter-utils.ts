@@ -1,13 +1,15 @@
 import { sql, and, gte, lte, eq, inArray, ne } from "drizzle-orm";
-import { reg_periksa } from "../../db/schema/reg_periksa";
-import { bridging_sep } from "../../db/schema/bridging_sep";
-import { pasien } from "../../db/schema/pasien";
-import { dpjp_ranap } from "../../db/schema/dpjp_ranap";
-import { permintaan_lab } from "../../db/schema/permintaan_lab";
-import { permintaan_radiologi } from "../../db/schema/permintaan_radiologi";
-import { kamarInap } from "../../db/schema/kamar_inap";
-import { bangsal } from "../../db/schema/bangsal";
-import { operasi } from "../../db/schema/operasi";
+import {
+  reg_periksa,
+  bridging_sep,
+  pasien,
+  dpjp_ranap,
+  permintaan_lab,
+  permintaan_radiologi,
+  kamar_inap,
+  bangsal,
+  operasi,
+} from "@/db/schema";
 
 export interface RawatInapFilterInput {
   search?: string;
@@ -63,7 +65,7 @@ export function buildRawatInapFilterConditions(input: RawatInapFilterInput) {
         sql`(
           SELECT COUNT(*) 
           FROM ${permintaan_lab} 
-          WHERE ${permintaan_lab.no_rawat} = ${kamarInap.no_rawat}
+          WHERE ${permintaan_lab.no_rawat} = ${kamar_inap.no_rawat}
         ) > 0`
       );
     } else if (input.selectedSupport === "radiologi") {
@@ -71,14 +73,14 @@ export function buildRawatInapFilterConditions(input: RawatInapFilterInput) {
         sql`(
           SELECT COUNT(*) 
           FROM ${permintaan_radiologi} 
-          WHERE ${permintaan_radiologi.no_rawat} = ${kamarInap.no_rawat}
+          WHERE ${permintaan_radiologi.no_rawat} = ${kamar_inap.no_rawat}
         ) > 0`
       );
     }
   }
 
   if (input.operation) {
-    whereConditions.push(eq(operasi.no_rawat, kamarInap.no_rawat));
+    whereConditions.push(eq(operasi.no_rawat, kamar_inap.no_rawat));
   }
 
   if (input.generalDoctor) {
@@ -88,7 +90,7 @@ export function buildRawatInapFilterConditions(input: RawatInapFilterInput) {
         FROM rawat_inap_drpr rid
         INNER JOIN jns_perawatan_inap jpi ON rid.kd_jenis_prw = jpi.kd_jenis_prw 
         INNER JOIN dokter d ON rid.kd_dokter = d.kd_dokter
-        WHERE rid.no_rawat = ${kamarInap.no_rawat}
+        WHERE rid.no_rawat = ${kamar_inap.no_rawat}
         AND (jpi.nm_perawatan LIKE '%emergency%' OR jpi.nm_perawatan = 'visite dokter')
       ) > 0`
     );
@@ -99,7 +101,7 @@ export function buildRawatInapFilterConditions(input: RawatInapFilterInput) {
         SELECT COUNT(*) 
         FROM rawat_inap_drpr rid
         INNER JOIN jns_perawatan_inap jpi ON rid.kd_jenis_prw = jpi.kd_jenis_prw 
-        WHERE rid.no_rawat = ${kamarInap.no_rawat}
+        WHERE rid.no_rawat = ${kamar_inap.no_rawat}
         AND jpi.nm_perawatan LIKE '%anastesi%'
       ) > 0`
     );
@@ -111,7 +113,7 @@ export function buildRawatInapFilterConditions(input: RawatInapFilterInput) {
         FROM rawat_inap_drpr rid
         INNER JOIN jns_perawatan_inap jpi ON rid.kd_jenis_prw = jpi.kd_jenis_prw 
         INNER JOIN dpjp_ranap dpjp ON rid.no_rawat = dpjp.no_rawat
-        WHERE rid.no_rawat = ${kamarInap.no_rawat}
+        WHERE rid.no_rawat = ${kamar_inap.no_rawat}
         AND rid.kd_dokter != dpjp.kd_dokter
         AND jpi.nm_perawatan LIKE '%visite dokter%'
         AND jpi.nm_perawatan NOT LIKE '%anastesi%'

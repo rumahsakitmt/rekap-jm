@@ -59,7 +59,7 @@ export interface RawatInapData {
   stts_pulang: string | null;
   lama: number | null;
   nm_dokter: string;
-  jns_perawatan: string;
+  jns_perawatan: any[];
   total_permintaan_radiologi: number;
   total_permintaan_lab: number;
   has_operasi: boolean;
@@ -74,7 +74,7 @@ export interface RawatInapSummaryData {
   nm_dokter: string;
   tgl_masuk: Date | null;
   tgl_keluar: Date | null;
-  jns_perawatan: string;
+  jns_perawatan: any[];
   total_permintaan_radiologi: number;
   total_permintaan_lab: number;
   has_operasi: boolean;
@@ -108,7 +108,7 @@ export interface ProcessedRawatInapData
   visite_konsul_1: any[];
   visite_konsul_2: any[];
   visite_dokter_umum: any[];
-  jns_perawatan: string;
+  jns_perawatan: any[];
   jns_perawatan_radiologi: any[];
   jns_perawatan_lab: any[];
   hari_rawat: number;

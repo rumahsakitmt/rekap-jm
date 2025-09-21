@@ -1,6 +1,6 @@
 import * as m from "drizzle-orm/mysql-core";
 
-export const kamarInap = m.mysqlTable("kamar_inap", {
+export const kamar_inap = m.mysqlTable("kamar_inap", {
   no_rawat: m.varchar("no_rawat", { length: 17 }).primaryKey(),
   kd_kamar: m.varchar("kd_kamar", { length: 15 }),
   trf_kamar: m.double("trf_kamar"),

@@ -1,20 +1,26 @@
 import { and } from "drizzle-orm";
 import { buildRawatInapFilterConditions } from "@/lib/rawat-inap/rawat-inap-filter-utils";
 import {
-  createRawatInapSummaryQuery,
   getRadiologiData,
   getLabData,
 } from "@/lib/rawat-inap/rawat-inap-query-builder";
 import { readCsvFile, createCsvTarifMap, type CsvData } from "@/lib/csv-utils";
 import { RawatInapCalculationService } from "./calculation-service";
+import { RawatInapDataService } from "./data-service";
 import type {
   RawatInapFilterInput,
   RawatInapSummaryData,
   DetailedReportResponse,
 } from "./types";
 
+interface ReportMap {
+  name: string;
+  visite: number;
+  total: number;
+}
 export class RawatInapReportService {
   private calculationService = new RawatInapCalculationService();
+  private dataService = new RawatInapDataService();
 
   async generateDetailedMonthlyReport(
     input: RawatInapFilterInput
@@ -29,8 +35,9 @@ export class RawatInapReportService {
       csvSepNumbers: csvData.map((item) => item.no_sep),
     });
 
-    const query = createRawatInapSummaryQuery(and(filterConditions.where));
-    const results = await query;
+    const results = await this.dataService.getRawatInapDenganJnsPerawatan(
+      and(filterConditions.where)
+    );
     const csvTarifMap = createCsvTarifMap(csvData);
 
     const noRawatList = results
@@ -45,42 +52,14 @@ export class RawatInapReportService {
     const radiologiMap = this.createDataMap(radiologiData, "no_rawat");
     const labMap = this.createDataMap(labData, "no_rawat");
 
-    const dpjpMap = new Map<
-      string,
-      { name: string; visite: number; total: number }
-    >();
-    const konsulAnastesiMap = new Map<
-      string,
-      { name: string; visite: number; total: number }
-    >();
-    const konsulMap = new Map<
-      string,
-      {
-        name: string;
-        visite: number;
-        total: number;
-      }
-    >();
-    const dokterUmumMap = new Map<
-      string,
-      { name: string; visite: number; total: number }
-    >();
-    const operatorMap = new Map<
-      string,
-      { name: string; visite: number; total: number }
-    >();
-    const anestesiMap = new Map<
-      string,
-      { name: string; visite: number; total: number }
-    >();
-    const anestesiPenggantiMap = new Map<
-      string,
-      { name: string; visite: number; total: number }
-    >();
-    const penunjangMap = new Map<
-      string,
-      { name: string; visite: number; total: number }
-    >();
+    const dpjpMap = new Map<string, ReportMap>();
+    const konsulAnastesiMap = new Map<string, ReportMap>();
+    const konsulMap = new Map<string, ReportMap>();
+    const dokterUmumMap = new Map<string, ReportMap>();
+    const operatorMap = new Map<string, ReportMap>();
+    const anestesiMap = new Map<string, ReportMap>();
+    const anestesiPenggantiMap = new Map<string, ReportMap>();
+    const penunjangMap = new Map<string, ReportMap>();
 
     let labTotal = 0;
     let radTotal = 0;
@@ -97,8 +76,6 @@ export class RawatInapReportService {
       );
 
       const visiteData = this.calculationService.calculateVisiteData(row);
-
-      // Aggregate DPJP Utama
       this.aggregateDpjpUtama(
         dpjpMap,
         row,
@@ -106,27 +83,22 @@ export class RawatInapReportService {
         visiteData
       );
 
-      // Aggregate Konsul Anastesi
       this.aggregateKonsulAnastesi(
         konsulAnastesiMap,
         visiteData,
         calculation.remun_konsul_anastesi
       );
 
-      // Aggregate Visite Antar Spesialis
       this.aggregateKonsul2(konsulMap, visiteData, calculation.remun_konsul_2);
 
-      // Aggregate Dokter Umum
       this.aggregateDokterUmum(
         dokterUmumMap,
         visiteData,
         calculation.remun_dokter_umum
       );
 
-      // Aggregate Operator
       this.aggregateOperator(operatorMap, row, calculation.remun_operator);
 
-      // Aggregate Anestesi
       this.aggregateAnestesi(
         anestesiMap,
         row,
@@ -157,7 +129,6 @@ export class RawatInapReportService {
         calculation.remun_rad;
     }
 
-    // Convert maps to sorted arrays
     const dpjpTotals = this.convertMapToSortedArray(dpjpMap);
     const konsulAnastesiTotals =
       this.convertMapToSortedArray(konsulAnastesiMap);
@@ -169,7 +140,6 @@ export class RawatInapReportService {
       this.convertMapToSortedArray(anestesiPenggantiMap);
     const penunjangTotals = this.convertMapToSortedArray(penunjangMap);
 
-    // Create monthly summary
     const rekapBulanan = this.createMonthlySummary([
       ...dpjpTotals,
       ...konsulTotals,
@@ -213,7 +183,7 @@ export class RawatInapReportService {
   }
 
   private aggregateDpjpUtama(
-    dpjpMap: Map<string, { name: string; visite: number; total: number }>,
+    dpjpMap: Map<string, ReportMap>,
     row: RawatInapSummaryData,
     remun_dpjp_utama: number,
     visiteData: any
@@ -235,10 +205,7 @@ export class RawatInapReportService {
   }
 
   private aggregateKonsulAnastesi(
-    konsulAnastesiMap: Map<
-      string,
-      { name: string; visite: number; total: number }
-    >,
+    konsulAnastesiMap: Map<string, ReportMap>,
     visiteData: any,
     remun_konsul_anastesi: number
   ) {
@@ -300,7 +267,7 @@ export class RawatInapReportService {
   }
 
   private aggregateDokterUmum(
-    dokterUmumMap: Map<string, { name: string; visite: number; total: number }>,
+    dokterUmumMap: Map<string, ReportMap>,
     visiteData: any,
     remun_dokter_umum: number
   ) {
@@ -331,7 +298,7 @@ export class RawatInapReportService {
   }
 
   private aggregateOperator(
-    operatorMap: Map<string, { name: string; visite: number; total: number }>,
+    operatorMap: Map<string, ReportMap>,
     row: RawatInapSummaryData,
     remun_operator: number
   ) {
@@ -354,7 +321,7 @@ export class RawatInapReportService {
   }
 
   private aggregateAnestesi(
-    anestesiMap: Map<string, { name: string; visite: number; total: number }>,
+    anestesiMap: Map<string, ReportMap>,
     row: RawatInapSummaryData,
     remun_anestesi: number,
     remun_anastesi_pengganti: number
@@ -386,7 +353,7 @@ export class RawatInapReportService {
   }
 
   private aggregatePenunjang(
-    penunjangMap: Map<string, { name: string; visite: number; total: number }>,
+    penunjangMap: Map<string, ReportMap>,
     radiologiMap: Map<string, any[]>,
     labMap: Map<string, any[]>,
     row: RawatInapSummaryData,
@@ -483,7 +450,7 @@ export class RawatInapReportService {
   }
 
   private convertMapToSortedArray(
-    map: Map<string, { name: string; visite: number; total: number }>
+    map: Map<string, ReportMap>
   ): Array<{ name: string; visite: number; total: number }> {
     return Array.from(map.values())
       .filter((item) => item.total > 0)
@@ -510,9 +477,7 @@ export class RawatInapReportService {
       }));
   }
 
-  private createMonthlySummary(
-    allTotals: Array<{ name: string; visite: number; total: number }>
-  ): Array<{ name: string; visite: number; total: number }> {
+  private createMonthlySummary(allTotals: Array<ReportMap>): Array<ReportMap> {
     const rekapBulanan = new Map<string, { visite: number; total: number }>();
 
     for (const item of allTotals) {

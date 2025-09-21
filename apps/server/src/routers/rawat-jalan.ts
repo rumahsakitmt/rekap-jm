@@ -1,11 +1,11 @@
-import { router } from "../lib/trpc";
-import { publicProcedure } from "../lib/trpc";
-import { z } from "zod";
+import { router } from "@/lib/trpc";
+import { publicProcedure } from "@/lib/trpc";
 import {
-  getRegPeriksaData,
+  getRawatJalan,
   getSummaryReport,
   getRegPeriksaDataForCsv,
-} from "../lib/reg-periksa-queries";
+} from "@/lib/rawat-jalan-queries";
+import { z } from "zod";
 
 export const rawatJalanRouter = router({
   getRegPeriksa: publicProcedure
@@ -33,9 +33,8 @@ export const rawatJalanRouter = router({
       })
     )
     .query(async ({ input }) => {
-      return await getRegPeriksaData(input);
+      return await getRawatJalan(input);
     }),
-
   getSummaryReport: publicProcedure
     .input(
       z.object({
@@ -49,7 +48,6 @@ export const rawatJalanRouter = router({
     .query(async ({ input }) => {
       return await getSummaryReport(input);
     }),
-
   downloadCsv: publicProcedure
     .input(
       z.object({

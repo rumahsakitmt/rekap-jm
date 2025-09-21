@@ -18,7 +18,7 @@ export class RawatInapCalculationService {
       tarif,
       total_permintaan_lab: row.total_permintaan_lab || 0,
       total_permintaan_radiologi: row.total_permintaan_radiologi || 0,
-      jns_perawatan: row.jns_perawatan || "[]",
+      jns_perawatan: row.jns_perawatan || [],
       jns_perawatan_radiologi: jnsPerawatanRadiologiArray,
       nm_dokter: row.nm_dokter || "",
       tgl_masuk: row.tgl_masuk,
@@ -34,7 +34,7 @@ export class RawatInapCalculationService {
    */
   calculateVisiteData(row: RawatInapData | RawatInapSummaryData) {
     return extractRawatInapVisiteData(
-      row.jns_perawatan || "[]",
+      row.jns_perawatan || [],
       row.nm_dokter || "",
       row.tgl_masuk,
       row.tgl_keluar

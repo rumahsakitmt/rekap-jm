@@ -1,26 +1,19 @@
 import { and } from "drizzle-orm";
 import { buildRawatInapFilterConditions } from "@/lib/rawat-inap/rawat-inap-filter-utils";
 import {
-  createRawatInapQuery,
   getRadiologiData,
   getLabData,
 } from "@/lib/rawat-inap/rawat-inap-query-builder";
-import {
-  readCsvFile,
-  createCsvTarifMap,
-  convertToCsv,
-  type CsvData,
-} from "@/lib/csv-utils";
+import { readCsvFile, createCsvTarifMap, convertToCsv } from "@/lib/csv-utils";
 import { accumulateTotals, createEmptyTotals } from "@/lib/calculation-utils";
 import { RawatInapCalculationService } from "./calculation-service";
 import type { RawatInapFilterInput, CsvDownloadResponse } from "./types";
+import { RawatInapDataService } from "./data-service";
 
 export class RawatInapCsvService {
   private calculationService = new RawatInapCalculationService();
+  private dataService = new RawatInapDataService();
 
-  /**
-   * Generate CSV download data
-   */
   async generateCsvDownload(
     input: RawatInapFilterInput
   ): Promise<CsvDownloadResponse> {
@@ -34,18 +27,18 @@ export class RawatInapCsvService {
       return { csv: "" };
     }
 
-    // Build filter conditions
     const filterConditions = buildRawatInapFilterConditions({
       ...input,
       csvSepNumbers: csvData.map((item) => item.no_sep),
     });
 
-    const baseQuery = createRawatInapQuery(and(filterConditions.where));
     const csvTarifMap = createCsvTarifMap(csvData);
 
-    const filteredResults = await baseQuery;
+    const filteredResults =
+      await this.dataService.getRawatInapDenganJnsPerawatan(
+        and(filterConditions.where)
+      );
 
-    // Get radiologi and lab data for filtered results
     const filteredNoRawatList = filteredResults
       .map((item) => item.no_rawat)
       .filter((id): id is string => id !== null);
@@ -55,14 +48,12 @@ export class RawatInapCsvService {
       getLabData(filteredNoRawatList),
     ]);
 
-    // Create maps for quick lookup
     const filteredRadiologiMap = this.createDataMap(
       filteredRadiologiData,
       "no_rawat"
     );
     const filteredLabMap = this.createDataMap(filteredLabData, "no_rawat");
 
-    // Process results for CSV
     const processedResult = filteredResults.map((row) => {
       const tarif = csvTarifMap.get(row.no_sep || "") || 0;
       const jnsPerawatanRadiologiArray =
@@ -79,23 +70,16 @@ export class RawatInapCsvService {
 
       return {
         ...row,
-        jns_perawatan: (
-          JSON.parse(row.jns_perawatan || "[]") as {
-            kd_jenis_prw: string;
-            nm_perawatan: string;
-          }[]
-        ).filter((item) => item !== null),
+        jns_perawatan: row.jns_perawatan.filter((item) => item !== null),
         jns_perawatan_radiologi:
           filteredRadiologiMap.get(row.no_rawat || "") || [],
         jns_perawatan_lab: filteredLabMap.get(row.no_rawat || "") || [],
         tarif_from_csv: csvTarifMap.get(row.no_sep || "") || undefined,
-        // Visite data
         visite_dpjp_utama: visiteData.visiteDpjpUtama,
         visite_konsul_anastesi: visiteData.visiteKonsul1.length,
         visite_konsul_2: visiteData.visiteKonsul2.length,
         visite_dokter_umum: visiteData.visiteDokterUmum.length,
         total_visite: visiteData.totalVisite,
-        // Financial data
         alokasi: calculation.alokasi,
         dpjp_ranap: calculation.dpjp_ranap,
         remun_dpjp_utama: calculation.remun_dpjp_utama,
@@ -108,7 +92,6 @@ export class RawatInapCsvService {
         remun_anestesi: calculation.remun_anestesi,
         yang_terbagi: calculation.yang_terbagi,
         percent_dari_klaim: calculation.percent_dari_klaim,
-        // Legacy fields for compatibility
         laboratorium: calculation.remun_lab,
         radiologi: calculation.remun_rad,
         operator: calculation.remun_operator,
@@ -116,7 +99,6 @@ export class RawatInapCsvService {
       };
     });
 
-    // Calculate totals using the filtered results
     const totals = filteredResults.reduce((acc, row) => {
       const tarif = csvTarifMap.get(row.no_sep || "") || 0;
       const jnsPerawatanRadiologiArray =
@@ -130,13 +112,9 @@ export class RawatInapCsvService {
       return accumulateTotals(acc, tarif, calculation);
     }, createEmptyTotals());
 
-    // Create totals row
     const totalsRow = this.createTotalsRow(totals);
-
-    // Add totals row to the data
     const dataWithTotals = [...processedResult, totalsRow];
 
-    // Convert to CSV
     const csv = convertToCsv(dataWithTotals, {
       fields: [
         "tgl_masuk",
@@ -203,9 +181,6 @@ export class RawatInapCsvService {
     return { csv };
   }
 
-  /**
-   * Create a map from array data for quick lookup
-   */
   private createDataMap<T extends Record<string, any>>(
     data: T[],
     keyField: keyof T
@@ -223,9 +198,6 @@ export class RawatInapCsvService {
     return map;
   }
 
-  /**
-   * Create totals row for CSV
-   */
   private createTotalsRow(totals: any) {
     return {
       tgl_masuk: "",

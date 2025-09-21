@@ -10,9 +10,9 @@ export interface CalculationInput {
   tarif: number;
   total_permintaan_lab: number;
   total_permintaan_radiologi: number;
-  jns_perawatan_radiologi: string;
+  jns_perawatan_radiologi: RadiologiData[];
   konsul_count: number;
-  jns_perawatan?: string;
+  jns_perawatan?: any[];
   nm_dokter?: string;
   nm_poli?: string;
 }
@@ -43,14 +43,11 @@ export function calculateFinancials(
     nm_poli,
   } = input;
 
-  // If nm_poli is IGD, set alokasi and dpjp_utama to 0
   const isIGD = nm_poli === "IGD" && konsul_count < 1;
   const alokasi = isIGD ? 0 : tarif * 0.2;
   const laboratorium = (total_permintaan_lab || 0) * 10000;
 
-  const jnsPerawatanRadiologi = JSON.parse(
-    jns_perawatan_radiologi || "[]"
-  ) as RadiologiData[];
+  const jnsPerawatanRadiologi = jns_perawatan_radiologi || [];
 
   const usgCount =
     jnsPerawatanRadiologi.filter(
@@ -69,17 +66,9 @@ export function calculateFinancials(
   let shouldCountKonsul = konsul_count && konsul_count >= 1;
 
   if (shouldCountKonsul && jns_perawatan && nm_dokter) {
-    const jnsPerawatanData = JSON.parse(jns_perawatan || "[]") as Array<{
-      kd_jenis_prw: string;
-      nm_perawatan: string;
-      kd_dokter: string;
-      nm_dokter: string;
-      is_konsul?: boolean;
-    }>;
+    const jnsPerawatanData = jns_perawatan || [];
 
-    const konsulTreatments = jnsPerawatanData.filter(
-      (item) => item && item.is_konsul
-    );
+    const konsulTreatments = jnsPerawatanData.filter((item) => item);
 
     const allSameDoctor = konsulTreatments.every(
       (item) => item.nm_dokter === nm_dokter
@@ -243,7 +232,7 @@ export interface RawatInapCalculationInput {
   total_permintaan_lab: number;
   total_permintaan_radiologi: number;
   jns_perawatan_radiologi: RadiologiData[];
-  jns_perawatan: string;
+  jns_perawatan: any[];
   nm_dokter: string;
   tgl_masuk: Date | null;
   tgl_keluar: Date | null;
@@ -263,13 +252,13 @@ export interface RawatInapVisiteData {
 }
 
 export function extractRawatInapVisiteData(
-  jns_perawatan: string,
+  jns_perawatan: any[],
   nm_dokter: string,
   tgl_masuk: Date | null,
   tgl_keluar: Date | null
 ): RawatInapVisiteData {
-  const jnsPerawatanArray = JSON.parse(jns_perawatan || "[]");
   const mainDoctor = nm_dokter;
+  const jnsPerawatanArray = jns_perawatan || [];
   const emergencyCount = jnsPerawatanArray.filter(
     (perawatan: any) =>
       perawatan?.nm_dokter === mainDoctor &&
@@ -349,7 +338,7 @@ export function calculateRawatInapFinancials(
   } = input;
 
   const visiteData = extractRawatInapVisiteData(
-    jns_perawatan,
+    jns_perawatan || [],
     nm_dokter,
     tgl_masuk,
     tgl_keluar
@@ -358,7 +347,7 @@ export function calculateRawatInapFinancials(
   const remun_lab = (total_permintaan_lab || 0) * 5000;
 
   const usgCount =
-    jns_perawatan_radiologi.filter(
+    (jns_perawatan_radiologi || []).filter(
       (item) =>
         item.nm_perawatan && item.nm_perawatan.toLowerCase().includes("usg")
     ).length || 0;

@@ -1,10 +1,10 @@
-import { and } from "drizzle-orm";
+import { and, SQL } from "drizzle-orm";
 import { buildRawatInapFilterConditions } from "@/lib/rawat-inap/rawat-inap-filter-utils";
 import {
   createRawatInapQuery,
-  createRawatInapSummaryQuery,
   getRadiologiData,
   getLabData,
+  getJenisPerwatanRawatInap,
 } from "@/lib/rawat-inap/rawat-inap-query-builder";
 import { readCsvFile, createCsvTarifMap, type CsvData } from "@/lib/csv-utils";
 import { differenceInDays } from "date-fns";
@@ -26,6 +26,39 @@ import type {
 } from "./types";
 
 export class RawatInapDataService {
+  async getRawatInapDenganJnsPerawatan(whereCondition?: SQL) {
+    const mainData = await createRawatInapQuery(whereCondition);
+
+    if (mainData.length === 0) {
+      return mainData.map((item) => ({ ...item, jns_perawatan: [] }));
+    }
+
+    const no_rawat_list = mainData.map((item) => item.no_rawat);
+    const jnsPerawatan = await getJenisPerwatanRawatInap(no_rawat_list);
+
+    const jnsPerawatanMap = jnsPerawatan.reduce(
+      (acc, perwatan) => {
+        if (!acc[perwatan.no_rawat]) {
+          acc[perwatan.no_rawat] = [];
+        }
+        acc[perwatan.no_rawat].push({
+          kd_jenis_prw: perwatan.kd_jenis_prw,
+          nm_perawatan: perwatan.nm_perawatan,
+          kd_dokter: perwatan.kd_dokter,
+          nm_dokter: perwatan.nm_dokter,
+          nm_bangsal: perwatan.nm_bangsal,
+        });
+        return acc;
+      },
+      {} as Record<string, any[]>
+    );
+
+    return mainData.map((item) => ({
+      ...item,
+      jns_perawatan: jnsPerawatanMap[item.no_rawat] || [],
+    }));
+  }
+
   async getRawatInapData(
     input: RawatInapFilterInput
   ): Promise<RawatInapResponse> {
@@ -38,29 +71,30 @@ export class RawatInapDataService {
       csvSepNumbers: csvData.map((item) => item.no_sep),
     });
 
-    const baseQuery = createRawatInapQuery(and(filterConditions.where));
     const csvTarifMap = createCsvTarifMap(csvData);
-
-    const totalCount = await baseQuery.then((results) => results.length);
-
     const limit = input?.limit || 50;
     const offset = input?.offset || 0;
     const page = Math.floor(offset / limit) + 1;
+
+    const allData = await this.getRawatInapDenganJnsPerawatan(
+      and(filterConditions.where)
+    );
+    const totalCount = allData.length;
     const totalPages = Math.ceil(totalCount / limit);
+
+    const paginatedData = allData.slice(offset, offset + limit);
 
     let totals: TotalsAccumulator | null = null;
     if (input?.includeTotals) {
       totals = await this.calculateTotals(
-        baseQuery,
+        allData,
         csvTarifMap,
         input?.selectedSupport
       );
     }
 
-    const rawatInap = await baseQuery.offset(offset).limit(limit);
-
     const processedData = await this.processRawatInapData(
-      rawatInap,
+      paginatedData,
       csvTarifMap,
       input?.selectedSupport
     );
@@ -86,9 +120,6 @@ export class RawatInapDataService {
     };
   }
 
-  /**
-   * Get summary data for detailed reports
-   */
   async getSummaryData(
     input: RawatInapFilterInput
   ): Promise<RawatInapSummaryData[]> {
@@ -102,20 +133,21 @@ export class RawatInapDataService {
       csvSepNumbers: csvData.map((item) => item.no_sep),
     });
 
-    const query = createRawatInapSummaryQuery(and(filterConditions.where));
-    return await query;
+    const results = await this.getRawatInapDenganJnsPerawatan(
+      and(filterConditions.where) as SQL
+    );
+    return results;
   }
-
-  /**
-   * Process rawat inap data with calculations
-   */
   private async processRawatInapData(
-    rawatInap: RawatInapData[],
+    jenisPerawatanRanap: RawatInapData[],
     csvTarifMap: Map<string, number>,
     selectedSupport?: string
   ): Promise<ProcessedRawatInapData[]> {
-    // Get radiologi and lab data
-    const noRawatList = rawatInap
+    if (jenisPerawatanRanap.length === 0) {
+      return [];
+    }
+
+    const noRawatList = jenisPerawatanRanap
       .map((item) => item.no_rawat)
       .filter((id): id is string => id !== null);
 
@@ -124,19 +156,16 @@ export class RawatInapDataService {
       getLabData(noRawatList) as Promise<LabData[]>,
     ]);
 
-    // Create maps for quick lookup
     const radiologiMap = this.createDataMap(radiologiData, "no_rawat");
     const labMap = this.createDataMap(labData, "no_rawat");
 
-    // Process each record
-    return rawatInap.map((item) => {
-      const jnsPerawatanArray = JSON.parse(item.jns_perawatan || "[]");
+    return jenisPerawatanRanap.map((item) => {
       const jnsPerawatanRadiologiArray = radiologiMap.get(item.no_rawat) || [];
       const jnsPerawatanLabArray = labMap.get(item.no_rawat) || [];
       const tarif = csvTarifMap.get(item.no_sep || "") || 0;
 
       const visiteData = extractRawatInapVisiteData(
-        item.jns_perawatan || "[]",
+        item.jns_perawatan,
         item.nm_dokter || "",
         item.tgl_masuk,
         item.tgl_keluar
@@ -146,7 +175,7 @@ export class RawatInapDataService {
         tarif,
         total_permintaan_lab: item.total_permintaan_lab || 0,
         total_permintaan_radiologi: item.total_permintaan_radiologi || 0,
-        jns_perawatan: item.jns_perawatan || "[]",
+        jns_perawatan: item.jns_perawatan,
         jns_perawatan_radiologi: jnsPerawatanRadiologiArray,
         nm_dokter: item.nm_dokter || "",
         tgl_masuk: item.tgl_masuk,
@@ -162,30 +191,30 @@ export class RawatInapDataService {
         visite_konsul_1: visiteData.finalVisiteKonsul1,
         visite_konsul_2: visiteData.finalVisiteKonsul2,
         visite_dokter_umum: visiteData.visiteDokterUmum,
-        jns_perawatan: jnsPerawatanArray,
+        jns_perawatan: item.jns_perawatan,
         jns_perawatan_radiologi: jnsPerawatanRadiologiArray,
         jns_perawatan_lab: jnsPerawatanLabArray,
         hari_rawat:
           item.tgl_masuk && item.tgl_keluar
             ? differenceInDays(item.tgl_keluar, item.tgl_masuk)
             : 1,
-        tarif_from_csv: csvTarifMap.get(item.no_sep || "") || undefined,
+        tarif_from_csv: tarif || undefined,
         totalVisite: visiteData.totalVisite,
         ...calculation,
       };
     });
   }
 
-  /**
-   * Calculate totals for all data
-   */
   private async calculateTotals(
-    baseQuery: Promise<RawatInapData[]>,
+    baseQuery: RawatInapData[],
     csvTarifMap: Map<string, number>,
     selectedSupport?: string
   ): Promise<TotalsAccumulator> {
-    const allResults = await baseQuery;
-    const noRawatList = allResults
+    if (baseQuery.length === 0) {
+      return createEmptyTotals();
+    }
+
+    const noRawatList = baseQuery
       .map((item) => item.no_rawat)
       .filter((id): id is string => id !== null);
 
@@ -195,14 +224,14 @@ export class RawatInapDataService {
 
     const radiologiMap = this.createDataMap(radiologiData, "no_rawat");
 
-    return allResults.reduce((acc, row) => {
+    return baseQuery.reduce((acc, row) => {
       const tarif = csvTarifMap.get(row.no_sep || "") || 0;
       const jnsPerawatanRadiologiArray = radiologiMap.get(row.no_rawat) || [];
       const calculation = calculateRawatInapFinancials({
         tarif,
         total_permintaan_lab: row.total_permintaan_lab || 0,
         total_permintaan_radiologi: row.total_permintaan_radiologi || 0,
-        jns_perawatan: row.jns_perawatan || "[]",
+        jns_perawatan: row.jns_perawatan,
         jns_perawatan_radiologi: jnsPerawatanRadiologiArray,
         nm_dokter: row.nm_dokter || "",
         tgl_masuk: row.tgl_masuk,
@@ -215,23 +244,22 @@ export class RawatInapDataService {
     }, createEmptyTotals());
   }
 
-  /**
-   * Create a map from array data for quick lookup
-   */
   private createDataMap<T extends Record<string, any>>(
     data: T[],
     keyField: keyof T
   ): Map<string, T[]> {
     const map = new Map<string, T[]>();
-    data.forEach((item) => {
+
+    for (const item of data) {
       const key = item[keyField] as string;
-      if (key && !map.has(key)) {
-        map.set(key, []);
-      }
       if (key) {
+        if (!map.has(key)) {
+          map.set(key, []);
+        }
         map.get(key)!.push(item);
       }
-    });
+    }
+
     return map;
   }
 }
