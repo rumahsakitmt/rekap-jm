@@ -5,6 +5,7 @@ import { SupportFilter } from "@/components/rawat-jalan/support-filter";
 import SearchInput from "@/components/search-input";
 import { DateFilter } from "@/components/date-filter";
 import SelectDPJP from "@/components/select-dpjp";
+import { FilterSwitch } from "@/components/rawat-jalan/filter-switch";
 
 export function DataTableFilters() {
   return (
@@ -19,6 +20,9 @@ export function DataTableFilters() {
           <SelectDPJP from="/" />
           <SelectPoliklinik />
           <SupportFilter from="/" />
+        </div>
+        <div className="py-4">
+          <FilterSwitch label="Konsul" searchParam="konsul" />
         </div>
         <div className="flex justify-end">
           <ClearFilter from="/" />

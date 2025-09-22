@@ -148,68 +148,6 @@ export const createColumns = (
       },
     },
     {
-      accessorKey: "total_permintaan_radiologi",
-      header: "Radiologi",
-      cell: ({ row }) => {
-        const value = row.getValue("total_permintaan_radiologi") as number;
-        const radiologiData = row.original.jns_perawatan_radiologi;
-
-        if (value > 0) {
-          return (
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  {value}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="bg-background text-primary">
-                {Object.entries(
-                  radiologiData
-                    .filter((item) => item.noorder)
-                    .reduce(
-                      (acc: any, item: any) => {
-                        if (!acc[item.noorder]) {
-                          acc[item.noorder] = [];
-                        }
-                        acc[item.noorder].push(item);
-                        return acc;
-                      },
-                      {} as { [key: string]: any[] }
-                    )
-                ).map(([noorder, items]) => (
-                  <div key={noorder} className="mb-2">
-                    <p className="font-semibold">{noorder}</p>
-                    {(items as any[]).map((item: any) => (
-                      <p key={item.kd_jenis_prw} className="ml-2 text-sm">
-                        {item.nm_perawatan}
-                      </p>
-                    ))}
-                  </div>
-                ))}
-              </TooltipContent>
-            </Tooltip>
-          );
-        }
-
-        return (
-          <Button variant="ghost" size="sm">
-            {value}
-          </Button>
-        );
-      },
-    },
-    {
-      accessorKey: "total_permintaan_lab",
-      header: "Lab",
-      cell: ({ row }) => {
-        return (
-          <span className="text-center">
-            {row.getValue("total_permintaan_lab")}
-          </span>
-        );
-      },
-    },
-    {
       accessorKey: "konsul_count",
       header: "Konsul",
       cell: ({ row }) => {
@@ -218,23 +156,84 @@ export const createColumns = (
 
         if (value > 0) {
           return (
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  {value}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="bg-background">
-                <PerawatanList perawatanList={perawatanList} />
-              </TooltipContent>
-            </Tooltip>
+            <div className="flex items-center justify-center">
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    {value}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="bg-background">
+                  <PerawatanList perawatanList={perawatanList} />
+                </TooltipContent>
+              </Tooltip>
+            </div>
           );
         }
 
-        return (
-          <Button variant="ghost" size="sm">
-            {value}
-          </Button>
+        return <div className="text-center text-muted-foreground">-</div>;
+      },
+    },
+    {
+      accessorKey: "total_permintaan_radiologi",
+      header: "Radiologi",
+      cell: ({ row }) => {
+        const value = row.getValue("total_permintaan_radiologi") as number;
+        const radiologiData = row.original.jns_perawatan_radiologi;
+
+        if (value > 0) {
+          return (
+            <div className="flex items-center justify-center">
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    {value}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="bg-background text-primary">
+                  {Object.entries(
+                    radiologiData
+                      .filter((item) => item.noorder)
+                      .reduce(
+                        (acc: any, item: any) => {
+                          if (!acc[item.noorder]) {
+                            acc[item.noorder] = [];
+                          }
+                          acc[item.noorder].push(item);
+                          return acc;
+                        },
+                        {} as { [key: string]: any[] }
+                      )
+                  ).map(([noorder, items]) => (
+                    <div key={noorder} className="mb-2">
+                      <p className="font-semibold">{noorder}</p>
+                      {(items as any[]).map((item: any) => (
+                        <p key={item.kd_jenis_prw} className="ml-2 text-sm">
+                          {item.nm_perawatan}
+                        </p>
+                      ))}
+                    </div>
+                  ))}
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          );
+        }
+
+        return <div className="text-center text-muted-foreground">-</div>;
+      },
+    },
+    {
+      accessorKey: "total_permintaan_lab",
+      header: "Lab",
+      cell: ({ row }) => {
+        const value = row.getValue("total_permintaan_lab") as number;
+        return value > 0 ? (
+          <div className="flex items-center justify-center">
+            {row.getValue("total_permintaan_lab")}
+          </div>
+        ) : (
+          <div className="text-center text-muted-foreground">-</div>
         );
       },
     },
@@ -316,17 +315,46 @@ export const createColumns = (
           );
         },
       },
-
+      {
+        accessorKey: "konsul",
+        header: () => <div className="text-center">Konsul</div>,
+        cell: ({ row }) => {
+          const value = row.getValue("konsul") as number;
+          const dpjpUtama = row.getValue("dpjp_utama") as number;
+          const konsulCount = Number(row.getValue("konsul_count")) as number;
+          return value > 0 ? (
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger>
+                <span className="text-right font-mono text-primary font-bold">
+                  {value > 0 ? formatCurrency(value) : ""}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent triangle="bg-primary fill-primary">
+                <div className="flex items-center gap-2 uppercase">
+                  <span>DPJP Utama</span>
+                  <span>/{konsulCount + 1}</span>
+                </div>
+                <div className="flex items-center gap-2 font-bold">
+                  <span>{formatCurrency(dpjpUtama)}</span>
+                  <span>/{konsulCount + 1}</span>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <div className="text-center text-muted-foreground">-</div>
+          );
+        },
+      },
       {
         accessorKey: "radiologi",
-        header: "Radiologi",
+        header: () => <div className="text-center">Radiologi</div>,
         cell: ({ row }) => {
           const value = row.getValue("radiologi") as number;
           const usgCount = row.original.usgCount as number;
           const nonUsgCount = row.original.nonUsgCount as number;
 
           const tarif = row.getValue("tarif_from_csv") as number;
-          return (
+          return value > 0 ? (
             <Tooltip delayDuration={0}>
               <TooltipTrigger>
                 <span className="text-right font-mono text-primary font-bold">
@@ -357,18 +385,20 @@ export const createColumns = (
                 )}
               </TooltipContent>
             </Tooltip>
+          ) : (
+            <div className="text-center text-muted-foreground">-</div>
           );
         },
       },
       {
         accessorKey: "laboratorium",
-        header: "Lab",
+        header: () => <div className="text-center">Lab</div>,
         cell: ({ row }) => {
           const value = row.getValue("laboratorium") as number;
           const totalPermintaanLab = row.getValue(
             "total_permintaan_lab"
           ) as number;
-          return (
+          return value > 0 ? (
             <Tooltip delayDuration={0}>
               <TooltipTrigger>
                 <span className="text-right font-mono text-primary font-bold">
@@ -386,37 +416,12 @@ export const createColumns = (
                 </div>
               </TooltipContent>
             </Tooltip>
+          ) : (
+            <div className="text-center text-muted-foreground">-</div>
           );
         },
       },
-      {
-        accessorKey: "konsul",
-        header: "Konsul",
-        cell: ({ row }) => {
-          const value = row.getValue("konsul") as number;
-          const dpjpUtama = row.getValue("dpjp_utama") as number;
-          const konsulCount = row.getValue("konsul_count") as number;
-          return (
-            <Tooltip>
-              <TooltipTrigger>
-                <span className="text-right font-mono text-primary font-bold">
-                  {value > 0 ? formatCurrency(value) : ""}
-                </span>
-              </TooltipTrigger>
-              <TooltipContent triangle="bg-primary fill-primary">
-                <div className="flex items-center gap-2 uppercase">
-                  <span>DPJP Utama</span>
-                  <span>/{konsulCount}</span>
-                </div>
-                <div className="flex items-center gap-2 font-bold">
-                  <span>{formatCurrency(dpjpUtama)}</span>
-                  <span>/{konsulCount}</span>
-                </div>
-              </TooltipContent>
-            </Tooltip>
-          );
-        },
-      },
+
       {
         accessorKey: "yang_terbagi",
         header: "Yang Terbagi",
@@ -427,33 +432,35 @@ export const createColumns = (
           const radiologi = row.getValue("radiologi") as number;
           const laboratorium = row.getValue("laboratorium") as number;
           return (
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger>
-                <span className="text-right font-mono text-primary font-bold">
-                  {value > 0 ? formatCurrency(value) : ""}
-                </span>
-              </TooltipTrigger>
-              <TooltipContent triangle="bg-primary fill-primary">
-                <div className="flex items-center gap-2 uppercase">
-                  <span>DPJP Utama</span>
-                  <span>+</span>
-                  <span>Konsul</span>
-                  <span>+</span>
-                  <span>Radiologi</span>
-                  <span>+</span>
-                  <span>Lab</span>
-                </div>
-                <div className="flex items-center gap-2 font-bold">
-                  <span>{formatCurrency(dpjpUtama)}</span>
-                  <span>+</span>
-                  <span>{formatCurrency(konsul)}</span>
-                  <span>+</span>
-                  <span>{formatCurrency(radiologi)}</span>
-                  <span>+</span>
-                  <span>{formatCurrency(laboratorium)}</span>
-                </div>
-              </TooltipContent>
-            </Tooltip>
+            <div className="text-center">
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger>
+                  <span className="text-right font-mono text-primary font-bold">
+                    {value > 0 ? formatCurrency(value) : ""}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent triangle="bg-primary fill-primary">
+                  <div className="flex items-center gap-2 uppercase">
+                    <span>DPJP Utama</span>
+                    <span>+</span>
+                    <span>Konsul</span>
+                    <span>+</span>
+                    <span>Radiologi</span>
+                    <span>+</span>
+                    <span>Lab</span>
+                  </div>
+                  <div className="flex items-center gap-2 font-bold">
+                    <span>{formatCurrency(dpjpUtama)}</span>
+                    <span>+</span>
+                    <span>{formatCurrency(konsul)}</span>
+                    <span>+</span>
+                    <span>{formatCurrency(radiologi)}</span>
+                    <span>+</span>
+                    <span>{formatCurrency(laboratorium)}</span>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </div>
           );
         },
       },

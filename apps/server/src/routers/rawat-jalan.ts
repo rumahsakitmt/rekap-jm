@@ -20,6 +20,7 @@ export const rawatJalanRouter = router({
         filename: z.string().optional(),
         kd_dokter: z.string().optional(),
         kd_poli: z.string().optional(),
+        konsul: z.boolean().optional(),
         konsulFilters: z
           .array(
             z.object({

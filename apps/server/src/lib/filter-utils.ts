@@ -33,6 +33,7 @@ export interface FilterInput {
   csvSepNumbers?: string[];
   konsulFilters?: KonsulFilter[];
   selectedSupport?: string;
+  konsul?: boolean;
 }
 
 export function buildFilterConditions(input: FilterInput) {
@@ -83,6 +84,11 @@ export function buildFilterConditions(input: FilterInput) {
         ) > 0`
       );
     }
+  }
+
+  if (input.konsul === true) {
+    const konsulCountExpr = sql<number>`SUM(CASE WHEN (${jns_perawatan.nm_perawatan} LIKE '%konsul%' OR ${jns_perawatan.nm_perawatan} LIKE '%visite%') AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%' THEN 1 ELSE 0 END)`;
+    havingConditions.push(gt(konsulCountExpr, 1));
   }
 
   if (input.konsulFilters && input.konsulFilters.length > 0) {

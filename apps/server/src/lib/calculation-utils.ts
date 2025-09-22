@@ -43,7 +43,9 @@ export function calculateFinancials(
     nm_poli,
   } = input;
 
-  const isIGD = nm_poli === "IGD" && konsul_count < 1;
+  const totalKonsul = Number(konsul_count);
+
+  const isIGD = nm_poli === "IGD" && totalKonsul < 1;
   const alokasi = isIGD ? 0 : tarif * 0.2;
   const laboratorium = (total_permintaan_lab || 0) * 10000;
 
@@ -61,9 +63,7 @@ export function calculateFinancials(
       ? Math.max(0, tarif - 185000) * usgCount * 0.2 + nonUsgCount * 15000
       : (total_permintaan_radiologi || 0) * 15000;
 
-  const dpjp_utama = isIGD ? 0 : alokasi - laboratorium - radiologi;
-
-  let shouldCountKonsul = konsul_count && konsul_count >= 1;
+  let shouldCountKonsul = totalKonsul && totalKonsul >= 1;
 
   if (shouldCountKonsul && jns_perawatan && nm_dokter) {
     const jnsPerawatanData = jns_perawatan || [];
@@ -77,9 +77,19 @@ export function calculateFinancials(
     shouldCountKonsul = !allSameDoctor;
   }
 
-  const konsul = shouldCountKonsul ? dpjp_utama / 2 : 0;
+  const dpjp_utama = isIGD ? 0 : alokasi - laboratorium - radiologi;
+  const konsul = shouldCountKonsul ? dpjp_utama / totalKonsul : 0;
+  const dpjp = shouldCountKonsul ? konsul : dpjp_utama;
 
-  const yang_terbagi = dpjp_utama + konsul + radiologi + laboratorium;
+  console.log({
+    shouldCountKonsul,
+    totalKonsul,
+    dpjp_utama,
+    konsul,
+    dpjp,
+  });
+
+  const yang_terbagi = dpjp_utama + radiologi + laboratorium;
   const percent_dari_klaim =
     tarif > 0 ? Math.floor((yang_terbagi / tarif) * 100) : 0;
 
@@ -87,7 +97,7 @@ export function calculateFinancials(
     alokasi,
     laboratorium,
     radiologi,
-    dpjp_utama,
+    dpjp_utama: dpjp,
     konsul,
     usgCount,
     nonUsgCount,
@@ -291,6 +301,11 @@ export function extractRawatInapVisiteData(
       !perawatan.nm_perawatan.toLowerCase().includes("emergency") &&
       perawatan.nm_perawatan.toLowerCase().includes("visite dokter")
   );
+
+  console.log({
+    visiteKonsul2,
+    jnsPerawatanArray,
+  });
 
   const visiteDokterUmum = jnsPerawatanArray.filter(
     (perawatan: any) =>

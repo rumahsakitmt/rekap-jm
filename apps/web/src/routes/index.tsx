@@ -25,6 +25,7 @@ const rawatInapSearchSchema = z.object({
   selectedDoctor: z.string().default(""),
   selectedPoliklinik: z.string().default(""),
   selectedSupport: z.string().default(""),
+  konsul: z.boolean().optional(),
 });
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -49,6 +50,7 @@ function HomeComponent() {
     selectedDoctor,
     selectedPoliklinik,
     selectedSupport,
+    konsul,
   } = Route.useSearch();
   const { copiedItems, addCopiedItem, removeCopiedItem } = useUIState();
 
@@ -107,6 +109,7 @@ function HomeComponent() {
       dateFrom: dateFrom || undefined,
       dateTo: dateTo || undefined,
       includeTotals: true,
+      ...(konsul && { konsul }),
       ...(selectedCsvFile && { filename: selectedCsvFile }),
       ...(selectedDoctor && { kd_dokter: selectedDoctor }),
       ...(selectedPoliklinik && { kd_poli: selectedPoliklinik }),

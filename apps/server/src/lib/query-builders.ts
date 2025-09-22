@@ -15,6 +15,10 @@ import {
 import { sql, eq, asc, inArray, like, and, or } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 
+function getKonsulCountCondition() {
+  return sql<number>`SUM(CASE WHEN (${jns_perawatan.nm_perawatan} LIKE '%konsul%' OR ${jns_perawatan.nm_perawatan} LIKE '%visite%') AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%' THEN 1 ELSE 0 END)`;
+}
+
 export function getJenisPerawatanRawatJalan(no_rawat: string[]) {
   return db
     .select({
@@ -81,7 +85,7 @@ export function createRawatJalanQuery(
     .select({
       no_rawat: reg_periksa.no_rawat,
       no_rekam_medis: reg_periksa.no_rkm_medis,
-      konsul_count: sql<number>`SUM(CASE WHEN (${jns_perawatan.nm_perawatan} LIKE '%konsul%' OR ${jns_perawatan.nm_perawatan} LIKE '%visite%') AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%' THEN 1 ELSE 0 END)`,
+      konsul_count: getKonsulCountCondition(),
       kd_dokter: sql<string>`CASE 
         WHEN ${poliklinik.nm_poli} = 'IGD' AND (
           SELECT COUNT(*) 
