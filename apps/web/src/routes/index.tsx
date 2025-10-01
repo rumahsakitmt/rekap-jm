@@ -3,13 +3,15 @@ import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 import { DataTable, createColumns } from "@/components/rawat-jalan";
 import { useUIState } from "@/stores/filter-store";
-import { Download, FileText } from "lucide-react";
+import { Download, FileText, Share } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
 import UploadCSVSheet from "@/components/upload-csv-sheet";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
-import { startOfMonth, endOfMonth } from "date-fns";
+import { startOfMonth, endOfMonth, format } from "date-fns";
+import { ShareButton } from "@/components/share-button";
+import { OGMeta } from "@/components/og-meta";
 
 const defaultDateFrom = startOfMonth(new Date()).toISOString();
 const defaultDateTo = endOfMonth(new Date()).toISOString();
@@ -117,11 +119,44 @@ function HomeComponent() {
     })
   );
 
+  // Generate OG data
+  const ogData = {
+    title: selectedCsvFile
+      ? `Rekap Rawat Jalan - ${selectedCsvFile}`
+      : "Rekap JM | Rawat Jalan",
+    subtitle: selectedCsvFile
+      ? "Data Rekam Medis Rawat Jalan"
+      : "Sistem Rekam Medis RSUD Mamuju Tengah",
+    type: "rawat-jalan" as const,
+    dateRange:
+      dateFrom && dateTo
+        ? `${format(new Date(dateFrom), "dd MMM yyyy")} - ${format(new Date(dateTo), "dd MMM yyyy")}`
+        : undefined,
+    totalRecords: rawatJalan.data?.totals?.count,
+    hospitalName: "RSUD Mamuju Tengah",
+  };
+
   return (
     <div className="py-2">
+      <OGMeta
+        data={ogData}
+        description={
+          selectedCsvFile
+            ? `Data rekam medis rawat jalan periode ${ogData.dateRange}`
+            : "Sistem rekam medis untuk rawat jalan RSUD Mamuju Tengah"
+        }
+      />
       <div className="flex justify-end gap-2">
         {selectedCsvFile !== "" && (
           <>
+            <ShareButton
+              title={ogData.title}
+              description={
+                selectedCsvFile
+                  ? `Data rekam medis rawat jalan periode ${ogData.dateRange}`
+                  : "Lihat data rekam medis RSUD Mamuju Tengah"
+              }
+            />
             <Link
               to="/report-rawat-jalan"
               className={cn(buttonVariants({ variant: "default" }))}

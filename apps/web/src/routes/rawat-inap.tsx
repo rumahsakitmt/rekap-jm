@@ -7,9 +7,11 @@ import { buttonVariants } from "@/components/ui/button";
 import { FileText, Share } from "lucide-react";
 import UploadCSVSheet from "@/components/upload-csv-sheet";
 import { Button } from "@/components/ui/button";
-import { startOfMonth, endOfMonth } from "date-fns";
+import { startOfMonth, endOfMonth, format } from "date-fns";
 import TableRawatInap from "@/components/rawat-inap/table";
 import { DownloadReport } from "@/components/rawat-inap/download-report";
+import { ShareButton } from "@/components/share-button";
+import { OGMeta } from "@/components/og-meta";
 
 const defaultDateFrom = startOfMonth(new Date()).toISOString();
 const defaultDateTo = endOfMonth(new Date()).toISOString();
@@ -53,27 +55,45 @@ function RouteComponent() {
     selectedCsvFile,
     selectedKamar,
     operation,
-    viisiteAnesthesia,
-    visiteDokterSpesialis,
   } = searchParams;
 
-  const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-    } catch (err) {
-      console.error("Failed to copy link: ", err);
-    }
+  // Generate OG data
+  const ogData = {
+    title: selectedCsvFile
+      ? `Rekap Rawat Inap - ${selectedCsvFile}`
+      : "Rekap JM | Rawat Inap",
+    subtitle: selectedCsvFile
+      ? "Data Rekam Medis Rawat Inap"
+      : "Sistem Rekam Medis RSUD Mamuju Tengah",
+    type: "rawat-inap" as const,
+    dateRange:
+      dateFrom && dateTo
+        ? `${format(new Date(dateFrom), "dd MMM yyyy")} - ${format(new Date(dateTo), "dd MMM yyyy")}`
+        : undefined,
+    hospitalName: "RSUD Mamuju Tengah",
   };
 
   return (
     <div className="py-2">
+      <OGMeta
+        data={ogData}
+        description={
+          selectedCsvFile
+            ? `Data rekam medis rawat inap periode ${ogData.dateRange}`
+            : "Sistem rekam medis untuk rawat inap RSUD Mamuju Tengah"
+        }
+      />
       <div className="flex justify-end gap-2">
         {selectedCsvFile !== "" && (
           <>
-            <Button variant="outline" onClick={handleShare}>
-              <Share />
-              Bagikan
-            </Button>
+            <ShareButton
+              title={ogData.title}
+              description={
+                selectedCsvFile
+                  ? `Data rekam medis rawat inap periode ${ogData.dateRange}`
+                  : "Lihat data rekam medis RSUD Mamuju Tengah"
+              }
+            />
             <Link
               to="/report-rawat-inap"
               search={{

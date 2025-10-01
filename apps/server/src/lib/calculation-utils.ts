@@ -81,14 +81,6 @@ export function calculateFinancials(
   const konsul = shouldCountKonsul ? dpjp_utama / totalKonsul : 0;
   const dpjp = shouldCountKonsul ? konsul : dpjp_utama;
 
-  console.log({
-    shouldCountKonsul,
-    totalKonsul,
-    dpjp_utama,
-    konsul,
-    dpjp,
-  });
-
   const yang_terbagi = dpjp_utama + radiologi + laboratorium;
   const percent_dari_klaim =
     tarif > 0 ? Math.floor((yang_terbagi / tarif) * 100) : 0;
@@ -301,11 +293,6 @@ export function extractRawatInapVisiteData(
       !perawatan.nm_perawatan.toLowerCase().includes("emergency") &&
       perawatan.nm_perawatan.toLowerCase().includes("visite dokter")
   );
-
-  console.log({
-    visiteKonsul2,
-    jnsPerawatanArray,
-  });
 
   const visiteDokterUmum = jnsPerawatanArray.filter(
     (perawatan: any) =>
