@@ -1,7 +1,7 @@
 import { publicProcedure, router } from "@/lib/trpc";
 import { RawatInapDataService } from "@/lib/rawat-inap/data-service";
 import { RawatInapReportService } from "@/lib/rawat-inap/report-service";
-import { RawatInapCsvService } from "@/lib/rawat-inap/csv-service";
+import { RawatInapXlsxService } from "@/lib/rawat-inap/xlsx-service";
 import {
   rawatInapFilterSchema,
   detailedReportSchema,
@@ -10,7 +10,7 @@ import {
 
 const dataService = new RawatInapDataService();
 const reportService = new RawatInapReportService();
-const csvService = new RawatInapCsvService();
+const xlsxService = new RawatInapXlsxService();
 
 export const rawatInapRouter = router({
   getRawatInap: publicProcedure
@@ -23,10 +23,10 @@ export const rawatInapRouter = router({
     .query(async ({ input }) => {
       return await reportService.generateDetailedMonthlyReport(input);
     }),
-  downloadCsv: publicProcedure
+  downloadXlsx: publicProcedure
     .input(csvDownloadSchema)
     .query(async ({ input }) => {
-      const result = await csvService.generateCsvDownload(input);
-      return result.csv;
+      const buffer = await xlsxService.generateXlsxDownload(input);
+      return { data: Array.from(buffer) };
     }),
 });

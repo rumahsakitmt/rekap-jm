@@ -4,27 +4,25 @@ import {
   getRadiologiData,
   getLabData,
 } from "@/lib/rawat-inap/rawat-inap-query-builder";
-import { readCsvFile, createCsvTarifMap, convertToCsv } from "@/lib/csv-utils";
+import { readCsvFile, createCsvTarifMap } from "@/lib/csv-utils";
 import { accumulateTotals, createEmptyTotals } from "@/lib/calculation-utils";
 import { RawatInapCalculationService } from "./calculation-service";
-import type { RawatInapFilterInput, CsvDownloadResponse } from "./types";
+import type { RawatInapFilterInput } from "./types";
 import { RawatInapDataService } from "./data-service";
 
-export class RawatInapCsvService {
+export class RawatInapXlsxService {
   private calculationService = new RawatInapCalculationService();
   private dataService = new RawatInapDataService();
 
-  async generateCsvDownload(
-    input: RawatInapFilterInput
-  ): Promise<CsvDownloadResponse> {
+  async generateXlsxDownload(input: RawatInapFilterInput): Promise<Buffer> {
     if (!input.filename) {
-      return { csv: "" };
+      return Buffer.from("");
     }
 
     const csvData = await readCsvFile(input.filename);
 
     if (csvData.length === 0) {
-      return { csv: "" };
+      return Buffer.from("");
     }
 
     const filterConditions = buildRawatInapFilterConditions({
@@ -115,70 +113,118 @@ export class RawatInapCsvService {
     const totalsRow = this.createTotalsRow(totals);
     const dataWithTotals = [...processedResult, totalsRow];
 
-    const csv = convertToCsv(dataWithTotals, {
-      fields: [
-        "tgl_masuk",
-        "tgl_keluar",
-        "no_rekam_medis",
-        "nm_pasien",
-        "no_sep",
-        "kamar",
-        "nm_dokter",
-        "total_permintaan_lab",
-        "total_permintaan_radiologi",
-        "visite_dpjp_utama",
-        "visite_konsul_anastesi",
-        "visite_konsul_2",
-        "visite_dokter_umum",
-        "hari_rawat",
-        "total_visite",
-        "tarif_from_csv",
-        "alokasi",
-        "dpjp_ranap",
-        "remun_dpjp_utama",
-        "remun_konsul_anastesi",
-        "remun_konsul_2",
-        "remun_dokter_umum",
-        "remun_lab",
-        "remun_rad",
-        "remun_operator",
-        "remun_anestesi",
-        "yang_terbagi",
-        "percent_dari_klaim",
-      ],
-      fieldLabels: {
-        tgl_masuk: "Tanggal Masuk",
-        tgl_keluar: "Tanggal Keluar",
-        no_rekam_medis: "No RM",
-        nm_pasien: "Nama Pasien",
-        no_sep: "No SEP",
-        kamar: "Kamar",
-        nm_dokter: "DPJP",
-        total_permintaan_lab: "Lab",
-        total_permintaan_radiologi: "Radiologi",
-        visite_dpjp_utama: "Visite DPJP Utama",
-        visite_konsul_anastesi: "Visite Konsul Anastesi",
-        visite_konsul_2: "Visite Konsul 2",
-        visite_dokter_umum: "Visite Dokter Umum",
-        hari_rawat: "Hari Rawat",
-        total_visite: "Total Visite",
-        tarif_from_csv: "Total Tarif",
-        alokasi: "Alokasi",
-        dpjp_ranap: "DPJP Ranap",
-        remun_dpjp_utama: "Remun DPJP Utama",
-        remun_konsul_anastesi: "Remun Konsul Anastesi",
-        remun_konsul_2: "Remun Konsul 2",
-        remun_dokter_umum: "Remun Dokter Umum",
-        remun_lab: "Remun Lab",
-        remun_rad: "Remun Radiologi",
-        remun_operator: "Remun Operator",
-        remun_anestesi: "Remun Anestesi",
-        yang_terbagi: "Yang Terbagi",
-        percent_dari_klaim: "Persentase Dari Klaim",
-      },
-    });
+    const XLSX = require("xlsx");
 
-    return { csv };
+    const fields = [
+      "tgl_masuk",
+      "tgl_keluar",
+      "no_rkm_medis",
+      "nm_pasien",
+      "no_sep",
+      "kamar",
+      "nm_dokter",
+      "total_permintaan_lab",
+      "total_permintaan_radiologi",
+      "visite_dpjp_utama",
+      "visite_konsul_anastesi",
+      "visite_konsul_2",
+      "visite_dokter_umum",
+      "hari_rawat",
+      "total_visite",
+      "tarif_from_csv",
+      "alokasi",
+      "dpjp_ranap",
+      "remun_dpjp_utama",
+      "remun_konsul_anastesi",
+      "remun_konsul_2",
+      "remun_dokter_umum",
+      "remun_lab",
+      "remun_rad",
+      "remun_operator",
+      "remun_anestesi",
+      "yang_terbagi",
+      "percent_dari_klaim",
+    ];
+
+    const fieldLabels = {
+      tgl_masuk: "Tanggal Masuk",
+      tgl_keluar: "Tanggal Keluar",
+      no_rkm_medis: "No RM",
+      nm_pasien: "Nama Pasien",
+      no_sep: "No SEP",
+      kamar: "Kamar",
+      nm_dokter: "DPJP",
+      total_permintaan_lab: "Lab",
+      total_permintaan_radiologi: "Radiologi",
+      visite_dpjp_utama: "Visite DPJP Utama",
+      visite_konsul_anastesi: "Visite Konsul Anastesi",
+      visite_konsul_2: "Visite Konsul 2",
+      visite_dokter_umum: "Visite Dokter Umum",
+      hari_rawat: "Hari Rawat",
+      total_visite: "Total Visite",
+      tarif_from_csv: "Total Tarif",
+      alokasi: "Alokasi",
+      dpjp_ranap: "DPJP Ranap",
+      remun_dpjp_utama: "Remun DPJP Utama",
+      remun_konsul_anastesi: "Remun Konsul Anastesi",
+      remun_konsul_2: "Remun Konsul 2",
+      remun_dokter_umum: "Remun Dokter Umum",
+      remun_lab: "Remun Lab",
+      remun_rad: "Remun Radiologi",
+      remun_operator: "Remun Operator",
+      remun_anestesi: "Remun Anestesi",
+      yang_terbagi: "Yang Terbagi",
+      percent_dari_klaim: "Persentase Dari Klaim",
+    };
+
+    const headers = fields.map(
+      (field) => fieldLabels[field as keyof typeof fieldLabels]
+    );
+    const worksheetData = [
+      headers,
+      ...dataWithTotals.map((row) =>
+        fields.map((field) => (row as any)[field] || "")
+      ),
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+    const colWidths = [
+      { wch: 15 }, // tgl_masuk
+      { wch: 15 }, // tgl_keluar
+      { wch: 15 }, // no_rekam_medis
+      { wch: 25 }, // nm_pasien
+      { wch: 25 }, // no_sep
+      { wch: 20 }, // kamar
+      { wch: 25 }, // nm_dokter
+      { wch: 8 }, // total_permintaan_lab
+      { wch: 8 }, // total_permintaan_radiologi
+      { wch: 8 }, // visite_dpjp_utama
+      { wch: 8 }, // visite_konsul_anastesi
+      { wch: 8 }, // visite_konsul_2
+      { wch: 8 }, // visite_dokter_umum
+      { wch: 8 }, // hari_rawat
+      { wch: 8 }, // total_visite
+      { wch: 15 }, // tarif_from_csv
+      { wch: 12 }, // alokasi
+      { wch: 12 }, // dpjp_ranap
+      { wch: 12 }, // remun_dpjp_utama
+      { wch: 12 }, // remun_konsul_anastesi
+      { wch: 12 }, // remun_konsul_2
+      { wch: 12 }, // remun_dokter_umum
+      { wch: 12 }, // remun_lab
+      { wch: 12 }, // remun_rad
+      { wch: 12 }, // remun_operator
+      { wch: 12 }, // remun_anestesi
+      { wch: 12 }, // yang_terbagi
+      { wch: 15 }, // percent_dari_klaim
+    ];
+    worksheet["!cols"] = colWidths;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Rawat Inap");
+
+    return XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
   }
 
   private createDataMap<T extends Record<string, any>>(
@@ -202,7 +248,7 @@ export class RawatInapCsvService {
     return {
       tgl_masuk: "",
       tgl_keluar: "",
-      no_rekam_medis: "",
+      no_rkm_medis: "",
       nm_pasien: "TOTAL",
       no_sep: "",
       kamar: "",

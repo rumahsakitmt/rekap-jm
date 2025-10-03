@@ -32,18 +32,16 @@ export const csvDownloadSchema = z.object({
   search: z.string().optional(),
   dateFrom: z.coerce.date().optional(),
   dateTo: z.coerce.date().optional(),
-  filename: z.string().min(1, "CSV filename is required for download"),
+  filename: z.string().min(1, "Filename is required for download"),
   kd_dokter: z.string().optional(),
   kd_bangsal: z.string().optional(),
   selectedSupport: z.string().optional(),
 });
 
-// Type definitions
 export type RawatInapFilterInput = z.infer<typeof rawatInapFilterSchema>;
 export type DetailedReportInput = z.infer<typeof detailedReportSchema>;
 export type CsvDownloadInput = z.infer<typeof csvDownloadSchema>;
 
-// Data interfaces
 export interface RawatInapData {
   no_rawat: string;
   no_rkm_medis: string | null;

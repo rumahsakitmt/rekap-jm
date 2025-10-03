@@ -13,8 +13,8 @@ export const DownloadReport = () => {
     selectedDoctor,
     selectedKamar,
   } = Route.useSearch();
-  const { data: csvData, isLoading: isLoadingCsv } = useQuery({
-    ...trpc.rawatInap.downloadCsv.queryOptions({
+  const { data: xlsxData, isLoading: isLoadingXlsx } = useQuery({
+    ...trpc.rawatInap.downloadXlsx.queryOptions({
       search: search || undefined,
       dateFrom: dateFrom || undefined,
       dateTo: dateTo || undefined,
@@ -24,18 +24,19 @@ export const DownloadReport = () => {
     }),
     enabled: !!selectedCsvFile,
   });
-  const handleDownloadCsv = async () => {
-    if (isLoadingCsv) return;
+  const handleDownloadXlsx = async () => {
+    if (!xlsxData) return;
     try {
-      const blob = new Blob([csvData || ""], {
-        type: "text/csv;charset=utf-8;",
+      const buffer = new Uint8Array(xlsxData.data);
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
       const link = document.createElement("a");
       const url = URL.createObjectURL(blob);
       link.setAttribute("href", url);
 
       const dateStr = new Date().toISOString().split("T")[0];
-      const filename = `rawat-inap-${dateStr}.csv`;
+      const filename = `rawat-inap-${dateStr}.xlsx`;
       link.setAttribute("download", filename);
 
       link.style.visibility = "hidden";
@@ -43,13 +44,17 @@ export const DownloadReport = () => {
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      console.error("Failed to download CSV:", error);
+      console.error("Failed to download XLSX:", error);
     }
   };
   return (
-    <Button onClick={handleDownloadCsv} variant="outline">
+    <Button
+      onClick={handleDownloadXlsx}
+      variant="outline"
+      disabled={isLoadingXlsx}
+    >
       <Download className="h-4 w-4 mr-2" />
-      Download CSV
+      {isLoadingXlsx ? "Loading" : "Download"}
     </Button>
   );
 };

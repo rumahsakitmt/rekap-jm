@@ -4,9 +4,8 @@ import { zodValidator } from "@tanstack/zod-adapter";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-import { FileText, Share } from "lucide-react";
+import { FileText } from "lucide-react";
 import UploadCSVSheet from "@/components/upload-csv-sheet";
-import { Button } from "@/components/ui/button";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import TableRawatInap from "@/components/rawat-inap/table";
 import { DownloadReport } from "@/components/rawat-inap/download-report";
@@ -57,7 +56,6 @@ function RouteComponent() {
     operation,
   } = searchParams;
 
-  // Generate OG data
   const ogData = {
     title: selectedCsvFile
       ? `Rekap Rawat Inap - ${selectedCsvFile}`
