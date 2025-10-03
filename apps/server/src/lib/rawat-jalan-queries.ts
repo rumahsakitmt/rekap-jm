@@ -377,18 +377,18 @@ export interface CsvExportInput extends FilterInput {
   filename?: string;
 }
 
-export async function getRegPeriksaDataForCsv(
+export async function getRegPeriksaDataForXlsx(
   input: CsvExportInput
-): Promise<string> {
+): Promise<Buffer> {
   if (!input.filename) {
-    return "";
+    return Buffer.from("");
   }
 
   const { csvData, csvTarifMap, filterConditions } =
     await processCsvAndFilters(input);
 
   if (csvData.length === 0) {
-    return "";
+    return Buffer.from("");
   }
 
   const allResults = await getRawatJalanDenganJnsPerawatan(
@@ -431,6 +431,46 @@ export async function getRegPeriksaDataForCsv(
   };
 
   const dataWithTotals = [...processedResult, totalsRow];
+  const XLSX = require("xlsx");
 
-  return convertToCsv(dataWithTotals, CSV_EXPORT_CONFIG);
+  const headers = CSV_EXPORT_CONFIG.fields.map(
+    (field) =>
+      CSV_EXPORT_CONFIG.fieldLabels[
+        field as keyof typeof CSV_EXPORT_CONFIG.fieldLabels
+      ]
+  );
+  const worksheetData = [
+    headers,
+    ...dataWithTotals.map((row) =>
+      CSV_EXPORT_CONFIG.fields.map((field) => (row as any)[field] || "")
+    ),
+  ];
+
+  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+  const colWidths = [
+    { wch: 15 }, // tgl_perawatan
+    { wch: 15 }, // no_rekam_medis
+    { wch: 25 }, // nm_pasien
+    { wch: 25 }, // no_sep
+    { wch: 15 }, // tarif_from_csv
+    { wch: 20 }, // nm_poli
+    { wch: 25 }, // nm_dokter
+    { wch: 8 }, // konsul_count
+    { wch: 8 }, // total_permintaan_lab
+    { wch: 8 }, // total_permintaan_radiologi
+    { wch: 12 }, // alokasi
+    { wch: 12 }, // dpjp_utama
+    { wch: 12 }, // konsul
+    { wch: 12 }, // laboratorium
+    { wch: 12 }, // radiologi
+    { wch: 12 }, // yang_terbagi
+    { wch: 15 }, // percent_dari_klaim
+  ];
+  worksheet["!cols"] = colWidths;
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Rawat Jalan");
+
+  return XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
 }

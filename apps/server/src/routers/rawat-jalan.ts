@@ -3,7 +3,7 @@ import { publicProcedure } from "@/lib/trpc";
 import {
   getRawatJalan,
   getSummaryReport,
-  getRegPeriksaDataForCsv,
+  getRegPeriksaDataForXlsx,
 } from "@/lib/rawat-jalan-queries";
 import { z } from "zod";
 
@@ -49,18 +49,18 @@ export const rawatJalanRouter = router({
     .query(async ({ input }) => {
       return await getSummaryReport(input);
     }),
-  downloadCsv: publicProcedure
+  downloadXlsx: publicProcedure
     .input(
       z.object({
         search: z.string().optional(),
         dateFrom: z.coerce.date().optional(),
         dateTo: z.coerce.date().optional(),
-        filename: z.string().min(1, "CSV filename is required for download"),
+        filename: z.string().min(1, "XLSX filename is required for download"),
         kd_dokter: z.string().optional(),
         kd_poli: z.string().optional(),
       })
     )
     .query(async ({ input }) => {
-      return await getRegPeriksaDataForCsv(input);
+      return await getRegPeriksaDataForXlsx(input);
     }),
 });

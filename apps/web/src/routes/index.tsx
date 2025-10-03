@@ -3,15 +3,16 @@ import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 import { DataTable, createColumns } from "@/components/rawat-jalan";
 import { useUIState } from "@/stores/filter-store";
-import { Download, FileText, Share } from "lucide-react";
+import { FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import UploadCSVSheet from "@/components/upload-csv-sheet";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { ShareButton } from "@/components/share-button";
 import { OGMeta } from "@/components/og-meta";
+import DownloadReport from "@/components/rawat-jalan/download-report";
 
 const defaultDateFrom = startOfMonth(new Date()).toISOString();
 const defaultDateTo = endOfMonth(new Date()).toISOString();
@@ -56,18 +57,6 @@ function HomeComponent() {
   } = Route.useSearch();
   const { copiedItems, addCopiedItem, removeCopiedItem } = useUIState();
 
-  const { data: csvData, isLoading: isLoadingCsv } = useQuery({
-    ...trpc.rawatJalan.downloadCsv.queryOptions({
-      search: search || undefined,
-      dateFrom: dateFrom || undefined,
-      dateTo: dateTo || undefined,
-      filename: selectedCsvFile,
-      kd_dokter: selectedDoctor || undefined,
-      kd_poli: selectedPoliklinik || undefined,
-    }),
-    enabled: !!selectedCsvFile,
-  });
-
   const handleCopy = async (text: string, id: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -77,29 +66,6 @@ function HomeComponent() {
       }, 2000);
     } catch (err) {
       console.error("Failed to copy: ", err);
-    }
-  };
-
-  const handleDownloadCsv = async () => {
-    if (isLoadingCsv) return;
-    try {
-      const blob = new Blob([csvData || ""], {
-        type: "text/csv;charset=utf-8;",
-      });
-      const link = document.createElement("a");
-      const url = URL.createObjectURL(blob);
-      link.setAttribute("href", url);
-
-      const dateStr = new Date().toISOString().split("T")[0];
-      const filename = `rawat-jalan-${dateStr}.csv`;
-      link.setAttribute("download", filename);
-
-      link.style.visibility = "hidden";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      console.error("Failed to download CSV:", error);
     }
   };
 
@@ -119,7 +85,6 @@ function HomeComponent() {
     })
   );
 
-  // Generate OG data
   const ogData = {
     title: selectedCsvFile
       ? `Rekap Rawat Jalan - ${selectedCsvFile}`
@@ -171,10 +136,7 @@ function HomeComponent() {
               <FileText />
               Report Rawat Jalan
             </Link>
-            <Button onClick={handleDownloadCsv} variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Download CSV
-            </Button>
+            <DownloadReport />
           </>
         )}
         <UploadCSVSheet />
