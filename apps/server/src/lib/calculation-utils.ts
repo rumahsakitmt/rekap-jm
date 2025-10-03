@@ -268,10 +268,33 @@ export function extractRawatInapVisiteData(
       perawatan.nm_perawatan.toLowerCase().includes("darurat")
   ).length;
 
-  const visiteDpjpUtama =
-    (tgl_masuk && tgl_keluar
+  const visiteDokterUmumEmergency = jnsPerawatanArray.filter(
+    (perawatan: any) =>
+      perawatan &&
+      perawatan.nm_dokter !== mainDoctor &&
+      perawatan.nm_perawatan &&
+      perawatan.nm_perawatan.toLowerCase().includes("emergency")
+  );
+
+  const visiteDokterUmumPengganti = jnsPerawatanArray.filter(
+    (perawatan: any) =>
+      perawatan &&
+      perawatan.nm_dokter !== mainDoctor &&
+      perawatan.nm_perawatan &&
+      perawatan.nm_perawatan.toLowerCase() === "visite dokter"
+  );
+
+  const visiteDokterUmum = [
+    ...visiteDokterUmumEmergency,
+    ...visiteDokterUmumPengganti,
+  ];
+
+  const hariRawat =
+    tgl_masuk && tgl_keluar
       ? Math.max(differenceInDays(tgl_keluar, tgl_masuk), 1)
-      : 1) + emergencyCount;
+      : 1;
+  const visiteDpjpUtama =
+    hariRawat - visiteDokterUmumPengganti.length + emergencyCount;
 
   const visiteKonsul1 = jnsPerawatanArray.filter(
     (perawatan: any) =>
@@ -292,15 +315,6 @@ export function extractRawatInapVisiteData(
       perawatan.nm_perawatan.toLowerCase() !== "visite dokter" &&
       !perawatan.nm_perawatan.toLowerCase().includes("emergency") &&
       perawatan.nm_perawatan.toLowerCase().includes("visite dokter")
-  );
-
-  const visiteDokterUmum = jnsPerawatanArray.filter(
-    (perawatan: any) =>
-      (perawatan &&
-        perawatan.nm_dokter !== mainDoctor &&
-        perawatan.nm_perawatan &&
-        perawatan.nm_perawatan.toLowerCase().includes("emergency")) ||
-      perawatan.nm_perawatan.toLowerCase() === "visite dokter"
   );
 
   let finalVisiteKonsul1 = visiteKonsul1;

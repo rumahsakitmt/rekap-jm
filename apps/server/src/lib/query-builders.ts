@@ -16,7 +16,17 @@ import { sql, eq, asc, inArray, like, and, or } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 
 function getKonsulCountCondition() {
-  return sql<number>`SUM(CASE WHEN (${jns_perawatan.nm_perawatan} LIKE '%konsul%' OR ${jns_perawatan.nm_perawatan} LIKE '%visite%') AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%' THEN 1 ELSE 0 END)`;
+  return sql<number>`(
+    SELECT COUNT(DISTINCT CONCAT(rjd.kd_jenis_prw, '-', rjd.kd_dokter))
+    FROM ${rawat_jl_drpr} rjd
+    JOIN ${jns_perawatan} jp ON rjd.kd_jenis_prw = jp.kd_jenis_prw
+    WHERE rjd.no_rawat = ${reg_periksa.no_rawat}
+    AND (jp.nm_perawatan LIKE '%konsul%' OR jp.nm_perawatan LIKE '%visite%')
+    AND jp.nm_perawatan NOT LIKE '%hp%'
+    AND jp.nm_perawatan NOT LIKE '%radiologi%'
+    AND jp.nm_perawatan NOT LIKE '%dokter umum%'
+    AND jp.nm_perawatan NOT LIKE '%antar spesialis%'
+  )`;
 }
 
 export function getJenisPerawatanRawatJalan(no_rawat: string[]) {
@@ -46,6 +56,11 @@ export function getJenisPerawatanRawatJalan(no_rawat: string[]) {
         sql`${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%'`,
         sql`${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%'`
       )
+    )
+    .groupBy(
+      rawat_jl_drpr.no_rawat,
+      rawat_jl_drpr.kd_jenis_prw,
+      rawat_jl_drpr.kd_dokter
     );
 }
 

@@ -87,7 +87,17 @@ export function buildFilterConditions(input: FilterInput) {
   }
 
   if (input.konsul === true) {
-    const konsulCountExpr = sql<number>`SUM(CASE WHEN (${jns_perawatan.nm_perawatan} LIKE '%konsul%' OR ${jns_perawatan.nm_perawatan} LIKE '%visite%') AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%' THEN 1 ELSE 0 END)`;
+    const konsulCountExpr = sql<number>`(
+      SELECT COUNT(DISTINCT CONCAT(rjd.kd_jenis_prw, '-', rjd.kd_dokter))
+      FROM rawat_jl_drpr rjd
+      JOIN jns_perawatan jp ON rjd.kd_jenis_prw = jp.kd_jenis_prw
+      WHERE rjd.no_rawat = ${reg_periksa.no_rawat}
+      AND (jp.nm_perawatan LIKE '%konsul%' OR jp.nm_perawatan LIKE '%visite%')
+      AND jp.nm_perawatan NOT LIKE '%hp%'
+      AND jp.nm_perawatan NOT LIKE '%radiologi%'
+      AND jp.nm_perawatan NOT LIKE '%dokter umum%'
+      AND jp.nm_perawatan NOT LIKE '%antar spesialis%'
+    )`;
     havingConditions.push(gt(konsulCountExpr, 1));
   }
 
@@ -101,7 +111,17 @@ export function buildFilterConditions(input: FilterInput) {
       let condition;
 
       if (filter.field === "konsul_count") {
-        const konsulCountExpr = sql<number>`SUM(CASE WHEN ${jns_perawatan.nm_perawatan} LIKE '%konsul%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%hp%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%radiologi%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%dokter umum%' AND ${jns_perawatan.nm_perawatan} NOT LIKE '%antar spesialis%' THEN 1 ELSE 0 END)`;
+        const konsulCountExpr = sql<number>`(
+          SELECT COUNT(DISTINCT CONCAT(rjd.kd_jenis_prw, '-', rjd.kd_dokter))
+          FROM rawat_jl_drpr rjd
+          JOIN jns_perawatan jp ON rjd.kd_jenis_prw = jp.kd_jenis_prw
+          WHERE rjd.no_rawat = ${reg_periksa.no_rawat}
+          AND (jp.nm_perawatan LIKE '%konsul%' OR jp.nm_perawatan LIKE '%visite%')
+          AND jp.nm_perawatan NOT LIKE '%hp%'
+          AND jp.nm_perawatan NOT LIKE '%radiologi%'
+          AND jp.nm_perawatan NOT LIKE '%dokter umum%'
+          AND jp.nm_perawatan NOT LIKE '%antar spesialis%'
+        )`;
 
         switch (filter.operator) {
           case "=":

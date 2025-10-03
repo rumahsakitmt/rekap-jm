@@ -79,6 +79,7 @@ export class RawatInapDataService {
     const allData = await this.getRawatInapDenganJnsPerawatan(
       and(filterConditions.where)
     );
+
     const totalCount = allData.length;
     const totalPages = Math.ceil(totalCount / limit);
 
@@ -196,7 +197,7 @@ export class RawatInapDataService {
         jns_perawatan_lab: jnsPerawatanLabArray,
         hari_rawat:
           item.tgl_masuk && item.tgl_keluar
-            ? differenceInDays(item.tgl_keluar, item.tgl_masuk)
+            ? Math.max(differenceInDays(item.tgl_keluar, item.tgl_masuk), 1)
             : 1,
         tarif_from_csv: tarif || undefined,
         totalVisite: visiteData.totalVisite,
