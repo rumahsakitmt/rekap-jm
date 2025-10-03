@@ -185,6 +185,7 @@ function HomeComponent() {
         totals={rawatJalan.data?.totals}
         pagination={rawatJalan.data?.pagination}
         isCsvMode={selectedCsvFile !== ""}
+        loading={rawatJalan.isLoading}
       />
     </div>
   );

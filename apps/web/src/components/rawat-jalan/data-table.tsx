@@ -36,11 +36,13 @@ import { TotalsDisplay } from "./totals-display";
 import { Columns } from "lucide-react";
 import { DataTablePagination } from "./pagination";
 import { CsvAnalysis } from "../csv-analysis";
+import { Skeleton } from "../ui/skeleton";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   isCsvMode?: boolean;
+  loading?: boolean;
   totals?:
     | {
         totalTarif?: number;
@@ -68,6 +70,7 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   isCsvMode = false,
+  loading,
   totals,
   pagination,
 }: DataTableProps<TData, TValue>) {
@@ -141,35 +144,55 @@ export function DataTable<TData, TValue>({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row, i) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className={cn(i % 2 !== 0 && "bg-muted")}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
+          {loading ? (
+            <TableBody>
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No results.
+                <TableCell colSpan={columns.length}>
+                  <Skeleton className="h-12 w-full" />
                 </TableCell>
               </TableRow>
-            )}
-          </TableBody>
+              <TableRow>
+                <TableCell colSpan={columns.length}>
+                  <Skeleton className="h-12 w-full opacity-70" />
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell colSpan={columns.length}>
+                  <Skeleton className="h-12 w-full opacity-10" />
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          ) : (
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row, i) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className={cn(i % 2 !== 0 && "bg-muted")}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          )}
         </Table>
       </div>
       <DataTablePagination from="/" pagination={pagination} />
