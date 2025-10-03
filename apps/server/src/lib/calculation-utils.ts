@@ -45,7 +45,8 @@ export function calculateFinancials(
 
   const totalKonsul = Number(konsul_count);
 
-  const isIGD = nm_poli === "IGD" && totalKonsul < 1;
+  const isIGD =
+    (nm_poli === "IGD" || nm_poli === "IGD PONEK") && totalKonsul < 1;
   const alokasi = isIGD ? 0 : tarif * 0.2;
   const laboratorium = (total_permintaan_lab || 0) * 10000;
 
