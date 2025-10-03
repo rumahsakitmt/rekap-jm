@@ -285,6 +285,25 @@ export const createColumns = (
       },
     },
     {
+      header: "Total Visite",
+      cell: ({ row }) => {
+        const value = row.original.totalVisite;
+        return <div className="text-sm text-center">{value || "-"}</div>;
+      },
+    },
+    {
+      accessorKey: "has_operasi",
+      header: "Operasi",
+      cell: ({ row }) => {
+        const value = row.original.has_operasi;
+        return (
+          <div className="font-mono text-sm text-center">
+            {value ? "Ya" : "Tidak"}
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: "hari_rawat",
       header: "Hari Rawat",
       cell: ({ row }) => {
@@ -360,25 +379,7 @@ export const createColumns = (
         );
       },
     },
-    {
-      header: "Total Visite",
-      cell: ({ row }) => {
-        const value = row.original.totalVisite;
-        return <div className="text-sm text-center">{value || "-"}</div>;
-      },
-    },
-    {
-      accessorKey: "has_operasi",
-      header: "Operasi",
-      cell: ({ row }) => {
-        const value = row.original.has_operasi;
-        return (
-          <div className="font-mono text-sm text-center">
-            {value ? "Ya" : "Tidak"}
-          </div>
-        );
-      },
-    },
+
     {
       accessorKey: "operator",
       header: "Operator",

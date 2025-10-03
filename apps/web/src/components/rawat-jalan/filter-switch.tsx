@@ -22,8 +22,9 @@ export const FilterSwitch = ({ label, searchParam }: FilterSwitchProps) => {
 
   return (
     <div className="flex items-center gap-4">
-      <Label>{label}</Label>
+      <Label htmlFor={label}>{label}</Label>
       <Switch
+        id={label}
         checked={!!search[searchParam as keyof typeof search]}
         onCheckedChange={setValue}
       />
