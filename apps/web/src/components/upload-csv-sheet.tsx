@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Sheet,
   SheetContent,
@@ -11,8 +12,14 @@ import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 
 export const UploadCSVSheet = () => {
+  const [open, setOpen] = useState(false);
+
+  const handleUploadSuccess = () => {
+    setOpen(false);
+  };
+
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button>
           <Upload className="h-4 w-4 mr-2" />
@@ -28,7 +35,7 @@ export const UploadCSVSheet = () => {
           </SheetDescription>
         </SheetHeader>
         <div className="p-4">
-          <CsvUpload />
+          <CsvUpload onUploadSuccess={handleUploadSuccess} />
         </div>
       </SheetContent>
     </Sheet>

@@ -6,17 +6,19 @@ import { Label } from "@/components/ui/label";
 import {
   Upload,
   FileText,
-  X,
   CheckCircle,
   AlertCircle,
   BarChart3,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { trpc } from "@/utils/trpc";
+import { queryClient, trpc } from "@/utils/trpc";
 import { useMutation } from "@tanstack/react-query";
-import { CsvAnalysis } from "./csv-analysis";
 
-export function CsvUpload() {
+interface CsvUploadProps {
+  onUploadSuccess?: () => void;
+}
+
+export function CsvUpload({ onUploadSuccess }: CsvUploadProps) {
   const [file, setFile] = useState<File | null>(null);
   const [uploadedFilename, setUploadedFilename] = useState<string>("");
   const [showAnalysis, setShowAnalysis] = useState(false);
@@ -26,9 +28,14 @@ export function CsvUpload() {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const uploadFileMutation = useMutation(
-    trpc.csvUpload.uploadFile.mutationOptions()
-  );
+  const uploadFileMutation = useMutation({
+    ...trpc.csvUpload.uploadFile.mutationOptions(),
+    onSettled: () => {
+      queryClient.invalidateQueries(
+        trpc.csvUpload.getUploadedFiles.queryOptions()
+      );
+    },
+  });
   const uploadCsvMutation = useMutation(
     trpc.csvUpload.uploadCsv.mutationOptions()
   );
@@ -43,8 +50,8 @@ export function CsvUpload() {
     }
 
     setFile(selectedFile);
-    setUploadedFilename(""); // Reset uploaded filename
-    setShowAnalysis(false); // Reset analysis view
+    setUploadedFilename("");
+    setShowAnalysis(false);
     setError("");
     setSuccess("");
   };
@@ -88,6 +95,8 @@ export function CsvUpload() {
         `CSV processed successfully! ${processResult.count} records imported.`
       );
       setShowAnalysis(true);
+
+      onUploadSuccess?.();
     } catch (err) {
       setError(
         err instanceof Error
