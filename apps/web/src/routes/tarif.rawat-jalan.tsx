@@ -7,6 +7,8 @@ import {
   type TarifRawatJalanData,
 } from "@/components/tarif/column";
 import { Skeleton } from "@/components/ui/skeleton";
+import { JnsPerawatanUploadSheet } from "@/components/tarif/jns-perawatan-upload-sheet";
+import { ResetStatusDialog } from "@/components/tarif/reset-status-sheet";
 
 export const Route = createFileRoute("/tarif/rawat-jalan")({
   component: RouteComponent,
@@ -43,13 +45,23 @@ function RouteComponent() {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Tarif Rawat Jalan</h1>
-        <p className="text-muted-foreground">
-          Daftar tarif perawatan rawat jalan yang tersedia
-        </p>
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">
+            Tarif Rawat Jalan
+          </h1>
+          <p className="text-muted-foreground">
+            Daftar tarif perawatan rawat jalan yang tersedia
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <JnsPerawatanUploadSheet />
+          <ResetStatusDialog />
+        </div>
       </div>
 
+      <p>{tarif.data?.length} records</p>
       <TarifTable
         columns={columns}
         data={tarif.data as TarifRawatJalanData[]}

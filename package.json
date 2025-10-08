@@ -19,9 +19,11 @@
     "db:migrate": "turbo -F server db:migrate"
   },
   "dependencies": {
-    "@uidotdev/usehooks": "^2.4.1"
+    "@uidotdev/usehooks": "^2.4.1",
+    "papaparse": "^5.5.3"
   },
   "devDependencies": {
+    "@types/papaparse": "^5.3.16",
     "turbo": "^2.5.4"
   },
   "packageManager": "bun@1.2.17"
