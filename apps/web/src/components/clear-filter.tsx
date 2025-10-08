@@ -2,7 +2,11 @@ import { Button } from "./ui/button";
 import { getRouteApi } from "@tanstack/react-router";
 import { startOfMonth, endOfMonth } from "date-fns";
 
-export const ClearFilter = ({ from }: { from: "/rawat-inap" | "/" }) => {
+export const ClearFilter = ({
+  from,
+}: {
+  from: "/rekap/rawat-inap" | "/rekap/rawat-jalan";
+}) => {
   const route = getRouteApi(from);
   const navigate = route.useNavigate();
 

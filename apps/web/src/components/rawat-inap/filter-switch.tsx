@@ -1,6 +1,6 @@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Route } from "@/routes/rawat-inap";
+import { Route } from "@/routes/rekap.rawat-inap";
 
 interface FilterSwitchProps {
   label: string;

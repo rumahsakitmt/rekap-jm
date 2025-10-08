@@ -4,7 +4,11 @@ import { Button } from "./ui/button";
 import { Search, X } from "lucide-react";
 import { getRouteApi } from "@tanstack/react-router";
 
-const SearchInput = ({ from }: { from: "/rawat-inap" | "/" }) => {
+const SearchInput = ({
+  from,
+}: {
+  from: "/rekap/rawat-inap" | "/rekap/rawat-jalan";
+}) => {
   const route = getRouteApi(from);
   const searchParams = route.useSearch();
   const navigate = route.useNavigate();

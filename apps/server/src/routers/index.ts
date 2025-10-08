@@ -8,6 +8,7 @@ import { dokterRouter } from "./dokter";
 import { poliklinikRouter } from "./poliklinik";
 import { rawatInapRouter } from "./rawat-inap";
 import { kamarRouter } from "./kamar";
+import { tarifRouter } from "./tarif";
 
 export const appRouter = router({
   healthCheck: publicProcedure.query(async () => {
@@ -34,5 +35,6 @@ export const appRouter = router({
   dokter: dokterRouter,
   poliklinik: poliklinikRouter,
   kamar: kamarRouter,
+  tarif: tarifRouter,
 });
 export type AppRouter = typeof appRouter;

@@ -9,7 +9,11 @@ import { getRouteApi } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 
-export const SupportFilter = ({ from }: { from: "/rawat-inap" | "/" }) => {
+export const SupportFilter = ({
+  from,
+}: {
+  from: "/rekap/rawat-inap" | "/rekap/rawat-jalan";
+}) => {
   const route = getRouteApi(from);
   const { selectedSupport } = route.useSearch();
   const navigate = route.useNavigate();

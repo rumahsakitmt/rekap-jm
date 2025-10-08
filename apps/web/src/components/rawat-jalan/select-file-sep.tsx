@@ -11,7 +11,11 @@ import { getRouteApi } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 
-const SelectFileSEP = ({ from }: { from: "/rawat-inap" | "/" }) => {
+const SelectFileSEP = ({
+  from,
+}: {
+  from: "/rekap/rawat-inap" | "/rekap/rawat-jalan";
+}) => {
   const route = getRouteApi(from);
   const { selectedCsvFile } = route.useSearch();
   const navigate = route.useNavigate();

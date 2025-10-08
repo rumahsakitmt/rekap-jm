@@ -1,4 +1,4 @@
-import { Route } from "@/routes/rawat-inap";
+import { Route } from "@/routes/rekap.rawat-inap";
 import { useUIState } from "@/stores/filter-store";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";

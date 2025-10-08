@@ -32,7 +32,7 @@ const rawatInapSearchSchema = z.object({
   visiteDokterSpesialis: z.boolean().optional(),
 });
 
-export const Route = createFileRoute("/rawat-inap")({
+export const Route = createFileRoute("/rekap/rawat-inap")({
   head: () => ({
     meta: [
       {

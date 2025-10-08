@@ -11,7 +11,11 @@ import { Button } from "./ui/button";
 import { X } from "lucide-react";
 import { getRouteApi } from "@tanstack/react-router";
 
-const SelectDPJP = ({ from }: { from: "/rawat-inap" | "/" }) => {
+const SelectDPJP = ({
+  from,
+}: {
+  from: "/rekap/rawat-inap" | "/rekap/rawat-jalan";
+}) => {
   const route = getRouteApi(from);
   const { selectedDoctor } = route.useSearch();
   const navigate = route.useNavigate();

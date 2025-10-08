@@ -117,10 +117,10 @@ export function DataTable<TData, TValue>({
             <span>]::</span>
           </div>
 
-          <CsvAnalysis from="/rawat-inap" />
+          <CsvAnalysis from="/rekap/rawat-inap" />
         </div>
       </div>
-      <TotalDisplay from="/rawat-inap" totals={totals} />
+      <TotalDisplay from="/rekap/rawat-inap" totals={totals} />
       <div className="uppercase">
         <Table>
           <TableHeader>
@@ -195,7 +195,7 @@ export function DataTable<TData, TValue>({
           )}
         </Table>
       </div>
-      <DataTablePagination from="/rawat-inap" pagination={pagination} />
+      <DataTablePagination from="/rekap/rawat-inap" pagination={pagination} />
     </div>
   );
 }

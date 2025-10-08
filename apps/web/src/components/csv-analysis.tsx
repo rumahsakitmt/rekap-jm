@@ -11,7 +11,11 @@ import { DialogNotFoundSep } from "./rawat-jalan/dialog-not-found-sep";
 import { Button } from "./ui/button";
 import { getRouteApi } from "@tanstack/react-router";
 
-export function CsvAnalysis({ from }: { from: "/" | "/rawat-inap" }) {
+export function CsvAnalysis({
+  from,
+}: {
+  from: "/rekap/rawat-jalan" | "/rekap/rawat-inap";
+}) {
   const route = getRouteApi(from);
 
   const { selectedCsvFile, dateFrom, dateTo } = route.useSearch();

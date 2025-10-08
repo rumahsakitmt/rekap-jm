@@ -11,21 +11,21 @@ export function DataTableFilters() {
   return (
     <div className="p-2">
       <div className="space-y-2 py-2">
-        <SearchInput from="/" />
+        <SearchInput from="/rekap/rawat-jalan" />
         <div className="grid grid-cols-2 gap-2">
-          <DateFilter from="/" />
-          <SelectFileSEP from="/" />
+          <DateFilter from="/rekap/rawat-jalan" />
+          <SelectFileSEP from="/rekap/rawat-jalan" />
         </div>
         <div className="grid grid-cols-3 gap-2">
-          <SelectDPJP from="/" />
+          <SelectDPJP from="/rekap/rawat-jalan" />
           <SelectPoliklinik />
-          <SupportFilter from="/" />
+          <SupportFilter from="/rekap/rawat-jalan" />
         </div>
         <div className="py-4">
           <FilterSwitch label="Konsul" searchParam="konsul" />
         </div>
         <div className="flex justify-end">
-          <ClearFilter from="/" />
+          <ClearFilter from="/rekap/rawat-jalan" />
         </div>
         {/* <DataTableViewOptions table={table} /> */}
       </div>

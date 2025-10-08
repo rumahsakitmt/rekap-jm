@@ -16,7 +16,7 @@ interface DataTablePaginationProps {
     page: number;
     totalPages: number;
   };
-  from: "/rawat-inap" | "/";
+  from: "/rekap/rawat-inap" | "/rekap/rawat-jalan";
 }
 
 export function DataTablePagination({

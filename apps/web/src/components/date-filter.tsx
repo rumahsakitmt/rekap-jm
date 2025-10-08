@@ -1,7 +1,11 @@
 import { DatePicker } from "./date-picker";
 import { getRouteApi } from "@tanstack/react-router";
 
-export const DateFilter = ({ from }: { from: "/rawat-inap" | "/" }) => {
+export const DateFilter = ({
+  from,
+}: {
+  from: "/rekap/rawat-inap" | "/rekap/rawat-jalan";
+}) => {
   const route = getRouteApi(from);
   const { dateFrom, dateTo } = route.useSearch();
   const navigate = route.useNavigate();

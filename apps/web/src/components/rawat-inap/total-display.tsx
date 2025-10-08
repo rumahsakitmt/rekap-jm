@@ -20,7 +20,7 @@ interface TotalsData {
 
 interface TotalDisplayProps {
   totals: TotalsData | null | undefined;
-  from: "/rawat-inap" | "/";
+  from: "/rekap/rawat-inap" | "/rekap/rawat-jalan";
 }
 
 export function TotalDisplay({ totals, from }: TotalDisplayProps) {

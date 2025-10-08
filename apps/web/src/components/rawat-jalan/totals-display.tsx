@@ -1,5 +1,5 @@
 import { formatCurrency } from "@/lib/utils";
-import { Route } from "@/routes";
+import { Route } from "@/routes/rekap.rawat-jalan";
 
 interface TotalsData {
   totalTarif?: number;

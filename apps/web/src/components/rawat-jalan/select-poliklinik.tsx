@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
-import { Route } from "@/routes/";
+import { Route } from "@/routes/rekap.rawat-jalan";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 

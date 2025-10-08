@@ -9,7 +9,6 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
@@ -117,7 +116,7 @@ export function DataTable<TData, TValue>({
             </p>
             <span>]::</span>
           </div>
-          <CsvAnalysis from="/" />
+          <CsvAnalysis from="/rekap/rawat-jalan" />
         </div>
         <TotalsDisplay totals={totals} />
       </div>
@@ -195,7 +194,7 @@ export function DataTable<TData, TValue>({
           )}
         </Table>
       </div>
-      <DataTablePagination from="/" pagination={pagination} />
+      <DataTablePagination from="/rekap/rawat-jalan" pagination={pagination} />
     </div>
   );
 }

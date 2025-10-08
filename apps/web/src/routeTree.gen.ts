@@ -9,13 +9,22 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TarifRouteImport } from './routes/tarif'
 import { Route as ReportRawatJalanRouteImport } from './routes/report-rawat-jalan'
 import { Route as ReportRawatInapRouteImport } from './routes/report-rawat-inap'
-import { Route as RawatInapRouteImport } from './routes/rawat-inap'
+import { Route as RekapRouteImport } from './routes/rekap'
 import { Route as PreviewRouteImport } from './routes/preview'
 import { Route as BridgingRouteImport } from './routes/bridging'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TarifRawatJalanRouteImport } from './routes/tarif.rawat-jalan'
+import { Route as RekapRawatJalanRouteImport } from './routes/rekap.rawat-jalan'
+import { Route as RekapRawatInapRouteImport } from './routes/rekap.rawat-inap'
 
+const TarifRoute = TarifRouteImport.update({
+  id: '/tarif',
+  path: '/tarif',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReportRawatJalanRoute = ReportRawatJalanRouteImport.update({
   id: '/report-rawat-jalan',
   path: '/report-rawat-jalan',
@@ -26,9 +35,9 @@ const ReportRawatInapRoute = ReportRawatInapRouteImport.update({
   path: '/report-rawat-inap',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RawatInapRoute = RawatInapRouteImport.update({
-  id: '/rawat-inap',
-  path: '/rawat-inap',
+const RekapRoute = RekapRouteImport.update({
+  id: '/rekap',
+  path: '/rekap',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PreviewRoute = PreviewRouteImport.update({
@@ -46,31 +55,58 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TarifRawatJalanRoute = TarifRawatJalanRouteImport.update({
+  id: '/rawat-jalan',
+  path: '/rawat-jalan',
+  getParentRoute: () => TarifRoute,
+} as any)
+const RekapRawatJalanRoute = RekapRawatJalanRouteImport.update({
+  id: '/rawat-jalan',
+  path: '/rawat-jalan',
+  getParentRoute: () => RekapRoute,
+} as any)
+const RekapRawatInapRoute = RekapRawatInapRouteImport.update({
+  id: '/rawat-inap',
+  path: '/rawat-inap',
+  getParentRoute: () => RekapRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/bridging': typeof BridgingRoute
   '/preview': typeof PreviewRoute
-  '/rawat-inap': typeof RawatInapRoute
+  '/rekap': typeof RekapRouteWithChildren
   '/report-rawat-inap': typeof ReportRawatInapRoute
   '/report-rawat-jalan': typeof ReportRawatJalanRoute
+  '/tarif': typeof TarifRouteWithChildren
+  '/rekap/rawat-inap': typeof RekapRawatInapRoute
+  '/rekap/rawat-jalan': typeof RekapRawatJalanRoute
+  '/tarif/rawat-jalan': typeof TarifRawatJalanRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/bridging': typeof BridgingRoute
   '/preview': typeof PreviewRoute
-  '/rawat-inap': typeof RawatInapRoute
+  '/rekap': typeof RekapRouteWithChildren
   '/report-rawat-inap': typeof ReportRawatInapRoute
   '/report-rawat-jalan': typeof ReportRawatJalanRoute
+  '/tarif': typeof TarifRouteWithChildren
+  '/rekap/rawat-inap': typeof RekapRawatInapRoute
+  '/rekap/rawat-jalan': typeof RekapRawatJalanRoute
+  '/tarif/rawat-jalan': typeof TarifRawatJalanRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/bridging': typeof BridgingRoute
   '/preview': typeof PreviewRoute
-  '/rawat-inap': typeof RawatInapRoute
+  '/rekap': typeof RekapRouteWithChildren
   '/report-rawat-inap': typeof ReportRawatInapRoute
   '/report-rawat-jalan': typeof ReportRawatJalanRoute
+  '/tarif': typeof TarifRouteWithChildren
+  '/rekap/rawat-inap': typeof RekapRawatInapRoute
+  '/rekap/rawat-jalan': typeof RekapRawatJalanRoute
+  '/tarif/rawat-jalan': typeof TarifRawatJalanRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -78,38 +114,58 @@ export interface FileRouteTypes {
     | '/'
     | '/bridging'
     | '/preview'
-    | '/rawat-inap'
+    | '/rekap'
     | '/report-rawat-inap'
     | '/report-rawat-jalan'
+    | '/tarif'
+    | '/rekap/rawat-inap'
+    | '/rekap/rawat-jalan'
+    | '/tarif/rawat-jalan'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/bridging'
     | '/preview'
-    | '/rawat-inap'
+    | '/rekap'
     | '/report-rawat-inap'
     | '/report-rawat-jalan'
+    | '/tarif'
+    | '/rekap/rawat-inap'
+    | '/rekap/rawat-jalan'
+    | '/tarif/rawat-jalan'
   id:
     | '__root__'
     | '/'
     | '/bridging'
     | '/preview'
-    | '/rawat-inap'
+    | '/rekap'
     | '/report-rawat-inap'
     | '/report-rawat-jalan'
+    | '/tarif'
+    | '/rekap/rawat-inap'
+    | '/rekap/rawat-jalan'
+    | '/tarif/rawat-jalan'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BridgingRoute: typeof BridgingRoute
   PreviewRoute: typeof PreviewRoute
-  RawatInapRoute: typeof RawatInapRoute
+  RekapRoute: typeof RekapRouteWithChildren
   ReportRawatInapRoute: typeof ReportRawatInapRoute
   ReportRawatJalanRoute: typeof ReportRawatJalanRoute
+  TarifRoute: typeof TarifRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tarif': {
+      id: '/tarif'
+      path: '/tarif'
+      fullPath: '/tarif'
+      preLoaderRoute: typeof TarifRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/report-rawat-jalan': {
       id: '/report-rawat-jalan'
       path: '/report-rawat-jalan'
@@ -124,11 +180,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReportRawatInapRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/rawat-inap': {
-      id: '/rawat-inap'
-      path: '/rawat-inap'
-      fullPath: '/rawat-inap'
-      preLoaderRoute: typeof RawatInapRouteImport
+    '/rekap': {
+      id: '/rekap'
+      path: '/rekap'
+      fullPath: '/rekap'
+      preLoaderRoute: typeof RekapRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/preview': {
@@ -152,16 +208,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tarif/rawat-jalan': {
+      id: '/tarif/rawat-jalan'
+      path: '/rawat-jalan'
+      fullPath: '/tarif/rawat-jalan'
+      preLoaderRoute: typeof TarifRawatJalanRouteImport
+      parentRoute: typeof TarifRoute
+    }
+    '/rekap/rawat-jalan': {
+      id: '/rekap/rawat-jalan'
+      path: '/rawat-jalan'
+      fullPath: '/rekap/rawat-jalan'
+      preLoaderRoute: typeof RekapRawatJalanRouteImport
+      parentRoute: typeof RekapRoute
+    }
+    '/rekap/rawat-inap': {
+      id: '/rekap/rawat-inap'
+      path: '/rawat-inap'
+      fullPath: '/rekap/rawat-inap'
+      preLoaderRoute: typeof RekapRawatInapRouteImport
+      parentRoute: typeof RekapRoute
+    }
   }
 }
+
+interface RekapRouteChildren {
+  RekapRawatInapRoute: typeof RekapRawatInapRoute
+  RekapRawatJalanRoute: typeof RekapRawatJalanRoute
+}
+
+const RekapRouteChildren: RekapRouteChildren = {
+  RekapRawatInapRoute: RekapRawatInapRoute,
+  RekapRawatJalanRoute: RekapRawatJalanRoute,
+}
+
+const RekapRouteWithChildren = RekapRoute._addFileChildren(RekapRouteChildren)
+
+interface TarifRouteChildren {
+  TarifRawatJalanRoute: typeof TarifRawatJalanRoute
+}
+
+const TarifRouteChildren: TarifRouteChildren = {
+  TarifRawatJalanRoute: TarifRawatJalanRoute,
+}
+
+const TarifRouteWithChildren = TarifRoute._addFileChildren(TarifRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BridgingRoute: BridgingRoute,
   PreviewRoute: PreviewRoute,
-  RawatInapRoute: RawatInapRoute,
+  RekapRoute: RekapRouteWithChildren,
   ReportRawatInapRoute: ReportRawatInapRoute,
   ReportRawatJalanRoute: ReportRawatJalanRoute,
+  TarifRoute: TarifRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
