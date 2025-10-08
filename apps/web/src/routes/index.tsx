@@ -9,6 +9,7 @@ function HomeComponent() {
     { to: "/rekap/rawat-jalan", label: "Rekap Rawat Jalan" },
     { to: "/rekap/rawat-inap", label: "Rekap Rawat Inap" },
     { to: "/tarif/rawat-jalan", label: "Tarif Rawat Jalan" },
+    { to: "/tarif/rawat-inap", label: "Tarif Rawat Inap" },
   ] as const;
 
   return (
