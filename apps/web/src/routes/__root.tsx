@@ -1,6 +1,4 @@
-import Header from "@/components/header";
 import Loader from "@/components/loader";
-import { Footer } from "@/components/footer";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import type { trpc } from "@/utils/trpc";
@@ -25,11 +23,11 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
   head: () => ({
     meta: [
       {
-        title: "Rekap JM",
+        title: "SMART SIMRS",
       },
       {
         name: "description",
-        content: "Rekap Jasa Medis RSUD Mamuju Tengah",
+        content: "SMART SIMRS",
       },
     ],
     links: [
@@ -55,7 +53,7 @@ function RootComponent() {
         disableTransitionOnChange
         storageKey="vite-ui-theme"
       >
-        <div className="grid grid-rows-[auto_1fr] h-svh uppercase">
+        <div className="grid grid-rows-[auto_1fr] h-svh">
           {isFetching ? <Loader /> : <Outlet />}
         </div>
         <Toaster richColors />

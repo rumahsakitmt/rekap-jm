@@ -9,6 +9,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { JnsPerawatanUploadSheet } from "@/components/tarif/jns-perawatan-upload-sheet";
 import { ResetStatusDialog } from "@/components/tarif/reset-status-sheet";
+import { Footprints } from "lucide-react";
 
 export const Route = createFileRoute("/tarif/rawat-jalan")({
   component: RouteComponent,
@@ -46,10 +47,13 @@ function RouteComponent() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">
-            Tarif Rawat Jalan
-          </h1>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Footprints />
+            <h1 className="text-3xl tracking-tight uppercase">
+              Tarif Rawat Jalan
+            </h1>
+          </div>
           <p className="text-muted-foreground">
             Daftar tarif perawatan rawat jalan yang tersedia
           </p>
@@ -61,7 +65,6 @@ function RouteComponent() {
         </div>
       </div>
 
-      <p>{tarif.data?.length} records</p>
       <TarifTable
         columns={columns}
         data={tarif.data as TarifRawatJalanData[]}

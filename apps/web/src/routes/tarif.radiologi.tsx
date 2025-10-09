@@ -9,6 +9,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { JnsPerawatanRadiologiUploadSheet } from "@/components/tarif/jns-perawatan-radiologi-upload-sheet";
 import { ResetStatusRadiologiSheet } from "@/components/tarif/reset-status-radiologi-sheet";
+import { Radiation } from "lucide-react";
 
 export const Route = createFileRoute("/tarif/radiologi")({
   component: RouteComponent,
@@ -21,7 +22,7 @@ function RouteComponent() {
   if (tarif.isLoading) {
     return (
       <div className="container mx-auto py-6 space-y-6">
-        <div className="space-y-2">
+        <div className="space-y-1">
           <Skeleton className="h-8 w-64" />
           <Skeleton className="h-4 w-96" />
         </div>
@@ -46,8 +47,13 @@ function RouteComponent() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Tarif Radiologi</h1>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Radiation />
+            <h1 className="text-3xl tracking-tight uppercase">
+              Tarif Radiologi
+            </h1>
+          </div>
           <p className="text-muted-foreground">
             Daftar tarif perawatan radiologi yang tersedia
           </p>
@@ -59,7 +65,6 @@ function RouteComponent() {
         </div>
       </div>
 
-      <p>{tarif.data?.length} records</p>
       <TarifTable
         columns={columns}
         data={tarif.data as TarifRadiologiData[]}

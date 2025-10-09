@@ -1,11 +1,12 @@
+import { cn } from "@/lib/utils";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Bed,
-  FileText,
   Footprints,
   FlaskConical,
   Pill,
   Radiation,
+  Flower,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -14,30 +15,77 @@ export const Route = createFileRoute("/")({
 
 function HomeComponent() {
   const links = [
-    { to: "/rekap/rawat-jalan", label: "Rekap Rawat Jalan", Icon: Footprints },
-    { to: "/rekap/rawat-inap", label: "Rekap Rawat Inap", Icon: Bed },
-    { to: "/obat/stok", label: "Stok Obat", Icon: Pill },
-    { to: "/tarif/rawat-jalan", label: "Tarif Rawat Jalan", Icon: FileText },
-    { to: "/tarif/rawat-inap", label: "Tarif Rawat Inap", Icon: FileText },
-    { to: "/tarif/lab", label: "Tarif Lab", Icon: FlaskConical },
-    { to: "/tarif/radiologi", label: "Tarif Radiologi", Icon: Radiation },
+    {
+      title: "Rekap",
+      items: [
+        {
+          to: "/rekap/rawat-jalan",
+          label: "Rawat Jalan",
+          Icon: Footprints,
+        },
+        { to: "/rekap/rawat-inap", label: "Rawat Inap", Icon: Bed },
+      ],
+    },
+    {
+      title: "Obat",
+      items: [{ to: "/obat/stok", label: "Stok Obat", Icon: Pill }],
+    },
+    {
+      title: "Tarif",
+      items: [
+        {
+          to: "/tarif/rawat-jalan",
+          label: "Rawat Jalan",
+          Icon: Footprints,
+        },
+        { to: "/tarif/rawat-inap", label: "Rawat Inap", Icon: Bed },
+        { to: "/tarif/lab", label: "Lab", Icon: FlaskConical },
+        { to: "/tarif/radiologi", label: "Radiologi", Icon: Radiation },
+      ],
+    },
   ] as const;
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="text-center border shadow rounded p-4">
-        <h1 className="text-2xl font-bold">Menu</h1>
-        <div className="grid grid-cols-5 gap-2">
-          {links.map(({ to, label, Icon }) => {
+    <div className="flex min-h-screen items-center justify-center relative">
+      <div
+        className={cn(
+          "absolute inset-0",
+          "[background-size:40px_40px]",
+          "[background-image:linear-gradient(to_right,#e4e4e7_1px,transparent_1px),linear-gradient(to_bottom,#e4e4e7_1px,transparent_1px)]",
+          "dark:[background-image:linear-gradient(to_right,#262626_1px,transparent_1px),linear-gradient(to_bottom,#262626_1px,transparent_1px)]"
+        )}
+      />
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)] dark:bg-background"></div>
+      <div className="text-center   p-4 space-y-8 z-20">
+        <div className="flex items-center gap-2 justify-center">
+          <Flower className="text-primary" />
+          <h1 className="text-2xl font-bold">
+            SMART SIMRS{" "}
+            <span className="text-primary font-normal italic">v1.0.0</span>
+          </h1>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {links.map(({ title, items }) => {
             return (
               <div
-                key={to}
-                className="border p-4 rounded flex items-center gap-2"
+                key={title}
+                className="border p-4 flex flex-col items-start gap-2 bg-background"
               >
-                <Link to={to} className="text-blue-500 hover:underline">
-                  <Icon className="h-6 w-6" />
-                  {label}
-                </Link>
+                <p className="text-sm font-medium uppercase tracking-widest text-muted-foreground">
+                  {title}
+                </p>
+                {items.map(({ to, label, Icon }) => {
+                  return (
+                    <Link
+                      key={to}
+                      to={to}
+                      className="text-muted-foreground hover:text-primary hover:underline flex items-center gap-2 text-sm"
+                    >
+                      <Icon className="h-4 w-4 text-primary" />
+                      {label}
+                    </Link>
+                  );
+                })}
               </div>
             );
           })}

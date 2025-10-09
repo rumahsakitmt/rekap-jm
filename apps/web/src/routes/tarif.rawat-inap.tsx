@@ -9,6 +9,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { JnsPerawatanInapUploadSheet } from "@/components/tarif/jns-perawatan-inap-upload-sheet";
 import { ResetStatusInapDialog } from "@/components/tarif/reset-status-inap-sheet";
+import { Bed } from "lucide-react";
 
 export const Route = createFileRoute("/tarif/rawat-inap")({
   component: RouteComponent,
@@ -47,9 +48,12 @@ function RouteComponent() {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">
-            Tarif Rawat Inap
-          </h1>
+          <div className="flex items-center gap-2">
+            <Bed />
+            <h1 className="text-3xl tracking-tight uppercase">
+              Tarif Rawat Inap
+            </h1>
+          </div>
           <p className="text-muted-foreground">
             Daftar tarif perawatan rawat inap yang tersedia
           </p>
