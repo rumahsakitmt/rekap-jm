@@ -10,6 +10,7 @@ function HomeComponent() {
     { to: "/rekap/rawat-inap", label: "Rekap Rawat Inap" },
     { to: "/tarif/rawat-jalan", label: "Tarif Rawat Jalan" },
     { to: "/tarif/rawat-inap", label: "Tarif Rawat Inap" },
+    { to: "/obat/stok", label: "Stok Obat" },
   ] as const;
 
   return (

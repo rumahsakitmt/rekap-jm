@@ -14,12 +14,14 @@ import { Route as ReportRawatJalanRouteImport } from './routes/report-rawat-jala
 import { Route as ReportRawatInapRouteImport } from './routes/report-rawat-inap'
 import { Route as RekapRouteImport } from './routes/rekap'
 import { Route as PreviewRouteImport } from './routes/preview'
+import { Route as ObatRouteImport } from './routes/obat'
 import { Route as BridgingRouteImport } from './routes/bridging'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TarifRawatJalanRouteImport } from './routes/tarif.rawat-jalan'
 import { Route as TarifRawatInapRouteImport } from './routes/tarif.rawat-inap'
 import { Route as RekapRawatJalanRouteImport } from './routes/rekap.rawat-jalan'
 import { Route as RekapRawatInapRouteImport } from './routes/rekap.rawat-inap'
+import { Route as ObatStokRouteImport } from './routes/obat.stok'
 
 const TarifRoute = TarifRouteImport.update({
   id: '/tarif',
@@ -44,6 +46,11 @@ const RekapRoute = RekapRouteImport.update({
 const PreviewRoute = PreviewRouteImport.update({
   id: '/preview',
   path: '/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ObatRoute = ObatRouteImport.update({
+  id: '/obat',
+  path: '/obat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BridgingRoute = BridgingRouteImport.update({
@@ -76,15 +83,22 @@ const RekapRawatInapRoute = RekapRawatInapRouteImport.update({
   path: '/rawat-inap',
   getParentRoute: () => RekapRoute,
 } as any)
+const ObatStokRoute = ObatStokRouteImport.update({
+  id: '/stok',
+  path: '/stok',
+  getParentRoute: () => ObatRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/bridging': typeof BridgingRoute
+  '/obat': typeof ObatRouteWithChildren
   '/preview': typeof PreviewRoute
   '/rekap': typeof RekapRouteWithChildren
   '/report-rawat-inap': typeof ReportRawatInapRoute
   '/report-rawat-jalan': typeof ReportRawatJalanRoute
   '/tarif': typeof TarifRouteWithChildren
+  '/obat/stok': typeof ObatStokRoute
   '/rekap/rawat-inap': typeof RekapRawatInapRoute
   '/rekap/rawat-jalan': typeof RekapRawatJalanRoute
   '/tarif/rawat-inap': typeof TarifRawatInapRoute
@@ -93,11 +107,13 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/bridging': typeof BridgingRoute
+  '/obat': typeof ObatRouteWithChildren
   '/preview': typeof PreviewRoute
   '/rekap': typeof RekapRouteWithChildren
   '/report-rawat-inap': typeof ReportRawatInapRoute
   '/report-rawat-jalan': typeof ReportRawatJalanRoute
   '/tarif': typeof TarifRouteWithChildren
+  '/obat/stok': typeof ObatStokRoute
   '/rekap/rawat-inap': typeof RekapRawatInapRoute
   '/rekap/rawat-jalan': typeof RekapRawatJalanRoute
   '/tarif/rawat-inap': typeof TarifRawatInapRoute
@@ -107,11 +123,13 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/bridging': typeof BridgingRoute
+  '/obat': typeof ObatRouteWithChildren
   '/preview': typeof PreviewRoute
   '/rekap': typeof RekapRouteWithChildren
   '/report-rawat-inap': typeof ReportRawatInapRoute
   '/report-rawat-jalan': typeof ReportRawatJalanRoute
   '/tarif': typeof TarifRouteWithChildren
+  '/obat/stok': typeof ObatStokRoute
   '/rekap/rawat-inap': typeof RekapRawatInapRoute
   '/rekap/rawat-jalan': typeof RekapRawatJalanRoute
   '/tarif/rawat-inap': typeof TarifRawatInapRoute
@@ -122,11 +140,13 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/bridging'
+    | '/obat'
     | '/preview'
     | '/rekap'
     | '/report-rawat-inap'
     | '/report-rawat-jalan'
     | '/tarif'
+    | '/obat/stok'
     | '/rekap/rawat-inap'
     | '/rekap/rawat-jalan'
     | '/tarif/rawat-inap'
@@ -135,11 +155,13 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/bridging'
+    | '/obat'
     | '/preview'
     | '/rekap'
     | '/report-rawat-inap'
     | '/report-rawat-jalan'
     | '/tarif'
+    | '/obat/stok'
     | '/rekap/rawat-inap'
     | '/rekap/rawat-jalan'
     | '/tarif/rawat-inap'
@@ -148,11 +170,13 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/bridging'
+    | '/obat'
     | '/preview'
     | '/rekap'
     | '/report-rawat-inap'
     | '/report-rawat-jalan'
     | '/tarif'
+    | '/obat/stok'
     | '/rekap/rawat-inap'
     | '/rekap/rawat-jalan'
     | '/tarif/rawat-inap'
@@ -162,6 +186,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BridgingRoute: typeof BridgingRoute
+  ObatRoute: typeof ObatRouteWithChildren
   PreviewRoute: typeof PreviewRoute
   RekapRoute: typeof RekapRouteWithChildren
   ReportRawatInapRoute: typeof ReportRawatInapRoute
@@ -206,6 +231,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/obat': {
+      id: '/obat'
+      path: '/obat'
+      fullPath: '/obat'
+      preLoaderRoute: typeof ObatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/bridging': {
       id: '/bridging'
       path: '/bridging'
@@ -248,8 +280,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RekapRawatInapRouteImport
       parentRoute: typeof RekapRoute
     }
+    '/obat/stok': {
+      id: '/obat/stok'
+      path: '/stok'
+      fullPath: '/obat/stok'
+      preLoaderRoute: typeof ObatStokRouteImport
+      parentRoute: typeof ObatRoute
+    }
   }
 }
+
+interface ObatRouteChildren {
+  ObatStokRoute: typeof ObatStokRoute
+}
+
+const ObatRouteChildren: ObatRouteChildren = {
+  ObatStokRoute: ObatStokRoute,
+}
+
+const ObatRouteWithChildren = ObatRoute._addFileChildren(ObatRouteChildren)
 
 interface RekapRouteChildren {
   RekapRawatInapRoute: typeof RekapRawatInapRoute
@@ -278,6 +327,7 @@ const TarifRouteWithChildren = TarifRoute._addFileChildren(TarifRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BridgingRoute: BridgingRoute,
+  ObatRoute: ObatRouteWithChildren,
   PreviewRoute: PreviewRoute,
   RekapRoute: RekapRouteWithChildren,
   ReportRawatInapRoute: ReportRawatInapRoute,

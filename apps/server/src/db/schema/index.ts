@@ -23,3 +23,5 @@ export { kabupaten } from "./kabupaten";
 export { petugas } from "./petugas";
 export { poliklinik } from "./poliklinik";
 export { rawat_jl_drpr } from "./rawat_jl_drpr";
+export { databarang } from "./databarang";
+export { gudangbarang } from "./gudangbarang";
