@@ -12,6 +12,8 @@ export { permintaan_radiologi } from "./permintaan_radiologi";
 export { periksa_radiologi } from "./periksa_radiologi";
 export { permintaan_pemeriksaan_radiologi } from "./permintaan_pemeriksaan_radiologi";
 export { jns_perawatan_radiologi } from "./jns_perawatan_radiologi";
+export { jns_perawatan_lab } from "./jns_perawatan_lab";
+export { jns_perawatan_utd } from "./jns_perawatan_utd";
 export { jns_perawatan } from "./jns_perawatan";
 export { dpjp_ranap } from "./dpjp_ranap";
 export { operasi } from "./operasi";

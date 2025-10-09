@@ -19,6 +19,8 @@ import { Route as BridgingRouteImport } from './routes/bridging'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TarifRawatJalanRouteImport } from './routes/tarif.rawat-jalan'
 import { Route as TarifRawatInapRouteImport } from './routes/tarif.rawat-inap'
+import { Route as TarifRadiologiRouteImport } from './routes/tarif.radiologi'
+import { Route as TarifLabRouteImport } from './routes/tarif.lab'
 import { Route as RekapRawatJalanRouteImport } from './routes/rekap.rawat-jalan'
 import { Route as RekapRawatInapRouteImport } from './routes/rekap.rawat-inap'
 import { Route as ObatStokRouteImport } from './routes/obat.stok'
@@ -73,6 +75,16 @@ const TarifRawatInapRoute = TarifRawatInapRouteImport.update({
   path: '/rawat-inap',
   getParentRoute: () => TarifRoute,
 } as any)
+const TarifRadiologiRoute = TarifRadiologiRouteImport.update({
+  id: '/radiologi',
+  path: '/radiologi',
+  getParentRoute: () => TarifRoute,
+} as any)
+const TarifLabRoute = TarifLabRouteImport.update({
+  id: '/lab',
+  path: '/lab',
+  getParentRoute: () => TarifRoute,
+} as any)
 const RekapRawatJalanRoute = RekapRawatJalanRouteImport.update({
   id: '/rawat-jalan',
   path: '/rawat-jalan',
@@ -101,6 +113,8 @@ export interface FileRoutesByFullPath {
   '/obat/stok': typeof ObatStokRoute
   '/rekap/rawat-inap': typeof RekapRawatInapRoute
   '/rekap/rawat-jalan': typeof RekapRawatJalanRoute
+  '/tarif/lab': typeof TarifLabRoute
+  '/tarif/radiologi': typeof TarifRadiologiRoute
   '/tarif/rawat-inap': typeof TarifRawatInapRoute
   '/tarif/rawat-jalan': typeof TarifRawatJalanRoute
 }
@@ -116,6 +130,8 @@ export interface FileRoutesByTo {
   '/obat/stok': typeof ObatStokRoute
   '/rekap/rawat-inap': typeof RekapRawatInapRoute
   '/rekap/rawat-jalan': typeof RekapRawatJalanRoute
+  '/tarif/lab': typeof TarifLabRoute
+  '/tarif/radiologi': typeof TarifRadiologiRoute
   '/tarif/rawat-inap': typeof TarifRawatInapRoute
   '/tarif/rawat-jalan': typeof TarifRawatJalanRoute
 }
@@ -132,6 +148,8 @@ export interface FileRoutesById {
   '/obat/stok': typeof ObatStokRoute
   '/rekap/rawat-inap': typeof RekapRawatInapRoute
   '/rekap/rawat-jalan': typeof RekapRawatJalanRoute
+  '/tarif/lab': typeof TarifLabRoute
+  '/tarif/radiologi': typeof TarifRadiologiRoute
   '/tarif/rawat-inap': typeof TarifRawatInapRoute
   '/tarif/rawat-jalan': typeof TarifRawatJalanRoute
 }
@@ -149,6 +167,8 @@ export interface FileRouteTypes {
     | '/obat/stok'
     | '/rekap/rawat-inap'
     | '/rekap/rawat-jalan'
+    | '/tarif/lab'
+    | '/tarif/radiologi'
     | '/tarif/rawat-inap'
     | '/tarif/rawat-jalan'
   fileRoutesByTo: FileRoutesByTo
@@ -164,6 +184,8 @@ export interface FileRouteTypes {
     | '/obat/stok'
     | '/rekap/rawat-inap'
     | '/rekap/rawat-jalan'
+    | '/tarif/lab'
+    | '/tarif/radiologi'
     | '/tarif/rawat-inap'
     | '/tarif/rawat-jalan'
   id:
@@ -179,6 +201,8 @@ export interface FileRouteTypes {
     | '/obat/stok'
     | '/rekap/rawat-inap'
     | '/rekap/rawat-jalan'
+    | '/tarif/lab'
+    | '/tarif/radiologi'
     | '/tarif/rawat-inap'
     | '/tarif/rawat-jalan'
   fileRoutesById: FileRoutesById
@@ -266,6 +290,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TarifRawatInapRouteImport
       parentRoute: typeof TarifRoute
     }
+    '/tarif/radiologi': {
+      id: '/tarif/radiologi'
+      path: '/radiologi'
+      fullPath: '/tarif/radiologi'
+      preLoaderRoute: typeof TarifRadiologiRouteImport
+      parentRoute: typeof TarifRoute
+    }
+    '/tarif/lab': {
+      id: '/tarif/lab'
+      path: '/lab'
+      fullPath: '/tarif/lab'
+      preLoaderRoute: typeof TarifLabRouteImport
+      parentRoute: typeof TarifRoute
+    }
     '/rekap/rawat-jalan': {
       id: '/rekap/rawat-jalan'
       path: '/rawat-jalan'
@@ -313,11 +351,15 @@ const RekapRouteChildren: RekapRouteChildren = {
 const RekapRouteWithChildren = RekapRoute._addFileChildren(RekapRouteChildren)
 
 interface TarifRouteChildren {
+  TarifLabRoute: typeof TarifLabRoute
+  TarifRadiologiRoute: typeof TarifRadiologiRoute
   TarifRawatInapRoute: typeof TarifRawatInapRoute
   TarifRawatJalanRoute: typeof TarifRawatJalanRoute
 }
 
 const TarifRouteChildren: TarifRouteChildren = {
+  TarifLabRoute: TarifLabRoute,
+  TarifRadiologiRoute: TarifRadiologiRoute,
   TarifRawatInapRoute: TarifRawatInapRoute,
   TarifRawatJalanRoute: TarifRawatJalanRoute,
 }
