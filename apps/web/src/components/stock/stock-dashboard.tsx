@@ -23,8 +23,6 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
   type ChartConfig,
 } from "@/components/ui/chart";
 import {
@@ -76,24 +74,17 @@ const COLORS = [
 ];
 
 export function StockDashboard() {
-  const { data: summary, isLoading: summaryLoading } = useQuery(
-    trpc.stock.getStockSummary.queryOptions()
-  );
   const { data: lowStockItems, isLoading: lowStockLoading } = useQuery(
     trpc.stock.getLowStockItems.queryOptions()
   );
   const { data: stockByWarehouse, isLoading: warehouseLoading } = useQuery(
     trpc.stock.getStockByWarehouse.queryOptions()
   );
-  const { data: topItemsByValue, isLoading: topItemsLoading } = useQuery(
-    trpc.stock.getTopItemsByValue.queryOptions()
-  );
+
   const { data: stockByCategory, isLoading: categoryLoading } = useQuery(
     trpc.stock.getStockByCategory.queryOptions()
   );
-  const { data: stockByBatch, isLoading: batchLoading } = useQuery(
-    trpc.stock.getStockByBatch.queryOptions()
-  );
+
   const { data: inventoryTurnover, isLoading: turnoverLoading } = useQuery(
     trpc.stock.getInventoryTurnover.queryOptions()
   );
@@ -109,12 +100,6 @@ export function StockDashboard() {
   const { data: performanceMetrics, isLoading: metricsLoading } = useQuery(
     trpc.stock.getStockPerformanceMetrics.queryOptions()
   );
-
-  if (summaryLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">Memuat...</div>
-    );
-  }
 
   const chartConfig = {
     stock: {
@@ -144,145 +129,6 @@ export function StockDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Item</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {summary?.totalItems?.toLocaleString() || 0}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Item aktif dalam inventori
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Nilai Stok
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(Number(summary?.totalValue) || 0)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Nilai inventori saat ini
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Item Stok Rendah
-            </CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              {Number(summary?.lowStockCount) || 0}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Item di bawah stok minimum
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Stok Habis</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {Number(summary?.outOfStockCount) || 0}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Item dengan stok nol
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Advanced KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Kesehatan Stok
-            </CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {performanceMetrics?.stockHealthPercentage || 0}%
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {performanceMetrics?.healthyStockCount || 0} dari{" "}
-              {performanceMetrics?.totalItems || 0} item sehat
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Rata-rata Nilai Item
-            </CardTitle>
-            <Calculator className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(
-                Number(performanceMetrics?.averageItemValue) || 0
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Nilai rata-rata per item
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Alert</CardTitle>
-            <Bell className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              {Number(criticalAlerts?.totalAlerts) || 0}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Peringatan yang perlu perhatian
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Rekomendasi Reorder
-            </CardTitle>
-            <RefreshCw className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {reorderRecommendations?.length || 0}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Item yang perlu di-reorder
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Low Stock Alert */}
       {lowStockItems && lowStockItems.length > 0 && (
         <Alert className="border-orange-200 bg-orange-50">
@@ -309,7 +155,7 @@ export function StockDashboard() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="">
             {/* Stock Distribution by Warehouse */}
             <Card>
               <CardHeader>
@@ -319,7 +165,10 @@ export function StockDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ChartContainer config={chartConfig} className="h-[300px]">
+                <ChartContainer
+                  config={chartConfig}
+                  className="h-[300px] w-full"
+                >
                   <BarChart data={stockByWarehouse}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis
@@ -333,40 +182,6 @@ export function StockDashboard() {
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Bar dataKey="totalStok" fill="var(--color-stock)" />
                   </BarChart>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-
-            {/* Stock Value by Warehouse */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Nilai Stok per Gudang</CardTitle>
-                <CardDescription>Distribusi nilai inventori</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer config={chartConfig} className="h-[300px]">
-                  <PieChart>
-                    <Pie
-                      data={stockByWarehouse}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ nm_bangsal, totalValue }) =>
-                        `${nm_bangsal}: ${formatCurrency(Number(totalValue) || 0)}`
-                      }
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="totalValue"
-                    >
-                      {stockByWarehouse?.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                  </PieChart>
                 </ChartContainer>
               </CardContent>
             </Card>

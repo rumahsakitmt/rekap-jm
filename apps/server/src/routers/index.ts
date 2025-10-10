@@ -10,6 +10,7 @@ import { rawatInapRouter } from "./rawat-inap";
 import { kamarRouter } from "./kamar";
 import { tarifRouter } from "./tarif";
 import { stockRouter } from "./stock";
+import { obatRouter } from "./obat";
 
 export const appRouter = router({
   healthCheck: publicProcedure.query(async () => {
@@ -38,5 +39,6 @@ export const appRouter = router({
   kamar: kamarRouter,
   tarif: tarifRouter,
   stock: stockRouter,
+  obat: obatRouter,
 });
 export type AppRouter = typeof appRouter;
