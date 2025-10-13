@@ -58,6 +58,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { StockBangsalFilter } from "./stock-bangsal-filter";
 
 export type DatabarangData = {
   kode_brng: string;
@@ -199,12 +200,12 @@ export function StockDataTable({ data, loading }: StockDataTableProps) {
             color: "bg-green-500",
             Icon: <CheckCircle />,
           },
-          rendah: {
+          sedang: {
             message: "Pesan",
             color: "bg-amber-500",
             Icon: <ShoppingCart />,
           },
-          sedang: {
+          rendah: {
             message: "Segera Pesan",
             color: "bg-red-500",
             Icon: <Flame />,
@@ -288,6 +289,7 @@ export function StockDataTable({ data, loading }: StockDataTableProps) {
           <StockDateFilter />
           <LeadingTimeSelect />
           <StockStatusFilter />
+          <StockBangsalFilter />
         </div>
         <div className="flex items-center space-x-2">
           <DropdownMenu>

@@ -8,7 +8,7 @@ import {
 } from "@/db/schema";
 import { publicProcedure, router } from "@/lib/trpc";
 import { z } from "zod";
-import { eq, like } from "drizzle-orm";
+import { and, eq, like } from "drizzle-orm";
 
 const insertTarifSchema = z.object({
   kd_jenis_prw: z.string().max(15),
@@ -200,13 +200,26 @@ export const tarifRouter = router({
       return result;
     }),
 
-  resetAllStatus: publicProcedure.mutation(async () => {
-    const result = await db
-      .update(jns_perawatan)
-      .set({ status: "0" })
-      .where(eq(jns_perawatan.status, "1"));
-    return result;
-  }),
+  resetAllStatus: publicProcedure
+    .input(
+      z.object({
+        prefix: z.string().max(15).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const whereCondition = input.prefix
+        ? and(
+            eq(jns_perawatan.status, "1"),
+            like(jns_perawatan.kd_jenis_prw, `${input.prefix}%`)
+          )
+        : eq(jns_perawatan.status, "1");
+
+      const result = await db
+        .update(jns_perawatan)
+        .set({ status: "0" })
+        .where(whereCondition);
+      return result;
+    }),
 
   resetAllStatusInap: publicProcedure.mutation(async () => {
     const result = await db

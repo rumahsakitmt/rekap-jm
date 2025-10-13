@@ -5,7 +5,7 @@ import path from "node:path";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  base: "/rekap-jm/",
+  base: "/simrs/",
   plugins: [tailwindcss(), tanstackRouter({}), react()],
   resolve: {
     alias: {

@@ -11,13 +11,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { RotateCcw, AlertTriangle } from "lucide-react";
+import { RotateCcw, AlertTriangle, X } from "lucide-react";
 import { trpc } from "@/utils/trpc";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 
 export function ResetStatusDialog() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
+
+  const [prefix, setPrefix] = useState("");
 
   const resetMutation = useMutation({
     ...trpc.tarif.resetAllStatus.mutationOptions(),
@@ -30,7 +34,7 @@ export function ResetStatusDialog() {
   });
 
   const handleReset = () => {
-    resetMutation.mutate();
+    resetMutation.mutate({ prefix });
   };
 
   return (
@@ -48,13 +52,30 @@ export function ResetStatusDialog() {
             Reset Status Tarif
           </AlertDialogTitle>
           <AlertDialogDescription className="space-y-3">
-            <p>
-              Apakah Anda yakin ingin mereset semua status tarif? Tindakan ini
-              tidak dapat dibatalkan dan akan mempengaruhi semua data tarif
-              rawat jalan.
-            </p>
+            Apakah Anda yakin ingin mereset semua status tarif? Tindakan ini
+            tidak dapat dibatalkan dan akan mempengaruhi semua data tarif rawat
+            jalan.
           </AlertDialogDescription>
         </AlertDialogHeader>
+        <div className="flex items-center gap-2 w-full">
+          <Label className="uppercase">Prefix:</Label>
+          <div className="relative w-full">
+            <Input
+              type="text"
+              value={prefix}
+              placeholder="ex: R00"
+              onChange={(e) => setPrefix(e.target.value)}
+            />
+            {prefix && (
+              <button
+                onClick={() => setPrefix("")}
+                className="absolute right-0 top-0 translate-y-1/2 pr-2"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
         <AlertDialogFooter>
           <AlertDialogCancel>Batal</AlertDialogCancel>
           <AlertDialogAction

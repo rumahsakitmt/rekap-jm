@@ -28,13 +28,13 @@ export function StockStatusFilter() {
       color: "text-green-500 focus:text-emerald-600",
     },
     {
-      value: "rendah",
+      value: "sedang",
       label: "Pesan",
       Icon: <ShoppingCart className="text-amber-600" />,
       color: "text-amber-500 focus:text-amber-600",
     },
     {
-      value: "sedang",
+      value: "rendah",
       label: "Segera Pesan",
       Icon: <Flame className="text-red-600" />,
       color: "text-red-500 focus:text-red-600",

@@ -11,6 +11,7 @@ export const obatRouter = router({
         dateFrom: z.coerce.date(),
         dateTo: z.coerce.date(),
         leadingTime: z.string().optional().default("6"),
+        selectedBangsal: z.string().optional(),
       })
     )
     .query(async ({ input }) => {
@@ -48,10 +49,14 @@ export const obatRouter = router({
           databarang.h_beli,
           databarang.status
         )
-        .where(eq(databarang.status, "1"))
+        .where(
+          and(
+            eq(databarang.status, "1"),
+            eq(gudangbarang.kd_bangsal, input.selectedBangsal || "GF")
+          )
+        )
         .orderBy(asc(databarang.nama_brng));
 
-      // Calculate Smin and stock status for each result
       return results.map((row) => {
         const avgUsage = row.penggunaan || 0;
         const Smin = 2 * ((avgUsage / 30) * leadingTimeNumber);

@@ -8,7 +8,7 @@ import { queryClient, trpc } from "./utils/trpc";
 
 const router = createRouter({
   routeTree,
-  basepath: "/rekap-jm",
+  basepath: "/simrs",
   defaultPreload: "intent",
   defaultPendingComponent: () => <Loader />,
   context: { trpc, queryClient },

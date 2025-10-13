@@ -18,6 +18,7 @@ const stockSearchSchema = z.object({
   leadingTime: z.string().default("6"),
   status: z.string().optional(),
   pageSize: z.string().optional(),
+  selectedBangsal: z.string().optional(),
 });
 
 export const Route = createFileRoute("/obat/stok")({
@@ -26,12 +27,13 @@ export const Route = createFileRoute("/obat/stok")({
 });
 
 function RouteComponent() {
-  const { dateFrom, dateTo, leadingTime, status } = Route.useSearch();
+  const { dateFrom, dateTo, leadingTime, selectedBangsal } = Route.useSearch();
   const { data: databarang, isLoading } = useQuery(
     trpc.obat.getObat.queryOptions({
       dateFrom,
       dateTo,
       leadingTime,
+      selectedBangsal,
     })
   );
   const totalPenggunaan = databarang?.reduce(
