@@ -5,6 +5,7 @@ import {
   jns_perawatan_lab,
   jns_perawatan_radiologi,
   jns_perawatan_utd,
+  paketOperasi,
 } from "@/db/schema";
 import { publicProcedure, router } from "@/lib/trpc";
 import { z } from "zod";
@@ -117,6 +118,84 @@ const insertTarifUtdSchema = z.object({
   totalByr: z.number().optional(),
   kdPj: z.string().max(3).optional(),
   status: z.string().max(1).optional(),
+});
+
+const insertPaketOperasiSchema = z.object({
+  kodePaket: z.string().max(15),
+  nmPerawatan: z.string().max(80),
+  kategori: z.string().max(20),
+  operator1: z.number(),
+  operator2: z.number(),
+  operator3: z.number(),
+  asistenOperator1: z.number(),
+  asistenOperator2: z.number(),
+  asistenOperator3: z.number(),
+  instrumen: z.number(),
+  dokterAnak: z.number(),
+  perawaatResusitas: z.number(),
+  dokterAnestesi: z.number(),
+  asistenAnestesi: z.number(),
+  asistenAnestesi2: z.number(),
+  bidan: z.number(),
+  bidan2: z.number(),
+  bidan3: z.number(),
+  perawatLuar: z.number(),
+  sewaOk: z.number(),
+  alat: z.number(),
+  akomodasi: z.number(),
+  bagianRs: z.number(),
+  omloop: z.number(),
+  omloop2: z.number(),
+  omloop3: z.number(),
+  omloop4: z.number(),
+  omloop5: z.number(),
+  sarpras: z.number(),
+  dokterPjanak: z.number(),
+  dokterUmum: z.number(),
+  kdPj: z.string().max(3),
+  status: z.string().max(2),
+  kelas: z.string().max(20),
+});
+
+const updatePaketOperasiSchema = z.object({
+  kodePaket: z.string().max(15),
+  nmPerawatan: z.string().max(80).optional(),
+  kategori: z.string().max(20).optional(),
+  operator1: z.number().optional(),
+  operator2: z.number().optional(),
+  operator3: z.number().optional(),
+  asistenOperator1: z.number().optional(),
+  asistenOperator2: z.number().optional(),
+  asistenOperator3: z.number().optional(),
+  instrumen: z.number().optional(),
+  dokterAnak: z.number().optional(),
+  perawaatResusitas: z.number().optional(),
+  dokterAnestesi: z.number().optional(),
+  asistenAnestesi: z.number().optional(),
+  asistenAnestesi2: z.number().optional(),
+  bidan: z.number().optional(),
+  bidan2: z.number().optional(),
+  bidan3: z.number().optional(),
+  perawatLuar: z.number().optional(),
+  sewaOk: z.number().optional(),
+  alat: z.number().optional(),
+  akomodasi: z.number().optional(),
+  bagianRs: z.number().optional(),
+  omloop: z.number().optional(),
+  omloop2: z.number().optional(),
+  omloop3: z.number().optional(),
+  omloop4: z.number().optional(),
+  omloop5: z.number().optional(),
+  sarpras: z.number().optional(),
+  dokterPjanak: z.number().optional(),
+  dokterUmum: z.number().optional(),
+  kdPj: z.string().max(3).optional(),
+  status: z.string().max(2).optional(),
+  kelas: z.string().max(20).optional(),
+});
+
+const deletePaketOperasiSchema = z.object({
+  kodePaket: z.string().max(15),
 });
 
 export const tarifRouter = router({
@@ -356,6 +435,65 @@ export const tarifRouter = router({
 
       const result = await db
         .update(jns_perawatan_utd)
+        .set({ status: "0" })
+        .where(whereCondition);
+      return result;
+    }),
+
+  getPaketOperasi: publicProcedure.query(async () => {
+    const paket = db
+      .select()
+      .from(paketOperasi)
+      .where(eq(paketOperasi.status, "1"))
+      .limit(50);
+
+    return paket;
+  }),
+
+  insertPaketOperasi: publicProcedure
+    .input(insertPaketOperasiSchema)
+    .mutation(async ({ input }) => {
+      const result = await db.insert(paketOperasi).values(input);
+      return result;
+    }),
+
+  updatePaketOperasi: publicProcedure
+    .input(updatePaketOperasiSchema)
+    .mutation(async ({ input }) => {
+      const { kodePaket, ...updateData } = input;
+      const result = await db
+        .update(paketOperasi)
+        .set(updateData)
+        .where(eq(paketOperasi.kodePaket, kodePaket));
+      return result;
+    }),
+
+  deletePaketOperasi: publicProcedure
+    .input(deletePaketOperasiSchema)
+    .mutation(async ({ input }) => {
+      const result = await db
+        .update(paketOperasi)
+        .set({ status: "0" })
+        .where(eq(paketOperasi.kodePaket, input.kodePaket));
+      return result;
+    }),
+
+  resetAllStatusPaketOperasi: publicProcedure
+    .input(
+      z.object({
+        prefix: z.string().max(15).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const whereCondition = input.prefix
+        ? and(
+            eq(paketOperasi.status, "1"),
+            like(paketOperasi.kodePaket, `${input.prefix}%`)
+          )
+        : eq(paketOperasi.status, "1");
+
+      const result = await db
+        .update(paketOperasi)
         .set({ status: "0" })
         .where(whereCondition);
       return result;

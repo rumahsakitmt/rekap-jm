@@ -28,3 +28,4 @@ export { rawat_jl_drpr } from "./rawat_jl_drpr";
 export { databarang } from "./databarang";
 export { gudangbarang } from "./gudangbarang";
 export { detail_pemberian_obat } from "./detail_pemberian_obat";
+export { paketOperasi } from "./paket_operasi";

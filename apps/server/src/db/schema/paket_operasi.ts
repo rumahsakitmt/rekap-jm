@@ -1,0 +1,41 @@
+import { mysqlTable, varchar, double, char } from "drizzle-orm/mysql-core";
+
+export const paketOperasi = mysqlTable("paket_operasi", {
+  kodePaket: varchar("kode_paket", { length: 15 }).primaryKey(),
+  nmPerawatan: varchar("nm_perawatan", { length: 80 }).notNull(),
+  kategori: varchar("kategori", { length: 20 }).notNull(),
+  operator1: double("operator1").notNull(),
+  operator2: double("operator2").notNull(),
+  operator3: double("operator3").notNull(),
+  asistenOperator1: double("asisten_operator1").notNull(),
+  asistenOperator2: double("asisten_operator2").notNull(),
+  asistenOperator3: double("asisten_operator3").notNull(),
+  instrumen: double("instrumen").notNull(),
+  dokterAnak: double("dokter_anak").notNull(),
+  perawaatResusitas: double("perawaat_resusitas").notNull(),
+  dokterAnestesi: double("dokter_anestesi").notNull(),
+  asistenAnestesi: double("asisten_anestesi").notNull(),
+  asistenAnestesi2: double("asisten_anestesi2").notNull(),
+  bidan: double("bidan").notNull(),
+  bidan2: double("bidan2").notNull(),
+  bidan3: double("bidan3").notNull(),
+  perawatLuar: double("perawat_luar").notNull(),
+  sewaOk: double("sewa_ok").notNull(),
+  alat: double("alat").notNull(),
+  akomodasi: double("akomodasi").notNull(),
+  bagianRs: double("bagian_rs").notNull(),
+  omloop: double("omloop").notNull(),
+  omloop2: double("omloop2").notNull(),
+  omloop3: double("omloop3").notNull(),
+  omloop4: double("omloop4").notNull(),
+  omloop5: double("omloop5").notNull(),
+  sarpras: double("sarpras").notNull(),
+  dokterPjanak: double("dokter_pjanak").notNull(),
+  dokterUmum: double("dokter_umum").notNull(),
+  kdPj: char("kd_pj", { length: 3 }).notNull(),
+  status: varchar("status", { length: 2 }).notNull(),
+  kelas: varchar("kelas", { length: 20 }).notNull(),
+});
+
+export type PaketOperasi = typeof paketOperasi.$inferSelect;
+export type NewPaketOperasi = typeof paketOperasi.$inferInsert;
