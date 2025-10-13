@@ -27,7 +27,7 @@ function HomeComponent() {
       ],
     },
     {
-      title: "Obat",
+      title: "Farmasi",
       items: [{ to: "/obat/stok", label: "Stok Obat", Icon: Pill }],
     },
     {
@@ -58,7 +58,7 @@ function HomeComponent() {
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)] dark:bg-background"></div>
       <div className="text-center   p-4 space-y-8 z-20">
         <div className="flex items-center gap-2 justify-center">
-          <Flower className="text-primary" />
+          <Flower className="text-primary animate-spin" />
           <h1 className="text-2xl font-bold">
             SMART SIMRS{" "}
             <span className="text-primary font-normal italic">v1.0.0</span>
