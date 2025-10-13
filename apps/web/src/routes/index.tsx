@@ -7,6 +7,7 @@ import {
   Pill,
   Radiation,
   Flower,
+  Stethoscope,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -41,6 +42,7 @@ function HomeComponent() {
         { to: "/tarif/rawat-inap", label: "Rawat Inap", Icon: Bed },
         { to: "/tarif/lab", label: "Lab", Icon: FlaskConical },
         { to: "/tarif/radiologi", label: "Radiologi", Icon: Radiation },
+        { to: "/tarif/operasi", label: "Operasi", Icon: Stethoscope },
       ],
     },
   ] as const;

@@ -1,5 +1,12 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
-import { Footprints, Bed, FlaskConical, Radiation, Flower } from "lucide-react";
+import {
+  Footprints,
+  Bed,
+  FlaskConical,
+  Radiation,
+  Flower,
+  Stethoscope,
+} from "lucide-react";
 
 export const Route = createFileRoute("/tarif")({
   component: RouteComponent,
@@ -11,6 +18,7 @@ function RouteComponent() {
     { to: "/tarif/rawat-inap", label: "Rawat Inap", Icon: Bed },
     { to: "/tarif/lab", label: "Lab", Icon: FlaskConical },
     { to: "/tarif/radiologi", label: "Radiologi", Icon: Radiation },
+    { to: "/tarif/operasi", label: "Operasi", Icon: Stethoscope },
   ] as const;
 
   return (
@@ -18,7 +26,7 @@ function RouteComponent() {
       <div className="flex justify-between items-center gap-6">
         <Link to="/" className="flex items-center gap-2">
           <Flower />
-          <span>SMART SIMRS</span>
+          <span>SMART SIMRS | TARIF</span>
         </Link>
         <div className="flex items-center gap-4">
           {links.map(({ to, label, Icon }) => {

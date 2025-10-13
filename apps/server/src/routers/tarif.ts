@@ -221,13 +221,26 @@ export const tarifRouter = router({
       return result;
     }),
 
-  resetAllStatusInap: publicProcedure.mutation(async () => {
-    const result = await db
-      .update(jns_perawatan_inap)
-      .set({ status: "0" })
-      .where(eq(jns_perawatan_inap.status, "1"));
-    return result;
-  }),
+  resetAllStatusInap: publicProcedure
+    .input(
+      z.object({
+        prefix: z.string().max(15).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const whereCondition = input.prefix
+        ? and(
+            eq(jns_perawatan_inap.status, "1"),
+            like(jns_perawatan_inap.kd_jenis_prw, `${input.prefix}%`)
+          )
+        : eq(jns_perawatan_inap.status, "1");
+
+      const result = await db
+        .update(jns_perawatan_inap)
+        .set({ status: "0" })
+        .where(whereCondition);
+      return result;
+    }),
 
   deleteTarifTRJ: publicProcedure.mutation(async () => {
     const result = await db
@@ -260,13 +273,26 @@ export const tarifRouter = router({
       return result;
     }),
 
-  resetAllStatusLab: publicProcedure.mutation(async () => {
-    const result = await db
-      .update(jns_perawatan_lab)
-      .set({ status: "0" })
-      .where(eq(jns_perawatan_lab.status, "1"));
-    return result;
-  }),
+  resetAllStatusLab: publicProcedure
+    .input(
+      z.object({
+        prefix: z.string().max(15).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const whereCondition = input.prefix
+        ? and(
+            eq(jns_perawatan_lab.status, "1"),
+            like(jns_perawatan_lab.kdJenisPrw, `${input.prefix}%`)
+          )
+        : eq(jns_perawatan_lab.status, "1");
+
+      const result = await db
+        .update(jns_perawatan_lab)
+        .set({ status: "0" })
+        .where(whereCondition);
+      return result;
+    }),
 
   // Radiologi procedures
   getTarifRadiologi: publicProcedure.query(async () => {
@@ -285,13 +311,26 @@ export const tarifRouter = router({
       return result;
     }),
 
-  resetAllStatusRadiologi: publicProcedure.mutation(async () => {
-    const result = await db
-      .update(jns_perawatan_radiologi)
-      .set({ status: "0" })
-      .where(eq(jns_perawatan_radiologi.status, "1"));
-    return result;
-  }),
+  resetAllStatusRadiologi: publicProcedure
+    .input(
+      z.object({
+        prefix: z.string().max(15).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const whereCondition = input.prefix
+        ? and(
+            eq(jns_perawatan_radiologi.status, "1"),
+            like(jns_perawatan_radiologi.kd_jenis_prw, `${input.prefix}%`)
+          )
+        : eq(jns_perawatan_radiologi.status, "1");
+
+      const result = await db
+        .update(jns_perawatan_radiologi)
+        .set({ status: "0" })
+        .where(whereCondition);
+      return result;
+    }),
 
   // UTD procedures
   insertTarifUtd: publicProcedure
@@ -301,11 +340,24 @@ export const tarifRouter = router({
       return result;
     }),
 
-  resetAllStatusUtd: publicProcedure.mutation(async () => {
-    const result = await db
-      .update(jns_perawatan_utd)
-      .set({ status: "0" })
-      .where(eq(jns_perawatan_utd.status, "1"));
-    return result;
-  }),
+  resetAllStatusUtd: publicProcedure
+    .input(
+      z.object({
+        prefix: z.string().max(15).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const whereCondition = input.prefix
+        ? and(
+            eq(jns_perawatan_utd.status, "1"),
+            like(jns_perawatan_utd.kdJenisPrw, `${input.prefix}%`)
+          )
+        : eq(jns_perawatan_utd.status, "1");
+
+      const result = await db
+        .update(jns_perawatan_utd)
+        .set({ status: "0" })
+        .where(whereCondition);
+      return result;
+    }),
 });

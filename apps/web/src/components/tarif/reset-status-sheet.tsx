@@ -25,11 +25,12 @@ export function ResetStatusDialog() {
 
   const resetMutation = useMutation({
     ...trpc.tarif.resetAllStatus.mutationOptions(),
-    onSuccess: () => {
+    onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: trpc.tarif.getTarifRawatJalan.queryKey(),
       });
       setIsDialogOpen(false);
+      setPrefix("");
     },
   });
 

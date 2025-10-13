@@ -12,19 +12,24 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { RotateCcw, AlertTriangle } from "lucide-react";
+import { Label } from "../ui/label";
+import { Input } from "../ui/input";
 
 export function ResetStatusRadiologiSheet() {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
 
+  const [prefix, setPrefix] = useState("");
+
   const resetAllStatusRadiologi = useMutation({
     ...trpc.tarif.resetAllStatusRadiologi.mutationOptions(),
-    onSuccess: () => {
+    onSettled: () => {
       queryClient.invalidateQueries(
         trpc.tarif.getTarifRadiologi.queryOptions()
       );
       toast.success("Status semua tarif radiologi berhasil direset");
       setOpen(false);
+      setPrefix("");
     },
     onError: (error) => {
       toast.error(`Gagal mereset status: ${error.message}`);
@@ -32,7 +37,7 @@ export function ResetStatusRadiologiSheet() {
   });
 
   const handleReset = () => {
-    resetAllStatusRadiologi.mutate();
+    resetAllStatusRadiologi.mutate({ prefix });
   };
 
   return (
@@ -55,6 +60,17 @@ export function ResetStatusRadiologiSheet() {
             <br />
             <strong>Perhatian:</strong> Tindakan ini tidak dapat dibatalkan.
           </DialogDescription>
+          <div className="flex items-center gap-2 w-full">
+            <Label className="uppercase">Prefix:</Label>
+            <div className="relative w-full">
+              <Input
+                type="text"
+                value={prefix}
+                placeholder="ex: R00"
+                onChange={(e) => setPrefix(e.target.value)}
+              />
+            </div>
+          </div>
         </DialogHeader>
 
         <div className="flex justify-end space-x-2">

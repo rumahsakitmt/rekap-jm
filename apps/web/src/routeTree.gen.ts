@@ -20,6 +20,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TarifRawatJalanRouteImport } from './routes/tarif.rawat-jalan'
 import { Route as TarifRawatInapRouteImport } from './routes/tarif.rawat-inap'
 import { Route as TarifRadiologiRouteImport } from './routes/tarif.radiologi'
+import { Route as TarifOperasiRouteImport } from './routes/tarif.operasi'
 import { Route as TarifLabRouteImport } from './routes/tarif.lab'
 import { Route as RekapRawatJalanRouteImport } from './routes/rekap.rawat-jalan'
 import { Route as RekapRawatInapRouteImport } from './routes/rekap.rawat-inap'
@@ -81,6 +82,11 @@ const TarifRadiologiRoute = TarifRadiologiRouteImport.update({
   path: '/radiologi',
   getParentRoute: () => TarifRoute,
 } as any)
+const TarifOperasiRoute = TarifOperasiRouteImport.update({
+  id: '/operasi',
+  path: '/operasi',
+  getParentRoute: () => TarifRoute,
+} as any)
 const TarifLabRoute = TarifLabRouteImport.update({
   id: '/lab',
   path: '/lab',
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/rekap/rawat-inap': typeof RekapRawatInapRoute
   '/rekap/rawat-jalan': typeof RekapRawatJalanRoute
   '/tarif/lab': typeof TarifLabRoute
+  '/tarif/operasi': typeof TarifOperasiRoute
   '/tarif/radiologi': typeof TarifRadiologiRoute
   '/tarif/rawat-inap': typeof TarifRawatInapRoute
   '/tarif/rawat-jalan': typeof TarifRawatJalanRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/rekap/rawat-inap': typeof RekapRawatInapRoute
   '/rekap/rawat-jalan': typeof RekapRawatJalanRoute
   '/tarif/lab': typeof TarifLabRoute
+  '/tarif/operasi': typeof TarifOperasiRoute
   '/tarif/radiologi': typeof TarifRadiologiRoute
   '/tarif/rawat-inap': typeof TarifRawatInapRoute
   '/tarif/rawat-jalan': typeof TarifRawatJalanRoute
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/rekap/rawat-inap': typeof RekapRawatInapRoute
   '/rekap/rawat-jalan': typeof RekapRawatJalanRoute
   '/tarif/lab': typeof TarifLabRoute
+  '/tarif/operasi': typeof TarifOperasiRoute
   '/tarif/radiologi': typeof TarifRadiologiRoute
   '/tarif/rawat-inap': typeof TarifRawatInapRoute
   '/tarif/rawat-jalan': typeof TarifRawatJalanRoute
@@ -178,6 +187,7 @@ export interface FileRouteTypes {
     | '/rekap/rawat-inap'
     | '/rekap/rawat-jalan'
     | '/tarif/lab'
+    | '/tarif/operasi'
     | '/tarif/radiologi'
     | '/tarif/rawat-inap'
     | '/tarif/rawat-jalan'
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/rekap/rawat-inap'
     | '/rekap/rawat-jalan'
     | '/tarif/lab'
+    | '/tarif/operasi'
     | '/tarif/radiologi'
     | '/tarif/rawat-inap'
     | '/tarif/rawat-jalan'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/rekap/rawat-inap'
     | '/rekap/rawat-jalan'
     | '/tarif/lab'
+    | '/tarif/operasi'
     | '/tarif/radiologi'
     | '/tarif/rawat-inap'
     | '/tarif/rawat-jalan'
@@ -309,6 +321,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TarifRadiologiRouteImport
       parentRoute: typeof TarifRoute
     }
+    '/tarif/operasi': {
+      id: '/tarif/operasi'
+      path: '/operasi'
+      fullPath: '/tarif/operasi'
+      preLoaderRoute: typeof TarifOperasiRouteImport
+      parentRoute: typeof TarifRoute
+    }
     '/tarif/lab': {
       id: '/tarif/lab'
       path: '/lab'
@@ -373,6 +392,7 @@ const RekapRouteWithChildren = RekapRoute._addFileChildren(RekapRouteChildren)
 
 interface TarifRouteChildren {
   TarifLabRoute: typeof TarifLabRoute
+  TarifOperasiRoute: typeof TarifOperasiRoute
   TarifRadiologiRoute: typeof TarifRadiologiRoute
   TarifRawatInapRoute: typeof TarifRawatInapRoute
   TarifRawatJalanRoute: typeof TarifRawatJalanRoute
@@ -380,6 +400,7 @@ interface TarifRouteChildren {
 
 const TarifRouteChildren: TarifRouteChildren = {
   TarifLabRoute: TarifLabRoute,
+  TarifOperasiRoute: TarifOperasiRoute,
   TarifRadiologiRoute: TarifRadiologiRoute,
   TarifRawatInapRoute: TarifRawatInapRoute,
   TarifRawatJalanRoute: TarifRawatJalanRoute,

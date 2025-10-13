@@ -14,23 +14,28 @@ import {
 import { RotateCcw, AlertTriangle } from "lucide-react";
 import { trpc } from "@/utils/trpc";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Label } from "../ui/label";
+import { Input } from "../ui/input";
 
 export function ResetStatusInapDialog() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
+  const [prefix, setPrefix] = useState("");
+
   const resetMutation = useMutation({
     ...trpc.tarif.resetAllStatusInap.mutationOptions(),
-    onSuccess: () => {
+    onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: trpc.tarif.getTarifRawatInap.queryKey(),
       });
       setIsDialogOpen(false);
+      setPrefix("");
     },
   });
 
   const handleReset = () => {
-    resetMutation.mutate();
+    resetMutation.mutate({ prefix });
   };
 
   return (
@@ -53,6 +58,17 @@ export function ResetStatusInapDialog() {
               tidak dapat dibatalkan dan akan mempengaruhi semua data tarif
               rawat inap.
             </p>
+            <div className="flex items-center gap-2 w-full">
+              <Label className="uppercase">Prefix:</Label>
+              <div className="relative w-full">
+                <Input
+                  type="text"
+                  value={prefix}
+                  placeholder="ex: R00"
+                  onChange={(e) => setPrefix(e.target.value)}
+                />
+              </div>
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
