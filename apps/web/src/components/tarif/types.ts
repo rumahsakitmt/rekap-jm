@@ -1,0 +1,106 @@
+export type TarifRawatJalanData = {
+  kd_jenis_prw: string;
+  nm_perawatan: string | null;
+  kd_kategori: string | null;
+  material: number | null;
+  bhp: number | null;
+  tarif_tindakandr: number | null;
+  tarif_tindakanpr: number | null;
+  kso: number | null;
+  menejemen: number | null;
+  total_byrdr: number | null;
+  total_byrpr: number | null;
+  total_byrdrpr: number | null;
+  kd_pj: string | null;
+  kd_poli: string | null;
+  status: string | null;
+};
+
+export type TarifRawatInapData = {
+  kd_jenis_prw: string;
+  nm_perawatan: string | null;
+  kd_kategori: string | null;
+  material: number | null;
+  bhp: number | null;
+  tarif_tindakandr: number | null;
+  tarif_tindakanpr: number | null;
+  kso: number | null;
+  menejemen: number | null;
+  total_byrdr: number | null;
+  total_byrpr: number | null;
+  total_byrdrpr: number | null;
+  kd_pj: string | null;
+  kd_bangsal: string | null;
+  status: string | null;
+  kelas: string | null;
+};
+
+export type TarifLabData = {
+  kdJenisPrw: string;
+  nmPerawatan: string | null;
+  bagianRs: number | null;
+  bhp: number | null;
+  tarifPerujuk: number | null;
+  tarifTindakanDokter: number | null;
+  tarifTindakanPetugas: number | null;
+  kso: number | null;
+  menejemen: number | null;
+  totalByr: number | null;
+  kdPj: string | null;
+  status: string | null;
+  kelas: string | null;
+  kategori: string | null;
+};
+
+export type TarifRadiologiData = {
+  kd_jenis_prw: string;
+  nm_perawatan: string | null;
+  bagian_rs: number | null;
+  bhp: number | null;
+  tarif_perujuk: number | null;
+  tarif_tindakan_dokter: number | null;
+  tarif_tindakan_petugas: number | null;
+  kso: number | null;
+  menejemen: number | null;
+  total_byr: number | null;
+  kd_pj: string | null;
+  status: string | null;
+  kelas: string | null;
+};
+
+export type PaketOperasiData = {
+  kodePaket: string;
+  nmPerawatan: string;
+  kategori: string;
+  operator1: number;
+  operator2: number;
+  operator3: number;
+  asistenOperator1: number;
+  asistenOperator2: number;
+  asistenOperator3: number;
+  instrumen: number;
+  dokterAnak: number;
+  perawaatResusitas: number;
+  dokterAnestesi: number;
+  asistenAnestesi: number;
+  asistenAnestesi2: number;
+  bidan: number;
+  bidan2: number;
+  bidan3: number;
+  perawatLuar: number;
+  sewaOk: number;
+  alat: number;
+  akomodasi: number;
+  bagianRs: number;
+  omloop: number;
+  omloop2: number;
+  omloop3: number;
+  omloop4: number;
+  omloop5: number;
+  sarpras: number;
+  dokterPjanak: number;
+  dokterUmum: number;
+  kdPj: string;
+  status: string;
+  kelas: string;
+};
