@@ -26,7 +26,7 @@ function RouteComponent() {
       <div className="flex justify-between items-center gap-6">
         <Link to="/" className="flex items-center gap-2">
           <Flower />
-          <span>SMART SIMRS | TARIF</span>
+          <span>SMART SIMRS</span>
         </Link>
         <div className="flex items-center gap-4">
           {links.map(({ to, label, Icon }) => {

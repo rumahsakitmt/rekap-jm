@@ -33,6 +33,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import Papa from "papaparse";
 import { queryClient, trpc } from "@/utils/trpc";
 import { useMutation } from "@tanstack/react-query";
+import PaketOperasiForm from "./paket-operasi-form";
 
 interface PaketOperasiData {
   kodePaket: string;
@@ -277,121 +278,109 @@ export const PaketOperasiUploadSheet = () => {
           Upload Paket Operasi CSV
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[600px] sm:w-[700px]">
+      <SheetContent className="sm:max-w-xl">
         <SheetHeader>
           <SheetTitle>Upload Paket Operasi CSV</SheetTitle>
           <SheetDescription>
             Upload a CSV file with paket operasi data to import into the system.
-            The CSV should contain columns: kodePaket, nmPerawatan, kategori,
-            operator1, operator2, operator3, asistenOperator1, asistenOperator2,
-            asistenOperator3, instrumen, dokterAnak, perawaatResusitas,
-            dokterAnestesi, asistenAnestesi, asistenAnestesi2, bidan, bidan2,
-            bidan3, perawatLuar, sewaOk, alat, akomodasi, bagianRs, omloop,
-            omloop2, omloop3, omloop4, omloop5, sarpras, dokterPjanak,
-            dokterUmum, kdPj, status, kelas
           </SheetDescription>
         </SheetHeader>
 
-        <div className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                CSV Import
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="csv-file">Upload CSV File</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    ref={fileInputRef}
-                    id="csv-file"
-                    type="file"
-                    accept=".csv"
-                    onChange={handleFileChange}
-                    className="flex-1"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Upload className="h-4 w-4" />
-                  </Button>
+        <div className="p-4 space-y-4">
+          <div className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            CSV Import
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="csv-file">Upload CSV File</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                ref={fileInputRef}
+                id="csv-file"
+                type="file"
+                accept=".csv"
+                onChange={handleFileChange}
+                className="flex-1"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {success && (
+            <Alert>
+              <CheckCircle className="h-4 w-4" />
+              <AlertDescription>{success}</AlertDescription>
+            </Alert>
+          )}
+
+          <div className="flex gap-2">
+            <Button
+              onClick={handleParseCSV}
+              className="flex-1"
+              disabled={!file || uploading}
+            >
+              {uploading ? "Parsing..." : "Parse CSV file"}
+            </Button>
+
+            {parsedData.length > 0 && (
+              <Button
+                onClick={() => setShowAnalysis(!showAnalysis)}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <BarChart3 className="h-4 w-4" />
+                {showAnalysis ? "Hide" : "Show"} Analysis
+              </Button>
+            )}
+          </div>
+
+          {parsedData.length > 0 && (
+            <div className="flex gap-2">
+              <Button
+                onClick={handleInsertData}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+                disabled={inserting}
+              >
+                <Database className="h-4 w-4 mr-2" />
+                {inserting
+                  ? "Inserting..."
+                  : `Insert ${parsedData.length} Records`}
+              </Button>
+            </div>
+          )}
+
+          {showAnalysis && parsedData.length > 0 && (
+            <div className="mt-4 p-4 border rounded-lg bg-muted/50">
+              <h4 className="font-semibold mb-2">CSV Analysis</h4>
+              <div className="space-y-1 text-sm">
+                <p>
+                  <strong>Total Records:</strong> {parsedData.length}
+                </p>
+                <p>
+                  <strong>Sample Data:</strong>
+                </p>
+                <div className="max-h-40 overflow-y-auto">
+                  <pre className="text-xs bg-background p-2 rounded border">
+                    {JSON.stringify(parsedData.slice(0, 3), null, 2)}
+                  </pre>
                 </div>
               </div>
-
-              {error && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
-              {success && (
-                <Alert>
-                  <CheckCircle className="h-4 w-4" />
-                  <AlertDescription>{success}</AlertDescription>
-                </Alert>
-              )}
-
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleParseCSV}
-                  className="flex-1"
-                  disabled={!file || uploading}
-                >
-                  {uploading ? "Parsing..." : "Parse CSV file"}
-                </Button>
-
-                {parsedData.length > 0 && (
-                  <Button
-                    onClick={() => setShowAnalysis(!showAnalysis)}
-                    variant="outline"
-                    className="flex items-center gap-2"
-                  >
-                    <BarChart3 className="h-4 w-4" />
-                    {showAnalysis ? "Hide" : "Show"} Analysis
-                  </Button>
-                )}
-              </div>
-
-              {parsedData.length > 0 && (
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleInsertData}
-                    className="flex-1 bg-green-600 hover:bg-green-700"
-                    disabled={inserting}
-                  >
-                    <Database className="h-4 w-4 mr-2" />
-                    {inserting
-                      ? "Inserting..."
-                      : `Insert ${parsedData.length} Records`}
-                  </Button>
-                </div>
-              )}
-
-              {showAnalysis && parsedData.length > 0 && (
-                <div className="mt-4 p-4 border rounded-lg bg-muted/50">
-                  <h4 className="font-semibold mb-2">CSV Analysis</h4>
-                  <div className="space-y-1 text-sm">
-                    <p>
-                      <strong>Total Records:</strong> {parsedData.length}
-                    </p>
-                    <p>
-                      <strong>Sample Data:</strong>
-                    </p>
-                    <div className="max-h-40 overflow-y-auto">
-                      <pre className="text-xs bg-background p-2 rounded border">
-                        {JSON.stringify(parsedData.slice(0, 3), null, 2)}
-                      </pre>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            </div>
+          )}
         </div>
       </SheetContent>
 
