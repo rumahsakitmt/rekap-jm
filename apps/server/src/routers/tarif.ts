@@ -9,7 +9,7 @@ import {
 } from "@/db/schema";
 import { publicProcedure, router } from "@/lib/trpc";
 import { z } from "zod";
-import { and, eq, like } from "drizzle-orm";
+import { and, desc, eq, like } from "drizzle-orm";
 
 const insertTarifSchema = z.object({
   kd_jenis_prw: z.string().max(15),
@@ -122,7 +122,7 @@ const insertTarifUtdSchema = z.object({
 
 const insertPaketOperasiSchema = z.object({
   kodePaket: z.string().max(15),
-  nmPerawatan: z.string().max(80),
+  nmPerawatan: z.string().max(200),
   kategori: z.string().max(20),
   operator1: z.number(),
   operator2: z.number(),
@@ -441,18 +441,32 @@ export const tarifRouter = router({
     }),
 
   getPaketOperasi: publicProcedure.query(async () => {
-    const paket = db
+    const paket = await db
       .select()
       .from(paketOperasi)
-      .where(eq(paketOperasi.status, "1"))
+      .where(and(eq(paketOperasi.status, "1")))
       .limit(50);
 
+    console.log(paket.length);
     return paket;
   }),
 
   insertPaketOperasi: publicProcedure
     .input(insertPaketOperasiSchema)
     .mutation(async ({ input }) => {
+      const existing = await db
+        .select()
+        .from(paketOperasi)
+        .where(eq(paketOperasi.kodePaket, input.kodePaket))
+        .limit(1);
+
+      if (existing.length > 0) {
+        return {
+          skipped: true,
+          message: `Paket with kodePaket ${input.kodePaket} already exists`,
+        };
+      }
+
       const result = await db.insert(paketOperasi).values(input);
       return result;
     }),

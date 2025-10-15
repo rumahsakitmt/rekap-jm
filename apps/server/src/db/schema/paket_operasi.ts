@@ -2,7 +2,7 @@ import { mysqlTable, varchar, double, char } from "drizzle-orm/mysql-core";
 
 export const paketOperasi = mysqlTable("paket_operasi", {
   kodePaket: varchar("kode_paket", { length: 15 }).primaryKey(),
-  nmPerawatan: varchar("nm_perawatan", { length: 80 }).notNull(),
+  nmPerawatan: varchar("nm_perawatan", { length: 200 }).notNull(),
   kategori: varchar("kategori", { length: 20 }).notNull(),
   operator1: double("operator1").notNull(),
   operator2: double("operator2").notNull(),
