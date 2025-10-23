@@ -21,6 +21,7 @@ export const obatRouter = router({
         .select({
           kode_brng: databarang.kode_brng,
           nama_brng: databarang.nama_brng,
+          expire: databarang.expire,
           h_beli: databarang.h_beli,
           status: databarang.status,
           stok: gudangbarang.stok,

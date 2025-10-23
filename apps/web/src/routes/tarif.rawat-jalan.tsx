@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { JnsPerawatanUploadSheet } from "@/components/tarif/jns-perawatan-upload-sheet";
 import { ResetStatusDialog } from "@/components/tarif/reset-status-sheet";
 import { Footprints } from "lucide-react";
+import Search from "@/components/tarif/search";
 
 export const Route = createFileRoute("/tarif/rawat-jalan")({
   component: RouteComponent,
@@ -64,6 +65,7 @@ function RouteComponent() {
           <ResetStatusDialog />
         </div>
       </div>
+      <Search />
 
       <TarifTable
         columns={columns}

@@ -35,9 +35,6 @@ import { cn } from "@/lib/utils";
 import {
   Columns,
   Search,
-  Package,
-  TrendingUp,
-  DollarSign,
   CheckCircle,
   ShoppingCart,
   Flame,
@@ -59,10 +56,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StockBangsalFilter } from "./stock-bangsal-filter";
+import { differenceInDays, format } from "date-fns";
+import { id } from "date-fns/locale";
 
 export type DatabarangData = {
   kode_brng: string;
   nama_brng: string | null;
+  expire: string | null;
   h_beli: number | null;
   stok: number | null;
   status: string;
@@ -131,6 +131,53 @@ export function StockDataTable({ data, loading }: StockDataTableProps) {
       cell: ({ row }) => {
         const nama = row.getValue("nama_brng") as string;
         return <div className=" font-medium">{nama || "-"}</div>;
+      },
+    },
+    {
+      accessorKey: "expire",
+      header: ({ column }) => (
+        <SortableHeader column={column} title="Tanggal Kadaluwarsa" />
+      ),
+      cell: ({ row }) => {
+        const expire = row.getValue("expire") as string;
+        const differentInMonth = Math.round(
+          differenceInDays(new Date(expire), new Date()) / 30
+        );
+
+        const getStatus = (months: number) => {
+          if (months <= 0) return "merah";
+          if (months <= 12) return "kuning";
+          return "hijau";
+        };
+
+        const status = getStatus(differentInMonth);
+
+        const statusConfig = {
+          hijau: {
+            color: "text-green-500",
+            message: "Expired (diatas 12 bulan)",
+          },
+          kuning: {
+            color: "text-amber-500",
+            message: "Expired (7-12 bulan)",
+          },
+          merah: { color: "text-red-500", message: "Expired (1-6 bulan)" },
+        } as const;
+
+        return (
+          <div
+            className={cn(
+              "font-medium text-end",
+
+              statusConfig[status as keyof typeof statusConfig]?.color
+            )}
+          >
+            <div className={cn("text-xs")}>
+              {statusConfig[status as keyof typeof statusConfig]?.message}
+            </div>
+            <div>{format(new Date(expire), "PPP", { locale: id }) || "-"}</div>
+          </div>
+        );
       },
     },
     {
