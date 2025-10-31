@@ -26,7 +26,7 @@ export function SortableHeader({
     >
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost">
+          <Button variant="ghost" className="uppercase">
             {title}
             {column.getIsSorted() === "desc" ? (
               <ArrowDown />

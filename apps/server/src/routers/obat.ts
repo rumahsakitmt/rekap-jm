@@ -1,15 +1,16 @@
 import { router, publicProcedure } from "../lib/trpc";
 import { db } from "../db";
 import { databarang, detail_pemberian_obat, gudangbarang } from "@/db/schema";
-import { eq, sql, desc, asc, gte, lte, and } from "drizzle-orm";
+import { eq, sql, asc, gte, lte, and } from "drizzle-orm";
 import { z } from "zod";
+import { differenceInMonths, startOfDay } from "date-fns";
 
 export const obatRouter = router({
   getObat: publicProcedure
     .input(
       z.object({
-        dateFrom: z.coerce.date(),
-        dateTo: z.coerce.date(),
+        dateFrom: z.coerce.date().optional(),
+        dateTo: z.coerce.date().optional(),
         leadingTime: z.string().optional().default("6"),
         selectedBangsal: z.string().optional(),
       })
@@ -35,8 +36,12 @@ export const obatRouter = router({
         .leftJoin(
           detail_pemberian_obat,
           and(
-            gte(detail_pemberian_obat.tgl_perawatan, input.dateFrom),
-            lte(detail_pemberian_obat.tgl_perawatan, input.dateTo),
+            input.dateFrom
+              ? gte(detail_pemberian_obat.tgl_perawatan, input.dateFrom)
+              : undefined,
+            input.dateTo
+              ? lte(detail_pemberian_obat.tgl_perawatan, input.dateTo)
+              : undefined,
             eq(databarang.kode_brng, detail_pemberian_obat.kode_brng)
           )
         )
@@ -48,7 +53,8 @@ export const obatRouter = router({
           databarang.kode_brng,
           databarang.nama_brng,
           databarang.h_beli,
-          databarang.status
+          databarang.status,
+          databarang.expire
         )
         .where(
           and(
@@ -63,6 +69,30 @@ export const obatRouter = router({
         const Smin = 2 * ((avgUsage / 30) * leadingTimeNumber);
         const stok = row.stok || 0;
 
+        const rawExpire = row.expire as unknown as string | Date | null;
+        const parsedExpire = rawExpire ? new Date(rawExpire as any) : null;
+        const isValidExpire = !!(
+          parsedExpire && !isNaN(parsedExpire.getTime())
+        );
+
+        const isEpoch = isValidExpire && parsedExpire!.getTime() === 0;
+
+        const today = startOfDay(new Date());
+        const daysUntilExpire =
+          isValidExpire && !isEpoch
+            ? differenceInMonths(parsedExpire!, today)
+            : -999;
+
+        const monthsUntilExpire =
+          daysUntilExpire >= 0 ? Math.floor(daysUntilExpire) : -1;
+
+        const getStatus = (months: number, days: number) => {
+          if (days < 0) return "merah";
+          if (months < 6) return "merah";
+          if (months <= 12) return "kuning";
+          return "hijau";
+        };
+
         let stockStatus = "sehat";
         if (stok < Smin) {
           stockStatus = "rendah";
@@ -74,6 +104,7 @@ export const obatRouter = router({
           ...row,
           smin: Smin,
           stockStatus,
+          expireStatus: getStatus(monthsUntilExpire, daysUntilExpire),
         };
       });
     }),

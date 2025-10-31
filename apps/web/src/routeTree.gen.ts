@@ -25,6 +25,7 @@ import { Route as TarifLabRouteImport } from './routes/tarif.lab'
 import { Route as RekapRawatJalanRouteImport } from './routes/rekap.rawat-jalan'
 import { Route as RekapRawatInapRouteImport } from './routes/rekap.rawat-inap'
 import { Route as ObatStokRouteImport } from './routes/obat.stok'
+import { Route as ObatKadaluwarsaRouteImport } from './routes/obat.kadaluwarsa'
 import { Route as ObatDashboardRouteImport } from './routes/obat.dashboard'
 
 const TarifRoute = TarifRouteImport.update({
@@ -107,6 +108,11 @@ const ObatStokRoute = ObatStokRouteImport.update({
   path: '/stok',
   getParentRoute: () => ObatRoute,
 } as any)
+const ObatKadaluwarsaRoute = ObatKadaluwarsaRouteImport.update({
+  id: '/kadaluwarsa',
+  path: '/kadaluwarsa',
+  getParentRoute: () => ObatRoute,
+} as any)
 const ObatDashboardRoute = ObatDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/report-rawat-jalan': typeof ReportRawatJalanRoute
   '/tarif': typeof TarifRouteWithChildren
   '/obat/dashboard': typeof ObatDashboardRoute
+  '/obat/kadaluwarsa': typeof ObatKadaluwarsaRoute
   '/obat/stok': typeof ObatStokRoute
   '/rekap/rawat-inap': typeof RekapRawatInapRoute
   '/rekap/rawat-jalan': typeof RekapRawatJalanRoute
@@ -142,6 +149,7 @@ export interface FileRoutesByTo {
   '/report-rawat-jalan': typeof ReportRawatJalanRoute
   '/tarif': typeof TarifRouteWithChildren
   '/obat/dashboard': typeof ObatDashboardRoute
+  '/obat/kadaluwarsa': typeof ObatKadaluwarsaRoute
   '/obat/stok': typeof ObatStokRoute
   '/rekap/rawat-inap': typeof RekapRawatInapRoute
   '/rekap/rawat-jalan': typeof RekapRawatJalanRoute
@@ -162,6 +170,7 @@ export interface FileRoutesById {
   '/report-rawat-jalan': typeof ReportRawatJalanRoute
   '/tarif': typeof TarifRouteWithChildren
   '/obat/dashboard': typeof ObatDashboardRoute
+  '/obat/kadaluwarsa': typeof ObatKadaluwarsaRoute
   '/obat/stok': typeof ObatStokRoute
   '/rekap/rawat-inap': typeof RekapRawatInapRoute
   '/rekap/rawat-jalan': typeof RekapRawatJalanRoute
@@ -183,6 +192,7 @@ export interface FileRouteTypes {
     | '/report-rawat-jalan'
     | '/tarif'
     | '/obat/dashboard'
+    | '/obat/kadaluwarsa'
     | '/obat/stok'
     | '/rekap/rawat-inap'
     | '/rekap/rawat-jalan'
@@ -202,6 +212,7 @@ export interface FileRouteTypes {
     | '/report-rawat-jalan'
     | '/tarif'
     | '/obat/dashboard'
+    | '/obat/kadaluwarsa'
     | '/obat/stok'
     | '/rekap/rawat-inap'
     | '/rekap/rawat-jalan'
@@ -221,6 +232,7 @@ export interface FileRouteTypes {
     | '/report-rawat-jalan'
     | '/tarif'
     | '/obat/dashboard'
+    | '/obat/kadaluwarsa'
     | '/obat/stok'
     | '/rekap/rawat-inap'
     | '/rekap/rawat-jalan'
@@ -356,6 +368,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ObatStokRouteImport
       parentRoute: typeof ObatRoute
     }
+    '/obat/kadaluwarsa': {
+      id: '/obat/kadaluwarsa'
+      path: '/kadaluwarsa'
+      fullPath: '/obat/kadaluwarsa'
+      preLoaderRoute: typeof ObatKadaluwarsaRouteImport
+      parentRoute: typeof ObatRoute
+    }
     '/obat/dashboard': {
       id: '/obat/dashboard'
       path: '/dashboard'
@@ -368,11 +387,13 @@ declare module '@tanstack/react-router' {
 
 interface ObatRouteChildren {
   ObatDashboardRoute: typeof ObatDashboardRoute
+  ObatKadaluwarsaRoute: typeof ObatKadaluwarsaRoute
   ObatStokRoute: typeof ObatStokRoute
 }
 
 const ObatRouteChildren: ObatRouteChildren = {
   ObatDashboardRoute: ObatDashboardRoute,
+  ObatKadaluwarsaRoute: ObatKadaluwarsaRoute,
   ObatStokRoute: ObatStokRoute,
 }
 

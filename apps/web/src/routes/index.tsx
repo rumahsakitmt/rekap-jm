@@ -8,6 +8,7 @@ import {
   Radiation,
   Flower,
   Stethoscope,
+  ClockAlert,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -29,7 +30,14 @@ function HomeComponent() {
     },
     {
       title: "Farmasi",
-      items: [{ to: "/obat/stok", label: "Stok Obat", Icon: Pill }],
+      items: [
+        { to: "/obat/stok", label: "Stok Obat", Icon: Pill },
+        {
+          to: "/obat/kadaluwarsa",
+          label: "Kadaluwarsa",
+          Icon: ClockAlert,
+        },
+      ],
     },
     {
       title: "Tarif",

@@ -15,14 +15,6 @@ import {
 } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Table,
   TableBody,
   TableCell,
@@ -32,21 +24,11 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import {
-  Columns,
-  Search,
-  CheckCircle,
-  ShoppingCart,
-  Flame,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SortableHeader } from "@/components/ui/sortable-header";
 
-import { StockDateFilter } from "./stock-date-filter";
-import { StockStatusFilter } from "./stock-status-filter";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import LeadingTimeSelect from "./leading-time-select";
 import { Label } from "../ui/label";
 import {
   Select,
@@ -55,9 +37,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { StockBangsalFilter } from "./stock-bangsal-filter";
 import { differenceInDays, format } from "date-fns";
 import { id } from "date-fns/locale";
+import { ExpireStatusFilter } from "./expire-status-filter";
 
 export type DatabarangData = {
   kode_brng: string;
@@ -73,6 +55,7 @@ export type DatabarangData = {
   total_harga: number;
   smin: number;
   stockStatus: string;
+  expireStatus: string;
 };
 
 interface StockDataTableProps {
@@ -80,7 +63,7 @@ interface StockDataTableProps {
   loading?: boolean;
 }
 
-export function StockDataTable({ data, loading }: StockDataTableProps) {
+export function KadaluwarsaDataTable({ data, loading }: StockDataTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -90,8 +73,7 @@ export function StockDataTable({ data, loading }: StockDataTableProps) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [globalFilter, setGlobalFilter] = React.useState("");
 
-  // Get search params from route
-  const route = getRouteApi("/obat/stok");
+  const route = getRouteApi("/obat/kadaluwarsa");
   const { status, pageSize: searchPageSize } = route.useSearch();
   const navigate = useNavigate();
 
@@ -99,16 +81,15 @@ export function StockDataTable({ data, loading }: StockDataTableProps) {
     parseInt(searchPageSize || "25")
   );
 
-  // Apply status filter
   React.useEffect(() => {
     if (status) {
       setColumnFilters((prev) => {
-        const existing = prev.filter((filter) => filter.id !== "stockStatus");
-        return [...existing, { id: "stockStatus", value: status }];
+        const existing = prev.filter((filter) => filter.id !== "expireStatus");
+        return [...existing, { id: "expireStatus", value: status }];
       });
     } else {
       setColumnFilters((prev) =>
-        prev.filter((filter) => filter.id !== "stockStatus")
+        prev.filter((filter) => filter.id !== "expireStatus")
       );
     }
   }, [status]);
@@ -116,7 +97,7 @@ export function StockDataTable({ data, loading }: StockDataTableProps) {
   const columns: ColumnDef<DatabarangData>[] = [
     {
       accessorKey: "kode_brng",
-      header: "Kode Barang",
+      header: "KODE BARANG",
       cell: ({ row }) => (
         <div className="font-mono text-sm font-medium">
           {row.getValue("kode_brng")}
@@ -134,72 +115,6 @@ export function StockDataTable({ data, loading }: StockDataTableProps) {
       },
     },
     {
-      accessorKey: "expire",
-      header: ({ column }) => (
-        <SortableHeader column={column} title="Tanggal Kadaluwarsa" />
-      ),
-      cell: ({ row }) => {
-        const expire = row.getValue("expire") as string;
-        const differentInMonth = Math.round(
-          differenceInDays(new Date(expire), new Date()) / 30
-        );
-
-        const getStatus = (months: number) => {
-          if (months < 6) return "merah";
-          if (months <= 12) return "kuning";
-          return "hijau";
-        };
-
-        const status = getStatus(differentInMonth);
-
-        const statusConfig = {
-          hijau: {
-            color: "text-green-500",
-            message: "Expired (diatas 12 bulan)",
-          },
-          kuning: {
-            color: "text-amber-500",
-            message: "Expired (6-12 bulan)",
-          },
-          merah: { color: "text-red-500", message: "Expired (< 6 bulan)" },
-        } as const;
-
-        return (
-          <div
-            className={cn(
-              "font-medium text-end",
-
-              statusConfig[status as keyof typeof statusConfig]?.color
-            )}
-          >
-            <div className={cn("text-xs")}>
-              {statusConfig[status as keyof typeof statusConfig]?.message}
-            </div>
-            <div>{format(new Date(expire), "PPP", { locale: id }) || "-"}</div>
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "h_beli",
-      header: "Harga Beli",
-      cell: ({ row }) => {
-        const harga = row.getValue("h_beli") as number;
-        return (
-          <div className="text-right">
-            {harga ? (
-              <span className="font-mono text-sm">
-                Rp {harga.toLocaleString("id-ID")}
-              </span>
-            ) : (
-              "-"
-            )}
-          </div>
-        );
-      },
-    },
-
-    {
       accessorKey: "stok",
       header: ({ column }) => <SortableHeader column={column} title="Stok" />,
       cell: ({ row }) => {
@@ -208,74 +123,43 @@ export function StockDataTable({ data, loading }: StockDataTableProps) {
       },
     },
     {
-      accessorKey: "penggunaan",
+      accessorKey: "expire",
       header: ({ column }) => (
-        <SortableHeader column={column} title="Penggunaan" />
+        <SortableHeader column={column} title="Tanggal Kadaluwarsa" />
       ),
       cell: ({ row }) => {
-        const penggunaan = row.getValue("penggunaan") as number;
-        return <div className="text-center">{penggunaan.toFixed(0)}</div>;
-      },
-    },
-    {
-      header: "S-MIN",
-      cell: ({ row }) => {
-        const avgUsage = (row.getValue("penggunaan") as number) || 0;
-        const route = getRouteApi("/obat/stok");
-        const { leadingTime } = route.useSearch();
-        const leadingTimeNumber = parseInt(leadingTime || "6");
-        const Smin = 2 * ((avgUsage / 30) * leadingTimeNumber);
+        const expire = row.getValue("expire") as string;
 
-        return <div className="text-center">{Smin.toFixed(0)}</div>;
-      },
-    },
-    {
-      accessorKey: "stockStatus",
-      header: () => {
         return (
-          <div className="flex items-center w-full justify-center">
-            <Button variant="ghost">Status</Button>
+          <div className={cn("font-medium text-end")}>
+            <div>{format(new Date(expire), "PPP", { locale: id }) || "-"}</div>
           </div>
         );
       },
+    },
+
+    {
+      accessorKey: "expireStatus",
+      header: ({ column }) => (
+        <div className="text-center uppercase">Status Expired</div>
+      ),
       cell: ({ row }) => {
-        const stockStatus = (row.original.stockStatus as string) || "sehat";
+        const statusConfig = {
+          hijau: {
+            message: "Expired (diatas 12 bulan)",
+          },
+          kuning: {
+            message: "Expired (6-12 bulan)",
+          },
+          merah: { message: "Expired (< 6 bulan)" },
+        } as const;
 
-        const mapStatus = {
-          sehat: {
-            message: "Stock Aman",
-            color: "bg-green-500",
-            Icon: <CheckCircle />,
-          },
-          sedang: {
-            message: "Pesan",
-            color: "bg-amber-500",
-            Icon: <ShoppingCart />,
-          },
-          rendah: {
-            message: "Segera Pesan",
-            color: "bg-red-500",
-            Icon: <Flame />,
-          },
-        };
-
+        const expire = row.getValue("expireStatus") as string;
         return (
-          <div className="w-full uppercase">
-            <Badge
-              className={cn(
-                "w-full uppercase",
-                mapStatus[stockStatus as keyof typeof mapStatus].color
-              )}
-            >
-              {mapStatus[stockStatus as keyof typeof mapStatus].Icon}
-              {mapStatus[stockStatus as keyof typeof mapStatus].message}
-            </Badge>
+          <div className="text-center">
+            {statusConfig[expire as keyof typeof statusConfig].message}
           </div>
         );
-      },
-      filterFn: (row: any, columnId: any, value: any) => {
-        const stockStatus = row.getValue(columnId) as string;
-        return stockStatus === value;
       },
     },
   ];
@@ -333,41 +217,7 @@ export function StockDataTable({ data, loading }: StockDataTableProps) {
               />
             </div>
           </div>
-          <StockDateFilter />
-          <LeadingTimeSelect />
-          <StockStatusFilter />
-          <StockBangsalFilter />
-        </div>
-        <div className="flex items-center space-x-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="ml-auto">
-                <Columns className="mr-2 h-4 w-4" />
-                Kolom
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[150px]">
-              <DropdownMenuLabel>Toggle kolom</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ExpireStatusFilter />
         </div>
       </div>
 
@@ -410,7 +260,13 @@ export function StockDataTable({ data, loading }: StockDataTableProps) {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className={cn(i % 2 !== 0 && "bg-muted/50")}
+                  className={cn(
+                    row.getValue("expireStatus") === "merah"
+                      ? "bg-red-100 text-red-600 hover:bg-red-200 border-red-300"
+                      : row.getValue("expireStatus") === "kuning"
+                        ? "bg-amber-50 text-amber-600 hover:bg-amber-100 border-amber-300"
+                        : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-300"
+                  )}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -449,7 +305,7 @@ export function StockDataTable({ data, loading }: StockDataTableProps) {
               setPageSize(newPageSize);
               table.setPageSize(newPageSize);
               navigate({
-                to: "/obat/stok",
+                to: "/obat/kadaluwarsa",
                 search: (prev) => ({
                   ...prev,
                   pageSize: newPageSize.toString(),

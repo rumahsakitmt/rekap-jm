@@ -9,14 +9,14 @@ function RouteComponent() {
   return (
     <div className="container mx-auto py-6 space-y-2">
       <div className="flex justify-between items-center gap-6 border-b border-dashed pb-2">
-        <Link to="/" className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <Flower />
           <span>SMART SIMRS</span>
-        </Link>
+        </div>
 
         <div className="flex items-center gap-2">
           <Pill size={16} />
-          <h1 className="tracking-tight uppercase">Stok Obat</h1>
+          <h1 className="tracking-tight uppercase">FARMASI</h1>
         </div>
       </div>
 
