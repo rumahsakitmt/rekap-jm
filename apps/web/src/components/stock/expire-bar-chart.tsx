@@ -14,6 +14,8 @@ import {
 import {
   type ChartConfig,
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
@@ -63,6 +65,9 @@ export function ExpireBarChart({ data }: { data: ChartData[] }) {
               tickLine={false}
               tickMargin={10}
               axisLine={false}
+              tickFormatter={(value: keyof typeof chartConfig) =>
+                chartConfig[value]?.label || value
+              }
             />
             <ChartTooltip
               cursor={false}
@@ -75,28 +80,10 @@ export function ExpireBarChart({ data }: { data: ChartData[] }) {
                 className="fill-foreground"
                 fontSize={12}
               />
-
-              <LabelList
-                dataKey="status"
-                className="fill-background"
-                stroke="none"
-                fontSize={12}
-                formatter={(value: keyof typeof chartConfig) =>
-                  chartConfig[value]?.label
-                }
-              />
             </Bar>
           </BarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
-        <div className="flex gap-2 leading-none font-medium">
-          Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="text-muted-foreground leading-none">
-          Showing total visitors for the last 6 months
-        </div>
-      </CardFooter>
     </Card>
   );
 }
