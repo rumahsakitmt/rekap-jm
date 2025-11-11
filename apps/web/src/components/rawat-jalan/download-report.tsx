@@ -1,11 +1,10 @@
 import { Button } from "../ui/button";
 import { Download } from "lucide-react";
-import { getRouteApi } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
+import { Route } from "@/routes/rekap.rawat-jalan";
 
 const DownloadReport = () => {
-  const route = getRouteApi("/");
   const {
     search,
     dateFrom,
@@ -13,7 +12,7 @@ const DownloadReport = () => {
     selectedCsvFile,
     selectedDoctor,
     selectedPoliklinik,
-  } = route.useSearch();
+  } = Route.useSearch();
   const { data: xlsxData, isLoading: isLoadingXlsx } = useQuery({
     ...trpc.rawatJalan.downloadXlsx.queryOptions({
       search: search || undefined,
