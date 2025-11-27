@@ -1,9 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InputTriaseForm } from "@/components/igd/input-triase-form";
+import { z } from "zod"
+import { zodValidator } from "@tanstack/zod-adapter";
+
+const searchParamsSchema = z.object({
+  type: z.string().default("primer"),
+  skala: z.string().optional()
+});
 
 export const Route = createFileRoute("/igd/triase/$norawat")({
   component: RouteComponent,
+  validateSearch: zodValidator(searchParamsSchema)
 });
 
 function RouteComponent() {

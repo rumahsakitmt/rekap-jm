@@ -40,7 +40,7 @@ export const formOpts = formOptions({
     skala4: [] as string[],
     skala5: [] as string[],
     catatan: "",
-    keputusan: "ruang-resustansi",
+    keputusan: "Ruang Resusitasi",
     tanggalTriase: new Date(),
     petugas: "",
   },

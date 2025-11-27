@@ -4,10 +4,13 @@ import { MasterPemeriksaan } from "./master-pemeriksaan";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { PetugasCombobox } from "./petugas-combobox";
 import { withForm } from "@/hooks/form";
+import { Route } from "@/routes/igd.triase.$norawat";
 
 const TriasePrimerForm = withForm({
   ...formOpts,
   render: ({ form }) => {
+    const navigate = Route.useNavigate();
+    const { skala } = Route.useSearch()
     return (
       <>
         <FieldGroup>
@@ -59,39 +62,55 @@ const TriasePrimerForm = withForm({
             />
             <form.Field
               name="keputusan"
-              children={(field) => (
-                <FieldSet>
-                  <FieldLabel>Plan/Keputusan</FieldLabel>
-                  <RadioGroup
-                    value={field.state.value}
-                    onValueChange={field.handleChange}
-                    defaultValue="ruang-resustansi"
-                    className="grid-cols-2"
-                  >
-                    <Field orientation="horizontal">
-                      <RadioGroupItem
-                        value="ruang-resustansi"
-                        id="ruang-resustansi"
-                      />
-                      <FieldLabel
-                        htmlFor="ruang-resustansi"
-                        className="font-normal"
-                      >
-                        Ruang Resustansi
-                      </FieldLabel>
-                    </Field>
-                    <Field orientation="horizontal">
-                      <RadioGroupItem value="ruang-kritis" id="ruang-kritis" />
-                      <FieldLabel
-                        htmlFor="ruang-kritis"
-                        className="font-normal"
-                      >
-                        Ruang Kritis
-                      </FieldLabel>
-                    </Field>
-                  </RadioGroup>
-                </FieldSet>
-              )}
+              children={(field) => {
+                const getValue = () => {
+                  if (skala === 'skala1') return "Ruang Resusitasi";
+                  if (skala === 'skala2') return "Ruang Kritis";
+                  return field.state.value || "Ruang Resusitasi";
+                };
+                return (
+                  <FieldSet>
+                    <FieldLabel>Plan/Keputusan</FieldLabel>
+                    <RadioGroup
+                      value={getValue()}
+                      onValueChange={(value) => {
+                        field.handleChange(value);
+                        const newSkala = value === "Ruang Resusitasi" ? "skala1" : "skala2";
+                        navigate({
+                          search: (prev) => ({
+                            ...prev,
+                            skala: newSkala,
+                          })
+                        });
+                      }}
+                      defaultValue="Ruang Resusitasi"
+                      className="grid-cols-2"
+                    >
+                      <Field orientation="horizontal">
+                        <RadioGroupItem
+                          value="Ruang Resusitasi"
+                          id="ruang-resustansi"
+                        />
+                        <FieldLabel
+                          htmlFor="ruang-resustansi"
+                          className="font-normal"
+                        >
+                          Ruang Resustansi
+                        </FieldLabel>
+                      </Field>
+                      <Field orientation="horizontal">
+                        <RadioGroupItem value="Ruang Kritis" id="ruang-kritis" />
+                        <FieldLabel
+                          htmlFor="ruang-kritis"
+                          className="font-normal"
+                        >
+                          Ruang Kritis
+                        </FieldLabel>
+                      </Field>
+                    </RadioGroup>
+                  </FieldSet>
+                )
+              }}
             />
             <form.AppField
               name="tanggalTriase"

@@ -6,13 +6,18 @@ import { formOpts } from "./shared-form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { useStore } from "@tanstack/react-form";
+import { Route } from "@/routes/igd.triase.$norawat";
 
 export const MasterPemeriksaan = withForm({
   ...formOpts,
   props: {
     type: "primer",
   },
-  render: ({ form, type }) => {
+  render: ({ form }) => {
+    const { norawat } = Route.useParams();
+    const { skala, type } = Route.useSearch();
+    const navigate = Route.useNavigate();
+
     const { data } = useQuery({
       ...trpc.triase.getNamaPemeriksaan.queryOptions(),
     });
@@ -25,6 +30,14 @@ export const MasterPemeriksaan = withForm({
       ? kodePemeriksaan || data[0].kode_pemeriksaan
       : kodePemeriksaan;
 
+    const handleSkalaTab = (s: string) => {
+      navigate({
+        search: (prev) => ({
+          ...prev,
+          skala: s,
+        })
+      })
+    }
     if (!data) {
       return <div>no data</div>;
     }
@@ -65,7 +78,7 @@ export const MasterPemeriksaan = withForm({
             />
           </div>
         </div>
-        <Tabs defaultValue={type === "primer" ? "skala1" : "skala3"}>
+        <Tabs defaultValue={type === "primer" ? "skala1" : "skala3"} value={skala} onValueChange={handleSkalaTab}>
           <TabsList>
             {type === "primer" ? (
               <>
