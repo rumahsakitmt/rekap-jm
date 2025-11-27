@@ -1,17 +1,34 @@
 import { formOptions } from "@tanstack/react-form";
-import type { AppFieldExtendedReactFormApi } from "@tanstack/react-form";
 import z from "zod";
 
-export const infoSchema = z.object({
-  norawat: z.string(),
-  norm: z.string(),
-  nama: z.string(),
+const infoSchema = z.object({
+  norawat: z.string().min(15, "Nomor Rawat tidak boleh kosong."),
+  norm: z.string().min(6, "Nomor RM tidak boleh kosong."),
+  nama: z.string().min(3, "Nama tidak boleh kosong."),
   tanggalKunjungan: z.date(),
-  caraMasuk: z.string(),
-  transportasi: z.string(),
-  alasanKedatagan: z.string(),
-  macamKasus: z.string(),
-  keterangan: z.string(),
+  caraMasuk: z.string().min(1, "Cara masuk tidak boleh kosong."),
+  transportasi: z.string().min(1, "Transportasi tidak boleh kosong."),
+  alasanKedatangan: z.string().min(1, "Alasan kedatangan tidak boleh kosong."),
+  macamKasus: z.string().min(1, "Macam kasus tidak boleh kosong."),
+  keterangan: z.string().min(1, "Keterangan tidak boleh kosong."),
+  keluhanUtama: z.string().min(1, "Keluhan utama tidak boleh kosong."),
+  suhu: z.string().min(1, "Suhu tidak boleh kosong."),
+  nyeri: z.string().min(1, "Nyeri tidak boleh kosong."),
+  tensi: z.string().min(1, "Tensi tidak boleh kosong."),
+  nadi: z.string().min(1, "Nadi tidak boleh kosong."),
+  saturasi: z.string().min(1, "Saturasi tidak boleh kosong."),
+  respirasi: z.string().min(1, "Respirasi tidak boleh kosong."),
+  kebutuhanKhusus: z.string().min(1, "Kebutuhan khusus tidak boleh kosong."),
+  pemeriksaan: z.string().min(1, "Pemeriksaan tidak boleh kosong."),
+  skala1: z.array(z.string()),
+  skala2: z.array(z.string()),
+  skala3: z.array(z.string()),
+  skala4: z.array(z.string()),
+  skala5: z.array(z.string()),
+  catatan: z.string(),
+  keputusan: z.string().min(1, "Keputusan tidak boleh kosong."),
+  tanggalTriase: z.date(),
+  petugas: z.string().min(1, "Petugas tidak boleh kosong.")
 });
 
 export const formOpts = formOptions({
@@ -19,7 +36,7 @@ export const formOpts = formOptions({
     norawat: "",
     norm: "",
     nama: "",
-    tanggalKunjugan: new Date(),
+    tanggalKunjungan: new Date(),
     caraMasuk: "jalan",
     transportasi: "sendiri",
     alasanKedatangan: "datang sendiri",
@@ -44,26 +61,7 @@ export const formOpts = formOptions({
     tanggalTriase: new Date(),
     petugas: "",
   },
-  onSubmit: ({ value }) => {
-    console.log(value);
-  },
+  validators: {
+    onChange: infoSchema,
+  }
 });
-
-export type TriaseFormValues = typeof formOpts.defaultValues;
-
-export type TriaseFormInstance = AppFieldExtendedReactFormApi<
-  TriaseFormValues,
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-  Record<string, never>,
-  Record<string, never>
->;

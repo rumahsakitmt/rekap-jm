@@ -9,52 +9,53 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader } from "lucide-react";
+import { withForm } from "@/hooks/form";
+import { formOpts } from "./shared-form";
 
-interface Props {
-  value: string;
-  onChange: (value: string) => void;
-  isInvalid: boolean;
-  errors: undefined[];
-}
-
-export const MacamKasusSelect = ({
-  value,
-  onChange,
-  isInvalid,
-  errors,
-}: Props) => {
-  const { data: macamKasus } = useQuery(
-    trpc.triase.getMacamKasus.queryOptions()
-  );
-
-  if (!macamKasus) {
-    return (
-      <Select>
-        <SelectTrigger>
-          <Loader className="animate-spin" />
-        </SelectTrigger>
-      </Select>
+export const MacamKasusSelect = withForm({
+  ...formOpts,
+  render: ({ form }) => {
+    const { data: macamKasus } = useQuery(
+      trpc.triase.getMacamKasus.queryOptions()
     );
-  }
 
-  return (
-    <div>
-      <Field data-invalid={isInvalid}>
-        <FieldLabel>Macam Kasus</FieldLabel>
-        <Select value={value} onValueChange={onChange}>
+    if (!macamKasus) {
+      return (
+        <Select>
           <SelectTrigger>
-            <SelectValue placeholder="Pilih Macam Kasus" />
+            <Loader className="animate-spin" />
           </SelectTrigger>
-          <SelectContent>
-            {macamKasus.map((mk) => (
-              <SelectItem value={mk.kode_kasus} key={mk.kode_kasus}>
-                {mk.kode_kasus} {mk.macam_kasus}
-              </SelectItem>
-            ))}
-          </SelectContent>
         </Select>
-        {isInvalid && <FieldError errors={errors} />}
-      </Field>
-    </div>
-  );
-};
+      );
+    }
+
+    return (
+      <form.Field
+        name="macamKasus"
+        children={(field) => {
+          const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+          return (
+            <Field data-invalid={isInvalid}>
+              <FieldLabel>Macam Kasus</FieldLabel>
+              <Select value={field.state.value} onValueChange={field.handleChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih Macam Kasus" />
+                </SelectTrigger>
+                <SelectContent>
+                  {macamKasus.map((mk) => (
+                    <SelectItem value={mk.kode_kasus} key={mk.kode_kasus}>
+                      {mk.kode_kasus} {mk.macam_kasus}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {isInvalid && <FieldError errors={field.state.meta.errors} />}
+            </Field>
+
+          )
+        }}
+      />
+    );
+
+  }
+})

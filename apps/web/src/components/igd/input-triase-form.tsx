@@ -30,7 +30,7 @@ export const InputTriaseForm = () => {
       norawat: norawat || "",
       norm: data?.no_rkm_medis || "",
       nama: data?.nm_pasien || "",
-      tanggalKunjugan: data?.tgl_registrasi ? new Date(data?.tgl_registrasi) : new Date(),
+      tanggalKunjungan: data?.tgl_registrasi ? new Date(data?.tgl_registrasi) : new Date(),
       tanggalTriase: data?.tgl_registrasi ? new Date(data?.tgl_registrasi) : new Date()
     }
   });

@@ -9,7 +9,7 @@ export const InfoForm = withForm({
       <>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <form.AppField
-            name="tanggalKunjugan"
+            name="tanggalKunjungan"
             children={(field) => (
               <field.DatePickerField label="Tanggal Kunjungan" />
             )}
@@ -48,20 +48,7 @@ export const InfoForm = withForm({
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <form.Field
-            name="macamKasus"
-            children={(field) => {
-              const isInvalid =
-                field.state.meta.isTouched && !field.state.meta.isValid;
-              return (
-                <MacamKasusSelect
-                  isInvalid={isInvalid}
-                  errors={field.state.meta.errors}
-                  value={field.state.value}
-                  onChange={field.handleChange}
-                />
-              );
-            }}
+          <MacamKasusSelect form={form}
           />
           <form.AppField
             name="keterangan"
