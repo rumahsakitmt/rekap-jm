@@ -19,17 +19,17 @@ import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface TarifTableProps<TData, TValue> {
+interface RegistrationProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   loading?: boolean;
 }
 
-export function TarifTable<TData, TValue>({
+export function RegistrationTable<TData, TValue>({
   columns,
   data,
   loading = false,
-}: TarifTableProps<TData, TValue>) {
+}: RegistrationProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const table = useReactTable({
@@ -128,7 +128,7 @@ export function TarifTable<TData, TValue>({
                 colSpan={columns.length}
                 className="h-24 text-center text-muted-foreground"
               >
-                Tidak ada data tarif yang ditemukan.
+                Tidak ada registrasi hari ini.
               </TableCell>
             </TableRow>
           )}

@@ -31,12 +31,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { DataTableFilters } from "./data-table-filters";
 import { DataTablePagination } from "../rawat-jalan/pagination";
-import { Columns, Loader2 } from "lucide-react";
+import { Columns } from "lucide-react";
 import { TotalDisplay } from "./total-display";
 import { CsvAnalysis } from "../csv-analysis";
-import { useSearch } from "@tanstack/react-router";
 import { Skeleton } from "../ui/skeleton";
 
 interface DataTableProps<TData, TValue> {

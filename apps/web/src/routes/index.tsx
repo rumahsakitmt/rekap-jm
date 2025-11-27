@@ -9,6 +9,7 @@ import {
   Flower,
   Stethoscope,
   ClockAlert,
+  Siren,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -53,6 +54,16 @@ function HomeComponent() {
         { to: "/tarif/operasi", label: "Operasi", Icon: Stethoscope },
       ],
     },
+    {
+      title: "IGD",
+      items: [
+        {
+          to: "/igd/triase",
+          label: "Triase",
+          Icon: Siren,
+        },
+      ],
+    },
   ] as const;
 
   return (
@@ -74,7 +85,7 @@ function HomeComponent() {
             <span className="text-primary font-normal italic">v1.0.0</span>
           </h1>
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-4 gap-2">
           {links.map(({ title, items }) => {
             return (
               <div
