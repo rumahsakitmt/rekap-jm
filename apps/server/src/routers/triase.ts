@@ -1,11 +1,19 @@
 import { db } from "@/db";
 import {
+  data_triase_igddetail_skala1,
+  data_triase_igddetail_skala2,
+  data_triase_igddetail_skala3,
+  data_triase_igddetail_skala4,
+  data_triase_igddetail_skala5,
   master_triase_macam_kasus,
   master_triase_pemeriksaan,
   master_triase_skala3,
   master_triase_skala4,
   master_triase_skala5,
 } from "@/db/schema";
+import { data_triase_igd } from "@/db/schema/data_triase_igd";
+import { data_triase_igdprimer } from "@/db/schema/data_triase_igdprimer";
+import { data_triase_igdsekunder } from "@/db/schema/data_triase_igdsekunder";
 import { master_triase_skala1 } from "@/db/schema/master_triase_skala1";
 import { master_triase_skala2 } from "@/db/schema/master_triase_skala2";
 import { publicProcedure, router } from "@/lib/trpc";
@@ -13,6 +21,143 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 export const triaseRouter = router({
+  createTriase: publicProcedure
+    .input(
+      z.object({
+        norawat: z.string().min(15, "Nomor Rawat tidak boleh kosong."),
+        norm: z.string().min(6, "Nomor RM tidak boleh kosong."),
+        nama: z.string().min(3, "Nama tidak boleh kosong."),
+        tanggalKunjungan: z.coerce.date(),
+        caraMasuk: z.string().min(1, "Cara masuk tidak boleh kosong."),
+        transportasi: z.string().min(1, "Transportasi tidak boleh kosong."),
+        alasanKedatangan: z
+          .string()
+          .min(1, "Alasan kedatangan tidak boleh kosong."),
+        macamKasus: z.string().min(1, "Macam kasus tidak boleh kosong."),
+        keterangan: z.string().min(1, "Keterangan tidak boleh kosong."),
+        keluhanUtama: z.string().min(1, "Keluhan utama tidak boleh kosong."),
+        suhu: z.string().min(1, "Suhu tidak boleh kosong."),
+        nyeri: z.string().min(1, "Nyeri tidak boleh kosong."),
+        tensi: z.string().min(1, "Tensi tidak boleh kosong."),
+        nadi: z.string().min(1, "Nadi tidak boleh kosong."),
+        saturasi: z.string().min(1, "Saturasi tidak boleh kosong."),
+        respirasi: z.string().min(1, "Respirasi tidak boleh kosong."),
+        kebutuhanKhusus: z.string(),
+        pemeriksaan: z.string().min(1, "Pemeriksaan tidak boleh kosong."),
+        skala1: z.array(z.string()),
+        skala2: z.array(z.string()),
+        skala3: z.array(z.string()),
+        skala4: z.array(z.string()),
+        skala5: z.array(z.string()),
+        catatan: z.string(),
+        keputusan: z.string().min(1, "Keputusan tidak boleh kosong."),
+        tanggalTriase: z.coerce.date(),
+        petugas: z.string().min(1, "Petugas tidak boleh kosong."),
+        type: z.string(),
+        skala: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      return await db.transaction(async (tx) => {
+        await tx.insert(data_triase_igd).values({
+          no_rawat: input.norawat,
+          tgl_kunjungan: input.tanggalKunjungan,
+          cara_masuk: input.caraMasuk,
+          alat_transportasi: input.transportasi,
+          alasan_kedatangan: input.alasanKedatangan,
+          keterangan_kedatangan: input.keterangan,
+          kode_kasus: input.macamKasus,
+          tekanan_darah: input.tensi,
+          nadi: input.nadi,
+          pernapasan: input.respirasi,
+          suhu: input.suhu,
+          saturasi_o2: input.saturasi,
+          nyeri: input.nyeri,
+        });
+
+        if (input.type === "primer") {
+          await tx.insert(data_triase_igdprimer).values({
+            no_rawat: input.norawat,
+            keluhan_utama: input.keluhanUtama,
+            kebutuhan_khusus: input.kebutuhanKhusus,
+            catatan: input.catatan,
+            plan: input.keputusan,
+            tanggaltriase: input.tanggalTriase,
+            nik: input.petugas,
+          });
+
+          if (
+            input.skala === "skala1" &&
+            input.skala1 &&
+            input.skala1.length > 0
+          ) {
+            await tx.insert(data_triase_igddetail_skala1).values(
+              input.skala1.map((s) => ({
+                no_rawat: input.norawat,
+                kode_skala1: s,
+              }))
+            );
+          } else if (
+            input.skala === "skala2" &&
+            input.skala2 &&
+            input.skala2.length > 0
+          ) {
+            await tx.insert(data_triase_igddetail_skala2).values(
+              input.skala2.map((s) => ({
+                no_rawat: input.norawat,
+                kode_skala2: s,
+              }))
+            );
+          }
+        } else if (input.type === "sekunder") {
+          await tx.insert(data_triase_igdsekunder).values({
+            no_rawat: input.norawat,
+            anamnesa_singkat: input.keluhanUtama,
+            catatan: input.catatan,
+            plan: input.keputusan,
+            tanggaltriase: input.tanggalTriase,
+            nik: input.petugas,
+          });
+
+          if (
+            input.skala === "skala3" &&
+            input.skala3 &&
+            input.skala3.length > 0
+          ) {
+            await tx.insert(data_triase_igddetail_skala3).values(
+              input.skala3.map((s) => ({
+                no_rawat: input.norawat,
+                kode_skala3: s,
+              }))
+            );
+          } else if (
+            input.skala === "skala4" &&
+            input.skala4 &&
+            input.skala4.length > 0
+          ) {
+            await tx.insert(data_triase_igddetail_skala4).values(
+              input.skala4.map((s) => ({
+                no_rawat: input.norawat,
+                kode_skala4: s,
+              }))
+            );
+          } else if (
+            input.skala === "skala5" &&
+            input.skala5 &&
+            input.skala5.length > 0
+          ) {
+            await tx.insert(data_triase_igddetail_skala5).values(
+              input.skala5.map((s) => ({
+                no_rawat: input.norawat,
+                kode_skala5: s,
+              }))
+            );
+          }
+        }
+
+        return { message: "success" };
+      });
+    }),
   getMacamKasus: publicProcedure.query(async () => {
     return await db
       .select()

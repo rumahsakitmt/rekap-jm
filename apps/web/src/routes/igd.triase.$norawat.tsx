@@ -4,14 +4,9 @@ import { InputTriaseForm } from "@/components/igd/input-triase-form";
 import { z } from "zod"
 import { zodValidator } from "@tanstack/zod-adapter";
 
-const searchParamsSchema = z.object({
-  type: z.string().default("primer"),
-  skala: z.string().optional()
-});
 
 export const Route = createFileRoute("/igd/triase/$norawat")({
   component: RouteComponent,
-  validateSearch: zodValidator(searchParamsSchema)
 });
 
 function RouteComponent() {
@@ -21,16 +16,7 @@ function RouteComponent() {
         <div className="absolute -top-4 left-2 px-2 py-1 border bg-background">
           <h3 className="text-sm">::[ Data triase IGD]::</h3>
         </div>
-        <Tabs defaultValue="input">
-          <TabsList>
-            <TabsTrigger value="input">Input Triase</TabsTrigger>
-            <TabsTrigger value="data">Data Triase</TabsTrigger>
-          </TabsList>
-          <TabsContent value="input">
-            <InputTriaseForm />
-          </TabsContent>
-          <TabsContent value="data">Change your password here.</TabsContent>
-        </Tabs>
+        <InputTriaseForm />
       </section>
     </div>
   );

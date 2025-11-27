@@ -4,13 +4,13 @@ import { MasterPemeriksaan } from "./master-pemeriksaan";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { PetugasCombobox } from "./petugas-combobox";
 import { withForm } from "@/hooks/form";
-import { Route } from "@/routes/igd.triase.$norawat";
+import { useTriaseStore, type Skala } from "@/features/igd/store";
 
 const TriaseSekunderForm = withForm({
   ...formOpts,
   render: ({ form }) => {
-    const navigate = Route.useNavigate();
-    const { skala } = Route.useSearch()
+    const { skala, setSkala } = useTriaseStore();
+
     return (
       <>
         <FieldGroup>
@@ -19,7 +19,7 @@ const TriaseSekunderForm = withForm({
               <form.AppField
                 name="keluhanUtama"
                 children={(field) => (
-                  <field.TextareaField label="Keluhan Utama" />
+                  <field.TextareaField label="Amnesa Singkat" />
                 )}
               />
             </div>
@@ -62,10 +62,11 @@ const TriaseSekunderForm = withForm({
               name="keputusan"
               children={(field) => {
                 const getValue = () => {
-                  if (skala === 'skala3') return "Zona Kuning";
-                  if (skala === 'skala4' || skala === 'skala5') return "Zona Hijau";
+                  if (skala === "skala3") return "Zona Kuning";
+                  if (skala === "skala4" || skala === "skala5")
+                    return "Zona Hijau";
                   return field.state.value || "Zona Kuning";
-                }
+                };
                 return (
                   <FieldSet>
                     <FieldLabel>Plan/Keputusan</FieldLabel>
@@ -78,24 +79,18 @@ const TriaseSekunderForm = withForm({
                         if (value === "Zona Kuning") {
                           newSkala = "skala3";
                         } else if (value === "Zona Hijau") {
-                          newSkala = (skala === 'skala4' || skala === 'skala5') ? skala : "skala4";
+                          newSkala =
+                            skala === "skala4" || skala === "skala5"
+                              ? skala
+                              : "skala4";
                         }
-
-                        navigate({
-                          search: (prev) => ({
-                            ...prev,
-                            skala: newSkala
-                          })
-                        });
+                        setSkala(newSkala as Skala);
                       }}
                       defaultValue="Zona Kuning"
                       className="grid-cols-2"
                     >
                       <Field orientation="horizontal">
-                        <RadioGroupItem
-                          value="Zona Kuning"
-                          id="Zona Kuning"
-                        />
+                        <RadioGroupItem value="Zona Kuning" id="Zona Kuning" />
                         <FieldLabel
                           htmlFor="Zona Kuning"
                           className="font-normal"
@@ -114,9 +109,8 @@ const TriaseSekunderForm = withForm({
                       </Field>
                     </RadioGroup>
                   </FieldSet>
-                )
-              }
-              }
+                );
+              }}
             />
             <form.AppField
               name="tanggalTriase"

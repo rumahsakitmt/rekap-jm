@@ -4,13 +4,12 @@ import { MasterPemeriksaan } from "./master-pemeriksaan";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { PetugasCombobox } from "./petugas-combobox";
 import { withForm } from "@/hooks/form";
-import { Route } from "@/routes/igd.triase.$norawat";
+import { useTriaseStore } from "@/features/igd/store";
 
 const TriasePrimerForm = withForm({
   ...formOpts,
   render: ({ form }) => {
-    const navigate = Route.useNavigate();
-    const { skala } = Route.useSearch()
+    const { skala, setSkala } = useTriaseStore();
     return (
       <>
         <FieldGroup>
@@ -51,7 +50,12 @@ const TriasePrimerForm = withForm({
             />
             <form.AppField
               name="kebutuhanKhusus"
-              children={(field) => <field.TextField label="Kebutuhan Khusus" />}
+              children={(field) => (
+                <field.SelectField
+                  label="Kebutuhan Khusus"
+                  data={["-", "UPPA", "Airborne", "Dekontaminan"]}
+                />
+              )}
             />
           </div>
           <MasterPemeriksaan form={form} type="primer" />
@@ -64,8 +68,8 @@ const TriasePrimerForm = withForm({
               name="keputusan"
               children={(field) => {
                 const getValue = () => {
-                  if (skala === 'skala1') return "Ruang Resusitasi";
-                  if (skala === 'skala2') return "Ruang Kritis";
+                  if (skala === "skala1") return "Ruang Resusitasi";
+                  if (skala === "skala2") return "Ruang Kritis";
                   return field.state.value || "Ruang Resusitasi";
                 };
                 return (
@@ -75,13 +79,9 @@ const TriasePrimerForm = withForm({
                       value={getValue()}
                       onValueChange={(value) => {
                         field.handleChange(value);
-                        const newSkala = value === "Ruang Resusitasi" ? "skala1" : "skala2";
-                        navigate({
-                          search: (prev) => ({
-                            ...prev,
-                            skala: newSkala,
-                          })
-                        });
+                        setSkala(
+                          value === "Ruang Resusitasi" ? "skala1" : "skala2"
+                        );
                       }}
                       defaultValue="Ruang Resusitasi"
                       className="grid-cols-2"
@@ -99,7 +99,10 @@ const TriasePrimerForm = withForm({
                         </FieldLabel>
                       </Field>
                       <Field orientation="horizontal">
-                        <RadioGroupItem value="Ruang Kritis" id="ruang-kritis" />
+                        <RadioGroupItem
+                          value="Ruang Kritis"
+                          id="ruang-kritis"
+                        />
                         <FieldLabel
                           htmlFor="ruang-kritis"
                           className="font-normal"
@@ -109,7 +112,7 @@ const TriasePrimerForm = withForm({
                       </Field>
                     </RadioGroup>
                   </FieldSet>
-                )
+                );
               }}
             />
             <form.AppField

@@ -6,7 +6,7 @@ import { formOpts } from "./shared-form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { useStore } from "@tanstack/react-form";
-import { Route } from "@/routes/igd.triase.$norawat";
+import { useTriaseStore, type Skala } from "@/features/igd/store";
 
 export const MasterPemeriksaan = withForm({
   ...formOpts,
@@ -14,30 +14,14 @@ export const MasterPemeriksaan = withForm({
     type: "primer",
   },
   render: ({ form }) => {
-    const { norawat } = Route.useParams();
-    const { skala, type } = Route.useSearch();
-    const navigate = Route.useNavigate();
+    const { type, skala, setSkala } = useTriaseStore();
 
     const { data } = useQuery({
       ...trpc.triase.getNamaPemeriksaan.queryOptions(),
     });
 
-    const kodePemeriksaan = useStore(
-      form.store,
-      (state) => state.values.pemeriksaan
-    );
-    const kp = data
-      ? kodePemeriksaan || data[0].kode_pemeriksaan
-      : kodePemeriksaan;
+    const kp = useStore(form.store, (state) => state.values.pemeriksaan);
 
-    const handleSkalaTab = (s: string) => {
-      navigate({
-        search: (prev) => ({
-          ...prev,
-          skala: s,
-        })
-      })
-    }
     if (!data) {
       return <div>no data</div>;
     }
@@ -52,7 +36,7 @@ export const MasterPemeriksaan = withForm({
               children={(field) => {
                 return (
                   <RadioGroup
-                    value={field.state.value || data[0].kode_pemeriksaan}
+                    value={field.state.value}
                     onValueChange={field.handleChange}
                   >
                     {data?.map((pem) => (
@@ -78,7 +62,11 @@ export const MasterPemeriksaan = withForm({
             />
           </div>
         </div>
-        <Tabs defaultValue={type === "primer" ? "skala1" : "skala3"} value={skala} onValueChange={handleSkalaTab}>
+        <Tabs
+          defaultValue={type === "primer" ? "skala1" : "skala3"}
+          value={skala}
+          onValueChange={(value) => setSkala(value as Skala)}
+        >
           <TabsList>
             {type === "primer" ? (
               <>
@@ -98,6 +86,7 @@ export const MasterPemeriksaan = withForm({
               <TabsContent value="skala1">
                 {kp && (
                   <form.AppField
+                    key={`skala1-${kp}`}
                     name="skala1"
                     children={(field) => (
                       <field.MasterPemeriksaanSkala
@@ -111,6 +100,7 @@ export const MasterPemeriksaan = withForm({
               <TabsContent value="skala2">
                 {kp && (
                   <form.AppField
+                    key={`skala2-${kp}`}
                     name="skala2"
                     children={(field) => (
                       <field.MasterPemeriksaanSkala
@@ -127,6 +117,7 @@ export const MasterPemeriksaan = withForm({
               <TabsContent value="skala3">
                 {kp && (
                   <form.AppField
+                    key={`skala3-${kp}`}
                     name="skala3"
                     children={(field) => (
                       <field.MasterPemeriksaanSkala
@@ -140,6 +131,7 @@ export const MasterPemeriksaan = withForm({
               <TabsContent value="skala4">
                 {kp && (
                   <form.AppField
+                    key={`skala4-${kp}`}
                     name="skala4"
                     children={(field) => (
                       <field.MasterPemeriksaanSkala
@@ -153,6 +145,7 @@ export const MasterPemeriksaan = withForm({
               <TabsContent value="skala5">
                 {kp && (
                   <form.AppField
+                    key={`skala5-${kp}`}
                     name="skala5"
                     children={(field) => (
                       <field.MasterPemeriksaanSkala

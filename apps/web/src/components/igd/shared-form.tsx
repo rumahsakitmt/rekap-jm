@@ -1,7 +1,7 @@
 import { formOptions } from "@tanstack/react-form";
 import z from "zod";
 
-const infoSchema = z.object({
+export const infoSchema = z.object({
   norawat: z.string().min(15, "Nomor Rawat tidak boleh kosong."),
   norm: z.string().min(6, "Nomor RM tidak boleh kosong."),
   nama: z.string().min(3, "Nama tidak boleh kosong."),
@@ -18,7 +18,7 @@ const infoSchema = z.object({
   nadi: z.string().min(1, "Nadi tidak boleh kosong."),
   saturasi: z.string().min(1, "Saturasi tidak boleh kosong."),
   respirasi: z.string().min(1, "Respirasi tidak boleh kosong."),
-  kebutuhanKhusus: z.string().min(1, "Kebutuhan khusus tidak boleh kosong."),
+  kebutuhanKhusus: z.string(),
   pemeriksaan: z.string().min(1, "Pemeriksaan tidak boleh kosong."),
   skala1: z.array(z.string()),
   skala2: z.array(z.string()),
@@ -28,7 +28,7 @@ const infoSchema = z.object({
   catatan: z.string(),
   keputusan: z.string().min(1, "Keputusan tidak boleh kosong."),
   tanggalTriase: z.date(),
-  petugas: z.string().min(1, "Petugas tidak boleh kosong.")
+  petugas: z.string().min(1, "Petugas tidak boleh kosong."),
 });
 
 export const formOpts = formOptions({
@@ -38,7 +38,7 @@ export const formOpts = formOptions({
     nama: "",
     tanggalKunjungan: new Date(),
     caraMasuk: "jalan",
-    transportasi: "sendiri",
+    transportasi: "-",
     alasanKedatangan: "datang sendiri",
     macamKasus: "",
     keterangan: "",
@@ -49,7 +49,7 @@ export const formOpts = formOptions({
     nadi: "",
     saturasi: "",
     respirasi: "",
-    kebutuhanKhusus: "",
+    kebutuhanKhusus: "-",
     pemeriksaan: "",
     skala1: [] as string[],
     skala2: [] as string[],
@@ -57,11 +57,11 @@ export const formOpts = formOptions({
     skala4: [] as string[],
     skala5: [] as string[],
     catatan: "",
-    keputusan: "Ruang Resusitasi",
+    keputusan: "Ruang Resustansi",
     tanggalTriase: new Date(),
     petugas: "",
   },
   validators: {
     onChange: infoSchema,
-  }
+  },
 });

@@ -7,14 +7,15 @@ import TriaseSekunderForm from "@/components/igd/triase-sekunder-form";
 import { FieldGroup } from "@/components/ui/field";
 import { Button } from "../ui/button";
 import { Save } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 import { Route } from "@/routes/igd.triase.$norawat";
+import { useTriaseStore, type TriaseType } from "@/features/igd/store";
 
 export const InputTriaseForm = () => {
+  const triase = useMutation(trpc.triase.createTriase.mutationOptions());
   const { norawat } = Route.useParams();
-  const { type } = Route.useSearch();
-  const navigate = Route.useNavigate();
+  const { skala, type, setType, setSkala } = useTriaseStore();
 
   const { data } = useQuery({
     ...trpc.igd.getUserRegistration.queryOptions({
@@ -30,21 +31,26 @@ export const InputTriaseForm = () => {
       norawat: norawat || "",
       norm: data?.no_rkm_medis || "",
       nama: data?.nm_pasien || "",
-      tanggalKunjungan: data?.tgl_registrasi ? new Date(data?.tgl_registrasi) : new Date(),
-      tanggalTriase: data?.tgl_registrasi ? new Date(data?.tgl_registrasi) : new Date()
-    }
+      tanggalKunjungan: data?.tgl_registrasi
+        ? new Date(data?.tgl_registrasi)
+        : new Date(),
+      tanggalTriase: data?.tgl_registrasi
+        ? new Date(data?.tgl_registrasi)
+        : new Date(),
+    },
+    onSubmit: ({ value }) => {
+      // if (!skala || !type) {
+      //   return;
+      // }
+
+      // triase.mutate({
+      //   ...value,
+      //   type,
+      //   skala,
+      // });
+      console.log(value);
+    },
   });
-
-  const handleTriaseTab = (type: string) => {
-    navigate({
-      search: (prev) => ({
-        ...prev,
-        type: type || "primer",
-        skala: type === "primer" ? "skala1" : "skala3"
-      })
-    })
-  }
-
 
   return (
     <form.AppForm>
@@ -80,15 +86,25 @@ export const InputTriaseForm = () => {
               />
             </div>
             <InfoForm form={form} />
-            <Tabs value={type || "primer"} onValueChange={handleTriaseTab}>
+            <Tabs
+              value={type}
+              onValueChange={(value) => {
+                setType(value as TriaseType);
+                setSkala(value === "primer" ? "skala1" : "skala3");
+                form.setFieldValue(
+                  "keputusan",
+                  value === "primer" ? "Ruang Resustansi" : "Zona Kuning"
+                );
+              }}
+            >
               <TabsList>
                 <TabsTrigger value="primer">Triase Primer</TabsTrigger>
-                <TabsTrigger value="skunder">Triase Skunder</TabsTrigger>
+                <TabsTrigger value="sekunder">Triase Skunder</TabsTrigger>
               </TabsList>
               <TabsContent value="primer">
                 <TriasePrimerForm form={form} />
               </TabsContent>
-              <TabsContent value="skunder">
+              <TabsContent value="sekunder">
                 <TriaseSekunderForm form={form} />
               </TabsContent>
             </Tabs>
