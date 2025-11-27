@@ -1,6 +1,5 @@
 import * as React from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
-
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,9 +25,23 @@ export const PetugasCombobox = withForm({
   ...formOpts,
   render: ({ form }) => {
     const [open, setOpen] = React.useState(false);
-    const [value, setValue] = React.useState("");
+    const [searchQuery, setSearchQuery] = React.useState("");
 
     const { data } = useQuery(trpc.pegawai.getPegawai.queryOptions());
+
+    const filteredData = React.useMemo(() => {
+      if (!data) return [];
+      if (!searchQuery) return data;
+
+      const query = searchQuery.toLowerCase();
+      return data.filter((p) =>
+        p.nama?.toLowerCase().includes(query)
+      );
+    }, [data, searchQuery]);
+
+    const displayedData = React.useMemo(() => {
+      return filteredData.slice(0, 50);
+    }, [filteredData]);
 
     return (
       <form.Field
@@ -36,6 +49,8 @@ export const PetugasCombobox = withForm({
         children={(field) => {
           const isInvalid =
             field.state.meta.isTouched && !field.state.meta.isValid;
+          const selectedPegawai = data?.find((p) => p.nik === field.state.value);
+
           return (
             <Field data-invalid={isInvalid}>
               <FieldLabel htmlFor={field.name}>Petugas/Dokter</FieldLabel>
@@ -47,44 +62,49 @@ export const PetugasCombobox = withForm({
                     aria-expanded={open}
                     className="w-full justify-between"
                   >
-                    {value
-                      ? data?.find((p) => p.nama === value)?.nama
-                      : "Cari Petugas/Dokter"}
+                    {selectedPegawai?.nama || "Cari Petugas/Dokter"}
                     <ChevronsUpDown className="opacity-50" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-full p-0">
-                  <Command
-                    onValueChange={field.handleChange}
-                    value={field.state.value}
-                  >
+                  <Command shouldFilter={false}>
                     <CommandInput
                       placeholder="Cari Petugas/Dokter"
                       className="h-9"
+                      value={searchQuery}
+                      onValueChange={setSearchQuery}
                     />
                     <CommandList>
                       <CommandEmpty>Tidak ada pegawai.</CommandEmpty>
                       <CommandGroup>
-                        {data?.map((p) => (
+                        {displayedData.map((p) => (
                           <CommandItem
                             key={p.nik}
-                            value={p.nama as string}
-                            onSelect={(currentValue) => {
-                              setValue(
-                                currentValue === value ? "" : currentValue
-                              );
+                            value={p.nik as string}
+                            keywords={[p.nama || ""]}
+                            onSelect={() => {
+                              field.handleChange(p.nik as string);
                               setOpen(false);
+                              setSearchQuery("");
                             }}
                           >
                             {p.nama}
                             <Check
                               className={cn(
                                 "ml-auto",
-                                value === p.nama ? "opacity-100" : "opacity-0"
+                                field.state.value === p.nik
+                                  ? "opacity-100"
+                                  : "opacity-0"
                               )}
                             />
                           </CommandItem>
                         ))}
+                        {filteredData.length > 100 && (
+                          <CommandItem disabled>
+                            Menampilkan 50 dari {filteredData.length} hasil.
+                            Ketik untuk mempersempit pencarian.
+                          </CommandItem>
+                        )}
                       </CommandGroup>
                     </CommandList>
                   </Command>
