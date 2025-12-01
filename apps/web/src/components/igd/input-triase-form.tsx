@@ -43,11 +43,11 @@ export const InputTriaseForm = () => {
       //   return;
       // }
 
-      // triase.mutate({
-      //   ...value,
-      //   type,
-      //   skala,
-      // });
+      triase.mutate({
+        ...value,
+        type,
+        skala,
+      });
       console.log(value);
     },
   });
