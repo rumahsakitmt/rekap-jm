@@ -31,6 +31,7 @@ export { detail_pemberian_obat } from "./detail_pemberian_obat";
 export { paketOperasi } from "./paket_operasi";
 export { master_triase_macam_kasus } from "./master_triase_macam_kasus";
 export { master_triase_pemeriksaan } from "./master_triase_pemeriksaan";
+export { data_triase_igd} from "./data_triase_igd"
 export { data_triase_igddetail_skala1 } from "./data_triase_igddetail_skala1";
 export { data_triase_igddetail_skala2 } from "./data_triase_igddetail_skala2";
 export { data_triase_igddetail_skala3 } from "./data_triase_igddetail_skala3";
@@ -42,3 +43,4 @@ export { master_triase_skala3 } from "./master_triase_skala3";
 export { master_triase_skala4 } from "./master_triase_skala4";
 export { master_triase_skala5 } from "./master_triase_skala5";
 export { pegawai } from "./pegawai";
+

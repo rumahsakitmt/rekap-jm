@@ -29,7 +29,8 @@ import { Route as ObatStokRouteImport } from './routes/obat.stok'
 import { Route as ObatKadaluwarsaRouteImport } from './routes/obat.kadaluwarsa'
 import { Route as ObatDashboardRouteImport } from './routes/obat.dashboard'
 import { Route as IgdTriaseIndexRouteImport } from './routes/igd.triase.index'
-import { Route as IgdTriaseNorawatRouteImport } from './routes/igd.triase.$norawat'
+import { Route as IgdTriaseNorawatIndexRouteImport } from './routes/igd.triase.$norawat.index'
+import { Route as IgdTriaseNorawatFormRouteImport } from './routes/igd.triase.$norawat.form'
 
 const TarifRoute = TarifRouteImport.update({
   id: '/tarif',
@@ -131,9 +132,14 @@ const IgdTriaseIndexRoute = IgdTriaseIndexRouteImport.update({
   path: '/triase/',
   getParentRoute: () => IgdRoute,
 } as any)
-const IgdTriaseNorawatRoute = IgdTriaseNorawatRouteImport.update({
-  id: '/triase/$norawat',
-  path: '/triase/$norawat',
+const IgdTriaseNorawatIndexRoute = IgdTriaseNorawatIndexRouteImport.update({
+  id: '/triase/$norawat/',
+  path: '/triase/$norawat/',
+  getParentRoute: () => IgdRoute,
+} as any)
+const IgdTriaseNorawatFormRoute = IgdTriaseNorawatFormRouteImport.update({
+  id: '/triase/$norawat/form',
+  path: '/triase/$norawat/form',
   getParentRoute: () => IgdRoute,
 } as any)
 
@@ -157,8 +163,9 @@ export interface FileRoutesByFullPath {
   '/tarif/radiologi': typeof TarifRadiologiRoute
   '/tarif/rawat-inap': typeof TarifRawatInapRoute
   '/tarif/rawat-jalan': typeof TarifRawatJalanRoute
-  '/igd/triase/$norawat': typeof IgdTriaseNorawatRoute
   '/igd/triase': typeof IgdTriaseIndexRoute
+  '/igd/triase/$norawat/form': typeof IgdTriaseNorawatFormRoute
+  '/igd/triase/$norawat': typeof IgdTriaseNorawatIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -180,8 +187,9 @@ export interface FileRoutesByTo {
   '/tarif/radiologi': typeof TarifRadiologiRoute
   '/tarif/rawat-inap': typeof TarifRawatInapRoute
   '/tarif/rawat-jalan': typeof TarifRawatJalanRoute
-  '/igd/triase/$norawat': typeof IgdTriaseNorawatRoute
   '/igd/triase': typeof IgdTriaseIndexRoute
+  '/igd/triase/$norawat/form': typeof IgdTriaseNorawatFormRoute
+  '/igd/triase/$norawat': typeof IgdTriaseNorawatIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -204,8 +212,9 @@ export interface FileRoutesById {
   '/tarif/radiologi': typeof TarifRadiologiRoute
   '/tarif/rawat-inap': typeof TarifRawatInapRoute
   '/tarif/rawat-jalan': typeof TarifRawatJalanRoute
-  '/igd/triase/$norawat': typeof IgdTriaseNorawatRoute
   '/igd/triase/': typeof IgdTriaseIndexRoute
+  '/igd/triase/$norawat/form': typeof IgdTriaseNorawatFormRoute
+  '/igd/triase/$norawat/': typeof IgdTriaseNorawatIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -229,8 +238,9 @@ export interface FileRouteTypes {
     | '/tarif/radiologi'
     | '/tarif/rawat-inap'
     | '/tarif/rawat-jalan'
-    | '/igd/triase/$norawat'
     | '/igd/triase'
+    | '/igd/triase/$norawat/form'
+    | '/igd/triase/$norawat'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -252,8 +262,9 @@ export interface FileRouteTypes {
     | '/tarif/radiologi'
     | '/tarif/rawat-inap'
     | '/tarif/rawat-jalan'
-    | '/igd/triase/$norawat'
     | '/igd/triase'
+    | '/igd/triase/$norawat/form'
+    | '/igd/triase/$norawat'
   id:
     | '__root__'
     | '/'
@@ -275,8 +286,9 @@ export interface FileRouteTypes {
     | '/tarif/radiologi'
     | '/tarif/rawat-inap'
     | '/tarif/rawat-jalan'
-    | '/igd/triase/$norawat'
     | '/igd/triase/'
+    | '/igd/triase/$norawat/form'
+    | '/igd/triase/$norawat/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -433,24 +445,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IgdTriaseIndexRouteImport
       parentRoute: typeof IgdRoute
     }
-    '/igd/triase/$norawat': {
-      id: '/igd/triase/$norawat'
+    '/igd/triase/$norawat/': {
+      id: '/igd/triase/$norawat/'
       path: '/triase/$norawat'
       fullPath: '/igd/triase/$norawat'
-      preLoaderRoute: typeof IgdTriaseNorawatRouteImport
+      preLoaderRoute: typeof IgdTriaseNorawatIndexRouteImport
+      parentRoute: typeof IgdRoute
+    }
+    '/igd/triase/$norawat/form': {
+      id: '/igd/triase/$norawat/form'
+      path: '/triase/$norawat/form'
+      fullPath: '/igd/triase/$norawat/form'
+      preLoaderRoute: typeof IgdTriaseNorawatFormRouteImport
       parentRoute: typeof IgdRoute
     }
   }
 }
 
 interface IgdRouteChildren {
-  IgdTriaseNorawatRoute: typeof IgdTriaseNorawatRoute
   IgdTriaseIndexRoute: typeof IgdTriaseIndexRoute
+  IgdTriaseNorawatFormRoute: typeof IgdTriaseNorawatFormRoute
+  IgdTriaseNorawatIndexRoute: typeof IgdTriaseNorawatIndexRoute
 }
 
 const IgdRouteChildren: IgdRouteChildren = {
-  IgdTriaseNorawatRoute: IgdTriaseNorawatRoute,
   IgdTriaseIndexRoute: IgdTriaseIndexRoute,
+  IgdTriaseNorawatFormRoute: IgdTriaseNorawatFormRoute,
+  IgdTriaseNorawatIndexRoute: IgdTriaseNorawatIndexRoute,
 }
 
 const IgdRouteWithChildren = IgdRoute._addFileChildren(IgdRouteChildren)

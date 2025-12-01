@@ -1,9 +1,18 @@
 import { db } from "@/db";
-import { dokter, pasien, reg_periksa } from "@/db/schema";
+import {
+  dokter,
+  pasien,
+  reg_periksa,
+  data_triase_igd,
+  poliklinik,
+  master_triase_skala1,
+} from "@/db/schema";
 import { publicProcedure, router } from "@/lib/trpc";
-import { and, eq, gte, lte, or, like, type SQL } from "drizzle-orm";
+import { and, eq, gte, lte, or, like, sql, type SQL } from "drizzle-orm";
 import { startOfMonth, endOfMonth } from "date-fns";
 import { z } from "zod";
+import { data_triase_igdprimer } from "@/db/schema/data_triase_igdprimer";
+import { data_triase_igdsekunder } from "@/db/schema/data_triase_igdsekunder";
 
 export const igdRouter = router({
   getUserRegistration: publicProcedure
@@ -23,10 +32,15 @@ export const igdRouter = router({
           jam_reg: reg_periksa.jam_reg,
           nm_dokter: dokter.nm_dokter,
           nm_pasien: pasien.nm_pasien,
+          has_triase: sql<boolean>`${data_triase_igd.no_rawat} IS NOT NULL`,
         })
         .from(reg_periksa)
         .leftJoin(dokter, eq(dokter.kd_dokter, reg_periksa.kd_dokter))
         .leftJoin(pasien, eq(pasien.no_rkm_medis, reg_periksa.no_rkm_medis))
+        .leftJoin(
+          data_triase_igd,
+          eq(data_triase_igd.no_rawat, reg_periksa.no_rawat)
+        )
         .orderBy(reg_periksa.tgl_registrasi)
         .where(eq(reg_periksa.no_rawat, norawat))
         .limit(1);
@@ -48,6 +62,7 @@ export const igdRouter = router({
       const baseFilters: SQL<unknown>[] = [
         gte(reg_periksa.tgl_registrasi, dateFrom),
         lte(reg_periksa.tgl_registrasi, dateTo),
+        eq(poliklinik.kd_poli, "IGDK"),
       ];
 
       if (normalizedKeyword) {
@@ -73,10 +88,29 @@ export const igdRouter = router({
           tgl_registrasi: reg_periksa.tgl_registrasi,
           nm_dokter: dokter.nm_dokter,
           nm_pasien: pasien.nm_pasien,
+          has_triase: sql<boolean>`${data_triase_igd.no_rawat} IS NOT NULL`,
+          triase_type: sql<string>`CASE 
+            WHEN ${data_triase_igdprimer.no_rawat} IS NOT NULL THEN 'primer'
+            WHEN ${data_triase_igdsekunder.no_rawat} IS NOT NULL THEN 'sekunder'
+            ELSE NULL
+          END`,
         })
         .from(reg_periksa)
-        .leftJoin(dokter, eq(dokter.kd_dokter, reg_periksa.kd_dokter))
-        .leftJoin(pasien, eq(pasien.no_rkm_medis, reg_periksa.no_rkm_medis))
+        .innerJoin(dokter, eq(dokter.kd_dokter, reg_periksa.kd_dokter))
+        .innerJoin(pasien, eq(pasien.no_rkm_medis, reg_periksa.no_rkm_medis))
+        .innerJoin(poliklinik, eq(poliklinik.kd_poli, reg_periksa.kd_poli))
+        .leftJoin(
+          data_triase_igd,
+          eq(data_triase_igd.no_rawat, reg_periksa.no_rawat)
+        )
+        .leftJoin(
+          data_triase_igdprimer,
+          eq(data_triase_igdprimer.no_rawat, reg_periksa.no_rawat)
+        )
+        .leftJoin(
+          data_triase_igdsekunder,
+          eq(data_triase_igdsekunder.no_rawat, reg_periksa.no_rawat)
+        )
         .where(whereClause)
         .orderBy(reg_periksa.tgl_registrasi)
         .limit(50);

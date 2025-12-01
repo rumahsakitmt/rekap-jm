@@ -1,4 +1,4 @@
-import { Route } from "@/routes/igd.triase.$norawat";
+import { Route } from "@/routes/igd.triase.$norawat.form";
 import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 import { Checkbox } from "@/components/ui/checkbox";

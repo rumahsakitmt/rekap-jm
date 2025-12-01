@@ -9,6 +9,8 @@ export interface IGDRegistration {
   tgl_registrasi: string | null;
   nm_dokter: string | null;
   nm_pasien: string | null;
+  has_triase: boolean | undefined;
+  triase_type: string | null | undefined;
 }
 
 export const columns: ColumnDef<IGDRegistration>[] = [
@@ -22,6 +24,11 @@ export const columns: ColumnDef<IGDRegistration>[] = [
             to="/igd/triase/$norawat"
             params={{
               norawat: row.original.no_rawat as string,
+            }}
+            search={{
+              triase_type: row.original.has_triase
+                ? (row.original.triase_type as string)
+                : undefined,
             }}
           >
             {row.original.no_rawat}

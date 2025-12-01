@@ -9,7 +9,7 @@ import { Button } from "../ui/button";
 import { Save } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
-import { Route } from "@/routes/igd.triase.$norawat";
+import { Route } from "@/routes/igd.triase.$norawat.form";
 import { useTriaseStore, type TriaseType } from "@/features/igd/store";
 
 export const InputTriaseForm = () => {

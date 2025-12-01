@@ -15,21 +15,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowUpDown, ArrowUp, ArrowDown, RotateCwSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface RegistrationProps<TData, TValue> {
+interface RegistrationProps<
+  TData extends { has_triase?: boolean; triase_type?: string },
+  TValue,
+> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   loading?: boolean;
 }
 
-export function RegistrationTable<TData, TValue>({
-  columns,
-  data,
-  loading = false,
-}: RegistrationProps<TData, TValue>) {
+export function RegistrationTable<
+  TData extends { has_triase?: boolean; triase_type?: string },
+  TValue,
+>({ columns, data, loading = false }: RegistrationProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const table = useReactTable({
@@ -113,7 +115,13 @@ export function RegistrationTable<TData, TValue>({
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
-                className="hover:bg-muted/50"
+                className={cn(
+                  "hover:bg-muted/50",
+                  row.original.triase_type === "sekunder" &&
+                    "bg-yellow-400 hover:bg-yellow-400 border-yellow-600",
+                  row.original.triase_type === "primer" &&
+                    "bg-red-400 hover:bg-red-400 border-red-600 text-white"
+                )}
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
