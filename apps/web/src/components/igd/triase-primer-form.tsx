@@ -59,7 +59,7 @@ const TriasePrimerForm = withForm({
             />
           </div>
           <MasterPemeriksaan form={form} type="primer" />
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             <form.AppField
               name="catatan"
               children={(field) => <field.TextareaField label="Catatan" />}
@@ -76,12 +76,9 @@ const TriasePrimerForm = withForm({
                   <FieldSet>
                     <FieldLabel>Plan/Keputusan</FieldLabel>
                     <RadioGroup
-                      value={getValue()}
+                      value={field.state.value}
                       onValueChange={(value) => {
                         field.handleChange(value);
-                        setSkala(
-                          value === "Ruang Resusitasi" ? "skala1" : "skala2"
-                        );
                       }}
                       defaultValue="Ruang Resusitasi"
                       className="grid-cols-2"

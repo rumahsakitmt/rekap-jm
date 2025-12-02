@@ -161,6 +161,44 @@ export const triaseRouter = router({
         return { message: "success" };
       });
     }),
+  deleteTriase: publicProcedure
+    .input(z.object({ no_rawat: z.string() }))
+    .mutation(async ({ input }) => {
+      await db.transaction(async (tx) => {
+        await tx
+          .delete(data_triase_igd)
+          .where(eq(data_triase_igd.no_rawat, input.no_rawat));
+
+        await tx
+          .delete(data_triase_igdprimer)
+          .where(eq(data_triase_igdprimer.no_rawat, input.no_rawat));
+
+        await tx
+          .delete(data_triase_igdsekunder)
+          .where(eq(data_triase_igdsekunder.no_rawat, input.no_rawat));
+
+        await tx
+          .delete(data_triase_igddetail_skala1)
+          .where(eq(data_triase_igddetail_skala1.no_rawat, input.no_rawat));
+
+        await tx
+          .delete(data_triase_igddetail_skala2)
+          .where(eq(data_triase_igddetail_skala2.no_rawat, input.no_rawat));
+
+        await tx
+          .delete(data_triase_igddetail_skala3)
+          .where(eq(data_triase_igddetail_skala3.no_rawat, input.no_rawat));
+
+        await tx
+          .delete(data_triase_igddetail_skala4)
+          .where(eq(data_triase_igddetail_skala4.no_rawat, input.no_rawat));
+
+        await tx
+          .delete(data_triase_igddetail_skala5)
+          .where(eq(data_triase_igddetail_skala5.no_rawat, input.no_rawat));
+      });
+      return { message: "success" };
+    }),
   getPatientTriase: publicProcedure
     .input(z.object({ no_rawat: z.string(), triase_type: z.string() }))
     .query(async ({ input }) => {

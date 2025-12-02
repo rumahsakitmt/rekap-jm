@@ -53,7 +53,7 @@ const TriaseSekunderForm = withForm({
             />
           </div>
           <MasterPemeriksaan form={form} type="sekunder" />
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             <form.AppField
               name="catatan"
               children={(field) => <field.TextareaField label="Catatan" />}
@@ -71,20 +71,20 @@ const TriaseSekunderForm = withForm({
                   <FieldSet>
                     <FieldLabel>Plan/Keputusan</FieldLabel>
                     <RadioGroup
-                      value={getValue()}
+                      value={field.state.value}
                       onValueChange={(value) => {
                         field.handleChange(value);
 
-                        let newSkala = "";
-                        if (value === "Zona Kuning") {
-                          newSkala = "skala3";
-                        } else if (value === "Zona Hijau") {
-                          newSkala =
-                            skala === "skala4" || skala === "skala5"
-                              ? skala
-                              : "skala4";
-                        }
-                        setSkala(newSkala as Skala);
+                        // let newSkala = "";
+                        // if (value === "Zona Kuning") {
+                        //   newSkala = "skala3";
+                        // } else if (value === "Zona Hijau") {
+                        //   newSkala =
+                        //     skala === "skala4" || skala === "skala5"
+                        //       ? skala
+                        //       : "skala4";
+                        // }
+                        // setSkala(newSkala as Skala);
                       }}
                       defaultValue="Zona Kuning"
                       className="grid-cols-2"

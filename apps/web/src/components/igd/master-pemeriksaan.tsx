@@ -29,7 +29,9 @@ export const MasterPemeriksaan = withForm({
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         <div className="bg-secondary">
-          <p className="text-center uppercase">Pemeriksaan</p>
+          <div className="text-center uppercase p-2 bg-primary text-primary-foreground font-semibold">
+            Pemeriksaan
+          </div>
           <div className="pl-4 p-2">
             <form.Field
               name="pemeriksaan"
@@ -66,8 +68,9 @@ export const MasterPemeriksaan = withForm({
           defaultValue={type === "primer" ? "skala1" : "skala3"}
           value={skala}
           onValueChange={(value) => setSkala(value as Skala)}
+          className="w-full"
         >
-          <TabsList>
+          <TabsList className="w-full">
             {type === "primer" ? (
               <>
                 <TabsTrigger value="skala1">Skala 1</TabsTrigger>

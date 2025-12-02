@@ -15,9 +15,11 @@ import {
 } from "@/components/ui/table";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, FileInput, Slash } from "lucide-react";
+import { ChevronLeft, Delete, FileInput, Slash, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
+import { DeleteTriaseDialog } from "@/components/igd/delete-triase-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const searchSchema = z.object({
   triase_type: z.string().optional(),
@@ -31,13 +33,60 @@ export const Route = createFileRoute("/igd/triase/$norawat/")({
 function RouteComponent() {
   const { norawat } = Route.useParams();
   const { triase_type } = Route.useSearch();
-  const { data: t } = useQuery({
+  const { data: t, isLoading } = useQuery({
     ...trpc.triase.getPatientTriase.queryOptions({
       no_rawat: norawat,
       triase_type: triase_type as "primer" | "sekunder",
     }),
     enabled: !!triase_type && !!norawat,
   });
+
+  if (isLoading) {
+    return (
+      <div className="max-w-3xl mx-auto p-4 space-y-8">
+        <Skeleton className="h-9 w-24" />
+
+        <div className="border rounded-2xl p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-8 w-8 rounded-md" />
+          </div>
+
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-5 w-64" />
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex flex-col gap-2">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-5 w-24" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="border rounded-md">
+          <div className="border-b p-4">
+            <div className="flex gap-4">
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-5 w-32" />
+            </div>
+          </div>
+
+          <div className="divide-y">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="p-4 flex gap-4">
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-5 flex-1" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!t) {
     return (
@@ -85,12 +134,18 @@ function RouteComponent() {
         </Link>
       </Button>
       <div className="border rounded-2xl p-4 space-y-4">
-        <span className="text-xs text-muted-foreground">
-          {format(
-            new Date(t?.patient.tanggal_kunjungan as string),
-            "yyyy-MM-dd HH:mm"
-          )}
-        </span>
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">
+            {format(
+              new Date(t?.patient.tanggal_kunjungan as string),
+              "yyyy-MM-dd HH:mm"
+            )}
+          </span>
+          <DeleteTriaseDialog
+            norawat={norawat}
+            triase_type={triase_type as string}
+          />
+        </div>
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
           <p>{t?.patient.nama_pasien}</p>
           <div className="flex items-center gap-2">
@@ -120,7 +175,7 @@ function RouteComponent() {
       </div>
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className="bg-secondary uppercase">
             <TableHead>Keterangan</TableHead>
             <TableHead>Triase {triase_type}</TableHead>
           </TableRow>
@@ -159,7 +214,7 @@ function RouteComponent() {
               </TableCell>
             </TableRow>
           )}
-          <TableRow className="bg-secondary">
+          <TableRow className="bg-secondary uppercase">
             <TableCell>Pemeriksaan</TableCell>
             <TableCell>{checkLabel(t?.skala_type || "skala1")}</TableCell>
           </TableRow>
