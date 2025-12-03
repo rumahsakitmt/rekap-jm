@@ -52,7 +52,7 @@ export const columns: ColumnDef<IGDRegistration>[] = [
         <div>
           {format(
             new Date(row.original.tgl_registrasi || new Date()),
-            "dd/MM/yyy"
+            "dd/MM/yyy HH:mm:ss"
           )}
         </div>
       );

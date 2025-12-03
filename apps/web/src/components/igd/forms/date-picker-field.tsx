@@ -23,16 +23,13 @@ export function DatePickerField({ label }: { label: string }) {
       return;
     }
 
-    if (field.state.value) {
-      const newDate = new Date(date);
-      newDate.setHours(field.state.value.getHours());
-      newDate.setMinutes(field.state.value.getMinutes());
-      newDate.setSeconds(field.state.value.getSeconds());
-      newDate.setMilliseconds(field.state.value.getMilliseconds());
-      field.handleChange(newDate);
-    } else {
-      field.handleChange(date);
-    }
+    const now = new Date();
+    const newDate = new Date(date);
+    newDate.setHours(now.getHours());
+    newDate.setMinutes(now.getMinutes());
+    newDate.setSeconds(now.getSeconds());
+    newDate.setMilliseconds(now.getMilliseconds());
+    field.handleChange(newDate);
   };
 
   return (

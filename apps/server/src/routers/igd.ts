@@ -5,11 +5,9 @@ import {
   reg_periksa,
   data_triase_igd,
   poliklinik,
-  master_triase_skala1,
 } from "@/db/schema";
 import { publicProcedure, router } from "@/lib/trpc";
 import { and, eq, gte, lte, or, like, sql, type SQL } from "drizzle-orm";
-import { startOfMonth, endOfMonth } from "date-fns";
 import { z } from "zod";
 import { data_triase_igdprimer } from "@/db/schema/data_triase_igdprimer";
 import { data_triase_igdsekunder } from "@/db/schema/data_triase_igdsekunder";
@@ -28,7 +26,7 @@ export const igdRouter = router({
           no_reg: reg_periksa.no_reg,
           no_rawat: reg_periksa.no_rawat,
           no_rkm_medis: reg_periksa.no_rkm_medis,
-          tgl_registrasi: reg_periksa.tgl_registrasi,
+          tgl_registrasi: sql<Date>`CAST(CONCAT(DATE(${reg_periksa.tgl_registrasi}), ' ', ${reg_periksa.jam_reg}) AS DATETIME)`,
           jam_reg: reg_periksa.jam_reg,
           nm_dokter: dokter.nm_dokter,
           nm_pasien: pasien.nm_pasien,
@@ -79,12 +77,12 @@ export const igdRouter = router({
       const whereClause = (and(...baseFilters) ??
         baseFilters[0]!) as SQL<unknown>;
 
-      return await db
+      const registrations = await db
         .select({
           no_reg: reg_periksa.no_reg,
           no_rawat: reg_periksa.no_rawat,
           no_rkm_medis: reg_periksa.no_rkm_medis,
-          tgl_registrasi: reg_periksa.tgl_registrasi,
+          tgl_registrasi: sql<Date>`CAST(CONCAT(DATE(${reg_periksa.tgl_registrasi}), ' ', ${reg_periksa.jam_reg}) AS DATETIME)`,
           nm_dokter: dokter.nm_dokter,
           nm_pasien: pasien.nm_pasien,
           has_triase: sql<boolean>`${data_triase_igd.no_rawat} IS NOT NULL`,
@@ -113,5 +111,7 @@ export const igdRouter = router({
         .where(whereClause)
         .orderBy(reg_periksa.tgl_registrasi)
         .limit(100);
+
+      return registrations;
     }),
 });
