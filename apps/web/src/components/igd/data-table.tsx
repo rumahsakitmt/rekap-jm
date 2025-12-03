@@ -15,12 +15,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowUpDown, ArrowUp, ArrowDown, RotateCwSquare } from "lucide-react";
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface RegistrationProps<
-  TData extends { has_triase?: boolean; triase_type?: string },
+  TData extends { has_triase?: boolean | null; triase_type?: string | null },
   TValue,
 > {
   columns: ColumnDef<TData, TValue>[];
@@ -29,7 +29,7 @@ interface RegistrationProps<
 }
 
 export function RegistrationTable<
-  TData extends { has_triase?: boolean; triase_type?: string },
+  TData extends { has_triase?: boolean | null; triase_type?: string | null },
   TValue,
 >({ columns, data, loading = false }: RegistrationProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -54,10 +54,11 @@ export function RegistrationTable<
         <div className="p-4 space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex space-x-4">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-4 w-48" />
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
             </div>
           ))}
         </div>
