@@ -573,10 +573,6 @@ export const triaseRouter = router({
     )
     .query(async ({ input }) => {
       const { no_rawat, kode_pemeriksaan } = input;
-      console.log({
-        no_rawat,
-        kode_pemeriksaan,
-      });
 
       return (
         db

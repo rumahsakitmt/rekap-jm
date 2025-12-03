@@ -1,15 +1,19 @@
 import { formOpts } from "./shared-form";
-import { Field, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldSet,
+} from "@/components/ui/field";
 import { MasterPemeriksaan } from "./master-pemeriksaan";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { PetugasCombobox } from "./petugas-combobox";
 import { withForm } from "@/hooks/form";
-import { useTriaseStore } from "@/features/igd/store";
 
 const TriasePrimerForm = withForm({
   ...formOpts,
   render: ({ form }) => {
-    const { skala, setSkala } = useTriaseStore();
     return (
       <>
         <FieldGroup>
@@ -67,20 +71,12 @@ const TriasePrimerForm = withForm({
             <form.Field
               name="keputusan"
               children={(field) => {
-                const getValue = () => {
-                  if (skala === "skala1") return "Ruang Resusitasi";
-                  if (skala === "skala2") return "Ruang Kritis";
-                  return field.state.value || "Ruang Resusitasi";
-                };
                 return (
                   <FieldSet>
                     <FieldLabel>Plan/Keputusan</FieldLabel>
                     <RadioGroup
                       value={field.state.value}
-                      onValueChange={(value) => {
-                        field.handleChange(value);
-                      }}
-                      defaultValue="Ruang Resusitasi"
+                      onValueChange={field.handleChange}
                       className="grid-cols-2"
                     >
                       <Field orientation="horizontal">
@@ -108,6 +104,7 @@ const TriasePrimerForm = withForm({
                         </FieldLabel>
                       </Field>
                     </RadioGroup>
+                    <FieldError errors={field.state.meta.errors} />
                   </FieldSet>
                 );
               }}

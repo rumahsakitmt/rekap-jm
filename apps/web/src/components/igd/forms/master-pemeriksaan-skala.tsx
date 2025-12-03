@@ -28,10 +28,9 @@ export const MasterPemeriksaanSkala = ({ kodePemeriksaan, skala }: Props) => {
 
   useEffect(() => {
     if (data) {
-      const validKodeSkala = new Set(data.map((s) => s.kode_skala));
       const seen = new Set<string>();
       const filteredValue = field.state.value.filter((val) => {
-        if (!validKodeSkala.has(val) || seen.has(val)) {
+        if (seen.has(val)) {
           return false;
         }
         seen.add(val);
@@ -53,7 +52,7 @@ export const MasterPemeriksaanSkala = ({ kodePemeriksaan, skala }: Props) => {
           key={s.kode_skala}
         >
           <Checkbox
-            value={field.state.value.find((v) => s.kode_skala === v)}
+            checked={field.state.value.includes(s.kode_skala)}
             id={s.pengkajian as string}
             onCheckedChange={(checked) => {
               if (checked) {

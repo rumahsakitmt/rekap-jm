@@ -447,7 +447,6 @@ export const tarifRouter = router({
       .where(and(eq(paketOperasi.status, "1")))
       .limit(50);
 
-    console.log(paket.length);
     return paket;
   }),
 

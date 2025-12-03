@@ -8,11 +8,13 @@ import { FieldGroup } from "@/components/ui/field";
 import { Button } from "../ui/button";
 import { Save } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { trpc } from "@/utils/trpc";
+import { queryClient, trpc } from "@/utils/trpc";
 import { Route } from "@/routes/igd.triase.$norawat.form";
 import { useTriaseStore, type TriaseType } from "@/features/igd/store";
+import { useRouter } from "@tanstack/react-router";
 
 export const InputTriaseForm = () => {
+  const router = useRouter();
   const triase = useMutation(trpc.triase.createTriase.mutationOptions());
   const { norawat } = Route.useParams();
   const { skala, type, setType, setSkala } = useTriaseStore();
@@ -39,16 +41,29 @@ export const InputTriaseForm = () => {
         : new Date(),
     },
     onSubmit: ({ value }) => {
-      // if (!skala || !type) {
-      //   return;
-      // }
-
-      triase.mutate({
-        ...value,
-        type,
-        skala,
-      });
-      console.log(value);
+      triase.mutate(
+        {
+          ...value,
+          type,
+          skala,
+        },
+        {
+          onSuccess: () => {
+            form.reset();
+            queryClient.invalidateQueries(
+              trpc.triase.getPatientTriase.queryOptions({
+                no_rawat: norawat,
+                triase_type: type,
+              })
+            );
+            router.navigate({
+              to: "/igd/triase/$norawat",
+              params: { norawat },
+              search: { triase_type: type },
+            });
+          },
+        }
+      );
     },
   });
 
@@ -97,7 +112,7 @@ export const InputTriaseForm = () => {
                 );
               }}
             >
-              <TabsList>
+              <TabsList className="w-full">
                 <TabsTrigger value="primer">Triase Primer</TabsTrigger>
                 <TabsTrigger value="sekunder">Triase Skunder</TabsTrigger>
               </TabsList>

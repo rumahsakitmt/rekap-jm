@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { withForm } from "@/hooks/form";
 import { formOpts } from "./shared-form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Field, FieldLabel } from "@/components/ui/field";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { useStore } from "@tanstack/react-form";
 import { useTriaseStore, type Skala } from "@/features/igd/store";
 
@@ -58,6 +58,7 @@ export const MasterPemeriksaan = withForm({
                         </FieldLabel>
                       </Field>
                     ))}
+                    <FieldError errors={field.state.meta.errors} />
                   </RadioGroup>
                 );
               }}
@@ -67,7 +68,14 @@ export const MasterPemeriksaan = withForm({
         <Tabs
           defaultValue={type === "primer" ? "skala1" : "skala3"}
           value={skala}
-          onValueChange={(value) => setSkala(value as Skala)}
+          onValueChange={(value) => {
+            setSkala(value as Skala);
+            form.setFieldValue("skala1", []);
+            form.setFieldValue("skala2", []);
+            form.setFieldValue("skala3", []);
+            form.setFieldValue("skala4", []);
+            form.setFieldValue("skala5", []);
+          }}
           className="w-full"
         >
           <TabsList className="w-full">

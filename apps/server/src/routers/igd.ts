@@ -57,7 +57,6 @@ export const igdRouter = router({
     )
     .query(async ({ input }) => {
       const { dateFrom, dateTo, keyword } = input;
-      console.log({ dateFrom, dateTo, keyword });
       const normalizedKeyword = keyword.trim();
       const baseFilters: SQL<unknown>[] = [
         gte(reg_periksa.tgl_registrasi, dateFrom),

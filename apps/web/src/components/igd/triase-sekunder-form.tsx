@@ -1,16 +1,19 @@
 import { formOpts } from "./shared-form";
-import { Field, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldSet,
+} from "@/components/ui/field";
 import { MasterPemeriksaan } from "./master-pemeriksaan";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { PetugasCombobox } from "./petugas-combobox";
 import { withForm } from "@/hooks/form";
-import { useTriaseStore, type Skala } from "@/features/igd/store";
 
 const TriaseSekunderForm = withForm({
   ...formOpts,
   render: ({ form }) => {
-    const { skala, setSkala } = useTriaseStore();
-
     return (
       <>
         <FieldGroup>
@@ -61,32 +64,12 @@ const TriaseSekunderForm = withForm({
             <form.Field
               name="keputusan"
               children={(field) => {
-                const getValue = () => {
-                  if (skala === "skala3") return "Zona Kuning";
-                  if (skala === "skala4" || skala === "skala5")
-                    return "Zona Hijau";
-                  return field.state.value || "Zona Kuning";
-                };
                 return (
                   <FieldSet>
                     <FieldLabel>Plan/Keputusan</FieldLabel>
                     <RadioGroup
                       value={field.state.value}
-                      onValueChange={(value) => {
-                        field.handleChange(value);
-
-                        // let newSkala = "";
-                        // if (value === "Zona Kuning") {
-                        //   newSkala = "skala3";
-                        // } else if (value === "Zona Hijau") {
-                        //   newSkala =
-                        //     skala === "skala4" || skala === "skala5"
-                        //       ? skala
-                        //       : "skala4";
-                        // }
-                        // setSkala(newSkala as Skala);
-                      }}
-                      defaultValue="Zona Kuning"
+                      onValueChange={field.handleChange}
                       className="grid-cols-2"
                     >
                       <Field orientation="horizontal">
@@ -108,6 +91,7 @@ const TriaseSekunderForm = withForm({
                         </FieldLabel>
                       </Field>
                     </RadioGroup>
+                    <FieldError errors={field.state.meta.errors} />
                   </FieldSet>
                 );
               }}
