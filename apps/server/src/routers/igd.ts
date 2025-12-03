@@ -112,6 +112,6 @@ export const igdRouter = router({
         )
         .where(whereClause)
         .orderBy(reg_periksa.tgl_registrasi)
-        .limit(50);
+        .limit(100);
     }),
 });
