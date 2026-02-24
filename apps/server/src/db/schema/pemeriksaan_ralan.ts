@@ -1,0 +1,45 @@
+import * as m from "drizzle-orm/mysql-core";
+
+export const pemeriksaan_ralan = m.mysqlTable(
+  "pemeriksaan_ralan",
+  {
+    no_rawat: m.varchar("no_rawat", { length: 17 }).notNull(),
+    tgl_perawatan: m.date("tgl_perawatan").notNull(),
+    jam_rawat: m.time("jam_rawat").notNull(),
+    suhu_tubuh: m.varchar("suhu_tubuh", { length: 5 }),
+    tensi: m.varchar("tensi", { length: 8 }),
+    nadi: m.varchar("nadi", { length: 3 }),
+    respirasi: m.varchar("respirasi", { length: 3 }),
+    tinggi: m.varchar("tinggi", { length: 5 }),
+    berat: m.varchar("berat", { length: 5 }),
+    spo2: m.varchar("spo2", { length: 3 }),
+    gcs: m.varchar("gcs", { length: 10 }),
+    kesadaran: m.mysqlEnum("kesadaran", [
+      "Compos Mentis",
+      "Somnolence",
+      "Sopor",
+      "Coma",
+      "Alert",
+      "Confusion",
+      "Voice",
+      "Pain",
+      "Unresponsive",
+      "Apatis",
+      "Delirium",
+    ]),
+    keluhan: m.varchar("keluhan", { length: 2000 }),
+    pemeriksaan: m.varchar("pemeriksaan", { length: 2000 }),
+    alergi: m.varchar("alergi", { length: 80 }),
+    lingkar_perut: m.varchar("lingkar_perut", { length: 5 }),
+    rtl: m.varchar("rtl", { length: 2000 }),
+    penilaian: m.varchar("penilaian", { length: 2000 }),
+    instruksi: m.varchar("instruksi", { length: 2000 }),
+    evaluasi: m.varchar("evaluasi", { length: 2000 }),
+    nip: m.varchar("nip", { length: 20 }),
+  },
+  (table) => [
+    m.primaryKey({
+      columns: [table.no_rawat, table.tgl_perawatan, table.jam_rawat],
+    }),
+  ],
+);

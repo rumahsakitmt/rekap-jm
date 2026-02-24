@@ -5,9 +5,5 @@ export const Route = createFileRoute("/igd")({
 });
 
 function RouteComponent() {
-  return (
-    <div>
-      <Outlet />
-    </div>
-  );
+  return <Outlet />;
 }

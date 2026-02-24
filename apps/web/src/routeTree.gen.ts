@@ -15,9 +15,11 @@ import { Route as ReportRawatInapRouteImport } from './routes/report-rawat-inap'
 import { Route as RekapRouteImport } from './routes/rekap'
 import { Route as PreviewRouteImport } from './routes/preview'
 import { Route as ObatRouteImport } from './routes/obat'
+import { Route as KlaimRouteImport } from './routes/klaim'
 import { Route as IgdRouteImport } from './routes/igd'
 import { Route as BridgingRouteImport } from './routes/bridging'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as KlaimIndexRouteImport } from './routes/klaim.index'
 import { Route as TarifRawatJalanRouteImport } from './routes/tarif.rawat-jalan'
 import { Route as TarifRawatInapRouteImport } from './routes/tarif.rawat-inap'
 import { Route as TarifRadiologiRouteImport } from './routes/tarif.radiologi'
@@ -28,7 +30,9 @@ import { Route as RekapRawatInapRouteImport } from './routes/rekap.rawat-inap'
 import { Route as ObatStokRouteImport } from './routes/obat.stok'
 import { Route as ObatKadaluwarsaRouteImport } from './routes/obat.kadaluwarsa'
 import { Route as ObatDashboardRouteImport } from './routes/obat.dashboard'
+import { Route as KlaimRanapIndexRouteImport } from './routes/klaim.ranap.index'
 import { Route as IgdTriaseIndexRouteImport } from './routes/igd.triase.index'
+import { Route as KlaimRanapNorawatIndexRouteImport } from './routes/klaim.ranap.$norawat.index'
 import { Route as IgdTriaseNorawatIndexRouteImport } from './routes/igd.triase.$norawat.index'
 import { Route as IgdTriaseNorawatFormRouteImport } from './routes/igd.triase.$norawat.form'
 
@@ -62,6 +66,11 @@ const ObatRoute = ObatRouteImport.update({
   path: '/obat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KlaimRoute = KlaimRouteImport.update({
+  id: '/klaim',
+  path: '/klaim',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IgdRoute = IgdRouteImport.update({
   id: '/igd',
   path: '/igd',
@@ -76,6 +85,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const KlaimIndexRoute = KlaimIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => KlaimRoute,
 } as any)
 const TarifRawatJalanRoute = TarifRawatJalanRouteImport.update({
   id: '/rawat-jalan',
@@ -127,10 +141,20 @@ const ObatDashboardRoute = ObatDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => ObatRoute,
 } as any)
+const KlaimRanapIndexRoute = KlaimRanapIndexRouteImport.update({
+  id: '/ranap/',
+  path: '/ranap/',
+  getParentRoute: () => KlaimRoute,
+} as any)
 const IgdTriaseIndexRoute = IgdTriaseIndexRouteImport.update({
   id: '/triase/',
   path: '/triase/',
   getParentRoute: () => IgdRoute,
+} as any)
+const KlaimRanapNorawatIndexRoute = KlaimRanapNorawatIndexRouteImport.update({
+  id: '/ranap/$norawat/',
+  path: '/ranap/$norawat/',
+  getParentRoute: () => KlaimRoute,
 } as any)
 const IgdTriaseNorawatIndexRoute = IgdTriaseNorawatIndexRouteImport.update({
   id: '/triase/$norawat/',
@@ -147,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/bridging': typeof BridgingRoute
   '/igd': typeof IgdRouteWithChildren
+  '/klaim': typeof KlaimRouteWithChildren
   '/obat': typeof ObatRouteWithChildren
   '/preview': typeof PreviewRoute
   '/rekap': typeof RekapRouteWithChildren
@@ -163,9 +188,12 @@ export interface FileRoutesByFullPath {
   '/tarif/radiologi': typeof TarifRadiologiRoute
   '/tarif/rawat-inap': typeof TarifRawatInapRoute
   '/tarif/rawat-jalan': typeof TarifRawatJalanRoute
+  '/klaim/': typeof KlaimIndexRoute
   '/igd/triase': typeof IgdTriaseIndexRoute
+  '/klaim/ranap': typeof KlaimRanapIndexRoute
   '/igd/triase/$norawat/form': typeof IgdTriaseNorawatFormRoute
   '/igd/triase/$norawat': typeof IgdTriaseNorawatIndexRoute
+  '/klaim/ranap/$norawat': typeof KlaimRanapNorawatIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -187,15 +215,19 @@ export interface FileRoutesByTo {
   '/tarif/radiologi': typeof TarifRadiologiRoute
   '/tarif/rawat-inap': typeof TarifRawatInapRoute
   '/tarif/rawat-jalan': typeof TarifRawatJalanRoute
+  '/klaim': typeof KlaimIndexRoute
   '/igd/triase': typeof IgdTriaseIndexRoute
+  '/klaim/ranap': typeof KlaimRanapIndexRoute
   '/igd/triase/$norawat/form': typeof IgdTriaseNorawatFormRoute
   '/igd/triase/$norawat': typeof IgdTriaseNorawatIndexRoute
+  '/klaim/ranap/$norawat': typeof KlaimRanapNorawatIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/bridging': typeof BridgingRoute
   '/igd': typeof IgdRouteWithChildren
+  '/klaim': typeof KlaimRouteWithChildren
   '/obat': typeof ObatRouteWithChildren
   '/preview': typeof PreviewRoute
   '/rekap': typeof RekapRouteWithChildren
@@ -212,9 +244,12 @@ export interface FileRoutesById {
   '/tarif/radiologi': typeof TarifRadiologiRoute
   '/tarif/rawat-inap': typeof TarifRawatInapRoute
   '/tarif/rawat-jalan': typeof TarifRawatJalanRoute
+  '/klaim/': typeof KlaimIndexRoute
   '/igd/triase/': typeof IgdTriaseIndexRoute
+  '/klaim/ranap/': typeof KlaimRanapIndexRoute
   '/igd/triase/$norawat/form': typeof IgdTriaseNorawatFormRoute
   '/igd/triase/$norawat/': typeof IgdTriaseNorawatIndexRoute
+  '/klaim/ranap/$norawat/': typeof KlaimRanapNorawatIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -222,6 +257,7 @@ export interface FileRouteTypes {
     | '/'
     | '/bridging'
     | '/igd'
+    | '/klaim'
     | '/obat'
     | '/preview'
     | '/rekap'
@@ -238,9 +274,12 @@ export interface FileRouteTypes {
     | '/tarif/radiologi'
     | '/tarif/rawat-inap'
     | '/tarif/rawat-jalan'
+    | '/klaim/'
     | '/igd/triase'
+    | '/klaim/ranap'
     | '/igd/triase/$norawat/form'
     | '/igd/triase/$norawat'
+    | '/klaim/ranap/$norawat'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -262,14 +301,18 @@ export interface FileRouteTypes {
     | '/tarif/radiologi'
     | '/tarif/rawat-inap'
     | '/tarif/rawat-jalan'
+    | '/klaim'
     | '/igd/triase'
+    | '/klaim/ranap'
     | '/igd/triase/$norawat/form'
     | '/igd/triase/$norawat'
+    | '/klaim/ranap/$norawat'
   id:
     | '__root__'
     | '/'
     | '/bridging'
     | '/igd'
+    | '/klaim'
     | '/obat'
     | '/preview'
     | '/rekap'
@@ -286,15 +329,19 @@ export interface FileRouteTypes {
     | '/tarif/radiologi'
     | '/tarif/rawat-inap'
     | '/tarif/rawat-jalan'
+    | '/klaim/'
     | '/igd/triase/'
+    | '/klaim/ranap/'
     | '/igd/triase/$norawat/form'
     | '/igd/triase/$norawat/'
+    | '/klaim/ranap/$norawat/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BridgingRoute: typeof BridgingRoute
   IgdRoute: typeof IgdRouteWithChildren
+  KlaimRoute: typeof KlaimRouteWithChildren
   ObatRoute: typeof ObatRouteWithChildren
   PreviewRoute: typeof PreviewRoute
   RekapRoute: typeof RekapRouteWithChildren
@@ -347,6 +394,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ObatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/klaim': {
+      id: '/klaim'
+      path: '/klaim'
+      fullPath: '/klaim'
+      preLoaderRoute: typeof KlaimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/igd': {
       id: '/igd'
       path: '/igd'
@@ -367,6 +421,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/klaim/': {
+      id: '/klaim/'
+      path: '/'
+      fullPath: '/klaim/'
+      preLoaderRoute: typeof KlaimIndexRouteImport
+      parentRoute: typeof KlaimRoute
     }
     '/tarif/rawat-jalan': {
       id: '/tarif/rawat-jalan'
@@ -438,12 +499,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ObatDashboardRouteImport
       parentRoute: typeof ObatRoute
     }
+    '/klaim/ranap/': {
+      id: '/klaim/ranap/'
+      path: '/ranap'
+      fullPath: '/klaim/ranap'
+      preLoaderRoute: typeof KlaimRanapIndexRouteImport
+      parentRoute: typeof KlaimRoute
+    }
     '/igd/triase/': {
       id: '/igd/triase/'
       path: '/triase'
       fullPath: '/igd/triase'
       preLoaderRoute: typeof IgdTriaseIndexRouteImport
       parentRoute: typeof IgdRoute
+    }
+    '/klaim/ranap/$norawat/': {
+      id: '/klaim/ranap/$norawat/'
+      path: '/ranap/$norawat'
+      fullPath: '/klaim/ranap/$norawat'
+      preLoaderRoute: typeof KlaimRanapNorawatIndexRouteImport
+      parentRoute: typeof KlaimRoute
     }
     '/igd/triase/$norawat/': {
       id: '/igd/triase/$norawat/'
@@ -475,6 +550,20 @@ const IgdRouteChildren: IgdRouteChildren = {
 }
 
 const IgdRouteWithChildren = IgdRoute._addFileChildren(IgdRouteChildren)
+
+interface KlaimRouteChildren {
+  KlaimIndexRoute: typeof KlaimIndexRoute
+  KlaimRanapIndexRoute: typeof KlaimRanapIndexRoute
+  KlaimRanapNorawatIndexRoute: typeof KlaimRanapNorawatIndexRoute
+}
+
+const KlaimRouteChildren: KlaimRouteChildren = {
+  KlaimIndexRoute: KlaimIndexRoute,
+  KlaimRanapIndexRoute: KlaimRanapIndexRoute,
+  KlaimRanapNorawatIndexRoute: KlaimRanapNorawatIndexRoute,
+}
+
+const KlaimRouteWithChildren = KlaimRoute._addFileChildren(KlaimRouteChildren)
 
 interface ObatRouteChildren {
   ObatDashboardRoute: typeof ObatDashboardRoute
@@ -524,6 +613,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BridgingRoute: BridgingRoute,
   IgdRoute: IgdRouteWithChildren,
+  KlaimRoute: KlaimRouteWithChildren,
   ObatRoute: ObatRouteWithChildren,
   PreviewRoute: PreviewRoute,
   RekapRoute: RekapRouteWithChildren,
