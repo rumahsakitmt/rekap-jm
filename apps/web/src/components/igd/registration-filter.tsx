@@ -17,10 +17,6 @@ export const RegistrationFilter = () => {
   const [inputValue, setInputValue] = useState(keyword);
 
   useEffect(() => {
-    setInputValue(keyword);
-  }, [keyword]);
-
-  useEffect(() => {
     const timeout = setTimeout(() => {
       if (inputValue !== keyword) {
         setKeyword(inputValue);

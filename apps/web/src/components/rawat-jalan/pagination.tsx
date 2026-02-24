@@ -16,16 +16,16 @@ interface DataTablePaginationProps {
     page: number;
     totalPages: number;
   };
-  from: "/rekap/rawat-inap" | "/rekap/rawat-jalan";
+  from: string;
 }
 
 export function DataTablePagination({
   pagination,
   from,
 }: DataTablePaginationProps) {
-  const searchParams = useSearch({ from });
-  const navigate = useNavigate({ from });
-  const { limit, page } = searchParams;
+  const searchParams = useSearch({ from: from as any }) as any;
+  const navigate = useNavigate({ from: from as any }) as any;
+  const { limit, page } = searchParams || {};
   if (!pagination) {
     return null;
   }

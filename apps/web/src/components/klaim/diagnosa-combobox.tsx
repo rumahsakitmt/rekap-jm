@@ -41,6 +41,7 @@ export function DiagnosaCombobox({
 }: DiagnosaComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
+  const listId = React.useId();
 
   // Search query for dropdown
   const { data: searchData, isLoading } = useQuery({
@@ -102,6 +103,7 @@ export function DiagnosaCombobox({
             variant="outline"
             role="combobox"
             aria-expanded={open}
+            aria-controls={listId}
             className="w-full justify-between font-normal"
             disabled={disabled}
           >
@@ -117,7 +119,7 @@ export function DiagnosaCombobox({
               value={searchQuery}
               onValueChange={setSearchQuery}
             />
-            <CommandList>
+            <CommandList id={listId}>
               {isLoading ? (
                 <div className="py-6 text-center text-sm text-muted-foreground">
                   Mencari...
@@ -221,6 +223,7 @@ export function ProsedurCombobox({
 }: ProsedurComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
+  const listId = React.useId();
 
   // Search query for dropdown
   const { data: searchData, isLoading } = useQuery({
@@ -282,6 +285,7 @@ export function ProsedurCombobox({
             variant="outline"
             role="combobox"
             aria-expanded={open}
+            aria-controls={listId}
             className="w-full justify-between font-normal"
             disabled={disabled}
           >
@@ -297,7 +301,7 @@ export function ProsedurCombobox({
               value={searchQuery}
               onValueChange={setSearchQuery}
             />
-            <CommandList>
+            <CommandList id={listId}>
               {isLoading ? (
                 <div className="py-6 text-center text-sm text-muted-foreground">
                   Mencari...

@@ -23,9 +23,10 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 
 export const PetugasCombobox = withForm({
   ...formOpts,
-  render: ({ form }) => {
+  render: function PetugasComboboxRender({ form }) {
     const [open, setOpen] = React.useState(false);
     const [searchQuery, setSearchQuery] = React.useState("");
+    const listId = React.useId();
 
     const { data } = useQuery(trpc.pegawai.getPegawai.queryOptions());
 
@@ -60,6 +61,7 @@ export const PetugasCombobox = withForm({
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
+                    aria-controls={listId}
                     className="w-full justify-between"
                   >
                     {selectedPegawai?.nama || "Cari Petugas/Dokter"}
@@ -74,7 +76,7 @@ export const PetugasCombobox = withForm({
                       value={searchQuery}
                       onValueChange={setSearchQuery}
                     />
-                    <CommandList>
+                    <CommandList id={listId}>
                       <CommandEmpty>Tidak ada pegawai.</CommandEmpty>
                       <CommandGroup>
                         {displayedData.map((p) => (

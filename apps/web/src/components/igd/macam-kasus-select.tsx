@@ -14,7 +14,7 @@ import { formOpts } from "./shared-form";
 
 export const MacamKasusSelect = withForm({
   ...formOpts,
-  render: ({ form }) => {
+  render: function MacamKasusSelectRender({ form }) {
     const { data: macamKasus } = useQuery(
       trpc.triase.getMacamKasus.queryOptions()
     );

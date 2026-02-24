@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { z } from "zod";
+import { DataTablePagination } from "@/components/rawat-jalan/pagination";
 import { trpc } from "@/utils/trpc";
 import {
   Table,
@@ -11,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DatePicker } from "@/components/date-picker";
 import { Search, FileText } from "lucide-react";
@@ -19,11 +21,21 @@ import { useState } from "react";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const claimSearchSchema = z.object({
+  page: z.number().catch(1).optional(),
+  limit: z.number().catch(50).optional(),
+});
+
 export const Route = createFileRoute("/klaim/ranap/")({
+  validateSearch: claimSearchSchema,
   component: RouteComponent,
 });
 
 function RouteComponent() {
+  const search = Route.useSearch();
+  const page = search.page || 1;
+  const limit = search.limit || 50;
+
   const [dateFrom, setDateFrom] = useState<Date | undefined>(
     startOfMonth(new Date()),
   );
@@ -38,6 +50,8 @@ function RouteComponent() {
       dateFrom: dateFrom ?? startOfMonth(new Date()),
       dateTo: dateTo ?? endOfMonth(new Date()),
       keyword: appliedKeyword || undefined,
+      page,
+      limit,
     }),
   );
 
@@ -85,7 +99,7 @@ function RouteComponent() {
           </div>
         </div>
         <Badge variant="outline" className="h-9 px-3">
-          {isLoading ? "..." : `${data?.length ?? 0} record`}
+          {isLoading ? "..." : `${data?.pagination.total ?? 0} record`}
         </Badge>
       </div>
 
@@ -97,9 +111,9 @@ function RouteComponent() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[200px]">SEP</TableHead>
-                  <TableHead className="w-[200px]">Pasien</TableHead>
+                  <TableHead >Pasien</TableHead>
                   <TableHead className="w-[200px]">Dokter</TableHead>
-                  <TableHead>Diagnosa Awal</TableHead>
+                  <TableHead className="w-[200px]">Diagnosa / Prosedur</TableHead>
                   <TableHead className="w-[80px] text-center">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
@@ -124,8 +138,8 @@ function RouteComponent() {
                       </TableCell>
                     </TableRow>
                   ))
-                ) : data && data.length > 0 ? (
-                  data.map((row) => (
+                ) : data?.data && data.data.length > 0 ? (
+                  data.data.map((row) => (
                     <TableRow key={row.noSep}>
                       <TableCell className="text-xs align-top">
                         <div className="space-y-0.5">
@@ -194,17 +208,26 @@ function RouteComponent() {
                       </TableCell>
                       <TableCell className="text-xs align-top">
                         <div className="space-y-0.5">
-                          {row.diagAwal ? (
+                          {row.allDiagnosa || row.diagAwal ? (
                             <div>
                               <span className="text-muted-foreground">
                                 Dx:{" "}
                               </span>
-                              <span className="font-mono">{row.diagAwal} - {row.nmDiagnosaAwal}</span>
+                              <span className="font-mono">{row.allDiagnosa || row.diagAwal} </span>
                             </div>
                           ) : (
                             <div className="text-muted-foreground">Dx: -</div>
                           )}
-                          <div className="text-muted-foreground">Px: -</div>
+                          {row.allProsedur ? (
+                            <div>
+                              <span className="text-muted-foreground">
+                                Px:{" "}
+                              </span>
+                              <span className="font-mono">{row.allProsedur} </span>
+                            </div>
+                          ) : (
+                            <div className="text-muted-foreground">Px: -</div>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="text-center align-top">
@@ -239,6 +262,12 @@ function RouteComponent() {
           </div>
         </CardContent>
       </Card>
+      {data?.pagination && (
+        <DataTablePagination
+          pagination={data.pagination}
+          from="/klaim/ranap/"
+        />
+      )}
     </div>
   );
 }

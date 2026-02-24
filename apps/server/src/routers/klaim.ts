@@ -131,17 +131,36 @@ export const klaimRouter = router({
         dateFrom: z.coerce.date(),
         dateTo: z.coerce.date(),
         keyword: z.string().optional(),
+        limit: z.number().optional().default(50),
+        page: z.number().optional().default(1),
       }),
     )
     .query(async ({ input }) => {
-      const { dateFrom, dateTo, keyword } = input;
+      const { dateFrom, dateTo, keyword, limit, page } = input;
       const dateFromStr = dateFrom.toISOString().slice(0, 10);
       const dateToStr = dateTo.toISOString().slice(0, 10);
 
-      // Simple query - diagnosa/prosedur details available on detail page
+      const limitVal = limit || 50;
+      const offsetVal = (page - 1) * limitVal;
+
       let mainQuery;
+      let countQuery;
       if (keyword) {
         const kw = `%${keyword}%`;
+        countQuery = sql`
+          SELECT COUNT(*) as total
+          FROM bridging_sep
+          INNER JOIN reg_periksa ON reg_periksa.no_rawat = bridging_sep.no_rawat
+          INNER JOIN dokter ON reg_periksa.kd_dokter = dokter.kd_dokter
+          WHERE bridging_sep.tglsep BETWEEN ${dateFromStr} AND ${dateToStr}
+            AND (
+              bridging_sep.no_sep LIKE ${kw}
+              OR bridging_sep.nomr LIKE ${kw}
+              OR bridging_sep.nama_pasien LIKE ${kw}
+              OR bridging_sep.no_rawat LIKE ${kw}
+              OR bridging_sep.no_kartu LIKE ${kw}
+            )
+        `;
         mainQuery = sql`
           SELECT
             bridging_sep.no_sep,
@@ -156,7 +175,9 @@ export const klaimRouter = router({
             bridging_sep.nmdiagnosaawal,
             bridging_sep.klsrawat,
             bridging_sep.tglpulang,
-            dokter.nm_dokter
+            dokter.nm_dokter,
+            (SELECT GROUP_CONCAT(kd_penyakit ORDER BY prioritas ASC SEPARATOR ', ') FROM diagnosa_pasien WHERE no_rawat = bridging_sep.no_rawat) as all_diagnosa,
+            (SELECT GROUP_CONCAT(kode ORDER BY prioritas ASC SEPARATOR ', ') FROM prosedur_pasien WHERE no_rawat = bridging_sep.no_rawat) as all_prosedur
           FROM bridging_sep
           INNER JOIN reg_periksa ON reg_periksa.no_rawat = bridging_sep.no_rawat
           INNER JOIN dokter ON reg_periksa.kd_dokter = dokter.kd_dokter
@@ -169,8 +190,16 @@ export const klaimRouter = router({
               OR bridging_sep.no_kartu LIKE ${kw}
             )
           ORDER BY bridging_sep.tglsep
+          LIMIT ${limitVal} OFFSET ${offsetVal}
         `;
       } else {
+        countQuery = sql`
+          SELECT COUNT(*) as total
+          FROM bridging_sep
+          INNER JOIN reg_periksa ON reg_periksa.no_rawat = bridging_sep.no_rawat
+          INNER JOIN dokter ON reg_periksa.kd_dokter = dokter.kd_dokter
+          WHERE bridging_sep.tglsep BETWEEN ${dateFromStr} AND ${dateToStr}
+        `;
         mainQuery = sql`
           SELECT
             bridging_sep.no_sep,
@@ -185,18 +214,23 @@ export const klaimRouter = router({
             bridging_sep.nmdiagnosaawal,
             bridging_sep.klsrawat,
             bridging_sep.tglpulang,
-            dokter.nm_dokter
+            dokter.nm_dokter,
+            (SELECT GROUP_CONCAT(kd_penyakit ORDER BY prioritas ASC SEPARATOR ', ') FROM diagnosa_pasien WHERE no_rawat = bridging_sep.no_rawat) as all_diagnosa,
+            (SELECT GROUP_CONCAT(kode ORDER BY prioritas ASC SEPARATOR ', ') FROM prosedur_pasien WHERE no_rawat = bridging_sep.no_rawat) as all_prosedur
           FROM bridging_sep
           INNER JOIN reg_periksa ON reg_periksa.no_rawat = bridging_sep.no_rawat
           INNER JOIN dokter ON reg_periksa.kd_dokter = dokter.kd_dokter
           WHERE bridging_sep.tglsep BETWEEN ${dateFromStr} AND ${dateToStr}
           ORDER BY bridging_sep.tglsep
+          LIMIT ${limitVal} OFFSET ${offsetVal}
         `;
       }
 
       const rows = await queryRows(mainQuery);
+      const countResult = await queryRows(countQuery);
+      const total = Number(countResult[0]?.total || 0);
 
-      return rows.map((r) => ({
+      const data = rows.map((r) => ({
         noSep: r.no_sep as string,
         noRawat: r.no_rawat as string,
         nomr: r.nomr as string,
@@ -210,7 +244,20 @@ export const klaimRouter = router({
         klsRawat: (r.klsrawat as string) || "",
         tglPulang: r.tglpulang as string | null,
         nmDokter: (r.nm_dokter as string) || "",
+        allDiagnosa: (r.all_diagnosa as string) || "",
+        allProsedur: (r.all_prosedur as string) || "",
       }));
+
+      return {
+        data,
+        pagination: {
+          total,
+          limit: limitVal,
+          offset: offsetVal,
+          page,
+          totalPages: Math.ceil(total / limitVal),
+        },
+      };
     }),
 
   getKlaimRanap: publicProcedure

@@ -13,7 +13,7 @@ export const MasterPemeriksaan = withForm({
   props: {
     type: "primer",
   },
-  render: ({ form }) => {
+  render: function MasterPemeriksaanRender({ form }) {
     const { type, skala, setSkala } = useTriaseStore();
 
     const { data } = useQuery({
