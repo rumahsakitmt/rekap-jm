@@ -430,7 +430,7 @@ function RouteComponent() {
     simpanKlaim.mutate({
       no_rawat: data.noRawat,
       tgl_registrasi: data.tglRegistrasi,
-      codernik: "7602091611930001", // Assuming a valid coder nik, this might need to come from context/auth
+      codernik: import.meta.env.VITE_CODER_NIK || "",
       nosep: data.nosep,
       nokartu: data.noKartu,
       nm_pasien: data.nmPasien,
@@ -842,7 +842,7 @@ function RouteComponent() {
                     onClick={() => {
                       hapusKlaim.mutate({
                         no_sep: data.nosep,
-                        coder_nik: "7602091611930001",
+                        coder_nik: import.meta.env.VITE_CODER_NIK || "",
                       });
                     }}
                   >
