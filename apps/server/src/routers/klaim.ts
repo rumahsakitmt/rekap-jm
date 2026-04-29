@@ -19,6 +19,45 @@ async function queryRows(query: ReturnType<typeof sql>) {
   return rows as unknown as Row[];
 }
 
+async function syncDiagnosaProsedurDb(
+  no_rawat: string,
+  diagnosa: string | undefined,
+  procedure: string | undefined
+) {
+  const diagCodes = diagnosa ? diagnosa.split("#").filter(Boolean) : [];
+  const procCodes = procedure ? procedure.split("#").filter(Boolean) : [];
+
+  // Delete ALL rows for this no_rawat regardless of status to avoid duplication
+  await db
+    .delete(diagnosa_pasien)
+    .where(eq(diagnosa_pasien.no_rawat, no_rawat));
+  if (diagCodes.length > 0) {
+    await db.insert(diagnosa_pasien).values(
+      diagCodes.map((code, idx) => ({
+        no_rawat,
+        kd_penyakit: code,
+        status: "Ranap" as const,
+        prioritas: idx + 1,
+        status_penyakit: "Baru" as const,
+      }))
+    );
+  }
+
+  await db
+    .delete(prosedur_pasien)
+    .where(eq(prosedur_pasien.no_rawat, no_rawat));
+  if (procCodes.length > 0) {
+    await db.insert(prosedur_pasien).values(
+      procCodes.map((code, idx) => ({
+        no_rawat,
+        kode: code,
+        status: "Ranap" as const,
+        prioritas: idx + 1,
+      }))
+    );
+  }
+}
+
 export const klaimRouter = router({
   // Search for ICD-10 diagnoses (penyakit)
   searchPenyakit: publicProcedure
@@ -442,7 +481,7 @@ export const klaimRouter = router({
       const diagRows = await queryRows(sql`
         SELECT kd_penyakit
         FROM diagnosa_pasien
-        WHERE no_rawat = ${noRawat}
+        WHERE no_rawat = ${noRawat} AND status = 'Ranap'
         ORDER BY prioritas ASC
       `);
       let diagnosa = diagRows.map((r) => r.kd_penyakit as string).join("#");
@@ -454,7 +493,7 @@ export const klaimRouter = router({
       const procRows = await queryRows(sql`
         SELECT kode
         FROM prosedur_pasien
-        WHERE no_rawat = ${noRawat}
+        WHERE no_rawat = ${noRawat} AND status = 'Ranap'
         ORDER BY prioritas ASC
       `);
       const prosedur = procRows.map((r) => r.kode as string).join("#");
@@ -464,7 +503,7 @@ export const klaimRouter = router({
         .select({ kd_penyakit: diagnosa_pasien.kd_penyakit })
         .from(diagnosa_pasien)
         .innerJoin(penyakit, eq(diagnosa_pasien.kd_penyakit, penyakit.kd_penyakit))
-        .where(and(eq(penyakit.im, '0'), eq(diagnosa_pasien.no_rawat, noRawat)))
+        .where(and(eq(penyakit.im, '0'), eq(diagnosa_pasien.no_rawat, noRawat), eq(diagnosa_pasien.status, 'Ranap')))
         .orderBy(asc(diagnosa_pasien.prioritas));
 
       const diagnosaInacbg = diagInacbgRows
@@ -476,7 +515,7 @@ export const klaimRouter = router({
         .select({ kode: prosedur_pasien.kode })
         .from(prosedur_pasien)
         .innerJoin(icd9, eq(prosedur_pasien.kode, icd9.kode))
-        .where(and(eq(icd9.im, '0'), eq(prosedur_pasien.no_rawat, noRawat)))
+        .where(and(eq(icd9.im, '0'), eq(prosedur_pasien.no_rawat, noRawat), eq(prosedur_pasien.status, 'Ranap')))
         .orderBy(asc(prosedur_pasien.prioritas));
 
       const prosedurInacbg = procInacbgRows
@@ -901,6 +940,7 @@ export const klaimRouter = router({
 
           const res = await UpdateDataKlaim3(klaimData);
           if (res.respon === "Berhasil") {
+            await syncDiagnosaProsedurDb(no_rawat, diagnosa, procedure);
             return { success: true, message: "Berhasil" };
           } else {
             return { success: false, message: res.msg?.metadata?.message || "Gagal Update Data Klaim" };
@@ -969,6 +1009,7 @@ export const klaimRouter = router({
 
           const res = await UpdateDataKlaim2(klaimData);
           if (res.respon === "Berhasil") {
+            await syncDiagnosaProsedurDb(no_rawat, diagnosa, procedure);
             return { success: true, message: "Berhasil" };
           } else {
             return { success: false, message: res.msg?.metadata?.message || "Gagal Update Data Klaim" };

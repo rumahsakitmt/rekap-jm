@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 import {
   Card,
@@ -11,7 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
   DiagnosaCombobox,
@@ -246,8 +246,33 @@ interface SimpanKlaimResult {
   message?: string;
 }
 
+const EKLAIM_STEPS = [
+  "Menyiapkan data klaim...",
+  "Mengirim ke server INACBG...",
+  "Menunggu respons server...",
+  "Memproses data pasien...",
+  "Menyimpan diagnosa dan prosedur...",
+  "Melakukan grouping klaim...",
+  "Menyimpan hasil ke database...",
+  "Memfinalisasi klaim...",
+];
+
+function SpinnerVerb() {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setIndex((prev) => (prev + 1) % EKLAIM_STEPS.length);
+    }, 2000);
+    return () => clearInterval(id);
+  }, []);
+
+  return <span>{EKLAIM_STEPS[index]}</span>;
+}
+
 function RouteComponent() {
   const { norawat } = Route.useParams();
+  const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery(
     trpc.klaim.getKlaimRanap.queryOptions({ noRawat: norawat }),
@@ -258,6 +283,9 @@ function RouteComponent() {
     onSuccess: (result: any) => {
       if (result.success) {
         toast.success("Klaim berhasil disimpan");
+        queryClient.invalidateQueries({
+          queryKey: trpc.klaim.getKlaimRanap.queryKey({ noRawat: norawat }),
+        });
       } else {
         toast.error(result.message || "Gagal menyimpan klaim");
       }
@@ -466,10 +494,6 @@ function RouteComponent() {
           <Badge variant="outline">{data.noRawat}</Badge>
         </div>
 
-        <Button onClick={handleSimpan} disabled={simpanKlaim.isPending}>
-          <Save className="mr-2 size-4" />
-          {simpanKlaim.isPending ? "Menyimpan..." : "Simpan Klaim"}
-        </Button>
       </div>
 
       {/* Patient Info & Admission */}
@@ -661,6 +685,24 @@ function RouteComponent() {
           </div>
         </CardContent>
       </Card>
+
+      <Button
+        onClick={handleSimpan}
+        disabled={simpanKlaim.isPending}
+        className="w-full"
+      >
+        {simpanKlaim.isPending ? (
+          <>
+            <Loader2 className="mr-2 size-4 animate-spin" />
+            <SpinnerVerb />
+          </>
+        ) : (
+          <>
+            <Save className="mr-2 size-4" />
+            Simpan Klaim
+          </>
+        )}
+      </Button>
     </div>
   );
 }
