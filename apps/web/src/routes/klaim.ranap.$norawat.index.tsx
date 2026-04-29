@@ -375,18 +375,26 @@ function RouteComponent() {
   const handleDiagnosaInacbgChange = (value: string[]) => {
     setDiagnosaInacbgState(value);
     setDiagnosaIdrg(value);
-    setDiagnosaStatuses((prev) => syncStatuses(value, diagnosaInacbgState, prev));
+    setDiagnosaStatuses((prev) =>
+      syncStatuses(value, diagnosaInacbgState, prev),
+    );
   };
   const handleProsedurInacbgChange = (value: string[]) => {
     setProsedurInacbgState(value);
     setProsedurIdrg(value);
-    setProsedurStatuses((prev) => syncStatuses(value, prosedurInacbgState, prev));
+    setProsedurStatuses((prev) =>
+      syncStatuses(value, prosedurInacbgState, prev),
+    );
   };
 
   useEffect(() => {
     if (data) {
-      const dIdrg = data.diagnosa ? data.diagnosa.split("#").filter(Boolean) : [];
-      const pIdrg = data.prosedur ? data.prosedur.split("#").filter(Boolean) : [];
+      const dIdrg = data.diagnosa
+        ? data.diagnosa.split("#").filter(Boolean)
+        : [];
+      const pIdrg = data.prosedur
+        ? data.prosedur.split("#").filter(Boolean)
+        : [];
       const dInacbg = data.diagnosaInacbg
         ? data.diagnosaInacbg.split("#").filter(Boolean)
         : data.diagnosa
@@ -404,66 +412,20 @@ function RouteComponent() {
       setProsedurInacbgState(pInacbg);
 
       setDiagnosaStatuses(
-        data.diagnosaStatus ? data.diagnosaStatus.split("#").filter(Boolean) : dIdrg.map(() => "Ralan"),
+        data.diagnosaStatus
+          ? data.diagnosaStatus.split("#").filter(Boolean)
+          : dIdrg.map(() => "Ralan"),
       );
       setProsedurStatuses(
-        data.prosedurStatus ? data.prosedurStatus.split("#").filter(Boolean) : pIdrg.map(() => "Ralan"),
+        data.prosedurStatus
+          ? data.prosedurStatus.split("#").filter(Boolean)
+          : pIdrg.map(() => "Ralan"),
       );
     }
   }, [data]);
 
   const handleSimpan = () => {
     if (!data) return;
-
-    console.log({
-      no_rawat: data.noRawat,
-      tgl_registrasi: data.tglRegistrasi,
-      codernik: "12345", // Assuming a valid coder nik, this might need to come from context/auth
-      nosep: data.nosep,
-      nokartu: data.noKartu,
-      nm_pasien: data.nmPasien,
-      keluar: data.tglKeluar,
-      kelas_rawat: data.klsRawat,
-      cara_masuk: data.caraMasuk,
-      // For IDRG / INACBG
-      diagnosa: diagnosaIdrg.join("#"),
-      procedure: prosedurIdrg.join("#"),
-      diagnosainacbg: diagnosaInacbgState.join("#"),
-      procedureinacbg: prosedurInacbgState.join("#"),
-
-      // Billing
-      prosedur_non_bedah: String(data.billing.prosedurNonBedah),
-      prosedur_bedah: String(data.billing.prosedurBedah),
-      konsultasi: String(data.billing.konsultasi),
-      tenaga_ahli: String(data.billing.tenagaAhli),
-      keperawatan: String(data.billing.keperawatan),
-      penunjang: String(data.billing.penunjang),
-      radiologi: String(data.billing.radiologi),
-      laboratorium: String(data.billing.laboratorium),
-      pelayanan_darah: String(data.billing.pelayananDarah),
-      rehabilitasi: String(data.billing.rehabilitasi),
-      kamar: String(data.billing.kamar),
-      rawat_intensif: String(data.billing.rawatIntensif),
-      obat: String(data.billing.obat),
-      obat_kronis: String(data.billing.obatKronis),
-      obat_kemoterapi: String(data.billing.obatKemoterapi),
-      alkes: String(data.billing.alkes),
-      bmhp: String(data.billing.bmhp),
-      sewa_alat: String(data.billing.sewaAlat),
-      tarif_poli_eks: String(data.billing.tarifPoliEks),
-
-      nama_dokter: data.nmDokter,
-      jk: data.jk,
-      tgl_lahir: data.tglLahir,
-      jnsrawat: data.jnsRawat,
-      sistole: data.sistole,
-      diastole: data.diastole,
-      discharge_status: data.dischargeStatus,
-      birth_weight: data.birthWeight,
-      upgrade_class_ind: data.upgradeClassInd,
-      upgrade_class_class: data.upgradeClassClass,
-      no_rkm_medis: data.noRkmMedis,
-    });
 
     simpanKlaim.mutate({
       no_rawat: data.noRawat,
@@ -563,7 +525,6 @@ function RouteComponent() {
           <h1 className="text-lg font-semibold">Detail Klaim Ranap</h1>
           <Badge variant="outline">{data.noRawat}</Badge>
         </div>
-
       </div>
 
       {/* Patient Info & Admission */}
@@ -813,12 +774,12 @@ function RouteComponent() {
           </Button>
         ) : (
           <>
-            <AlertDialog open={kirimDialogOpen} onOpenChange={setKirimDialogOpen}>
+            <AlertDialog
+              open={kirimDialogOpen}
+              onOpenChange={setKirimDialogOpen}
+            >
               <AlertDialogTrigger asChild>
-                <Button
-                  className="flex-1"
-                  disabled={kirimKlaim.isPending}
-                >
+                <Button className="flex-1" disabled={kirimKlaim.isPending}>
                   {kirimKlaim.isPending ? (
                     <Loader2 className="mr-2 size-4 animate-spin" />
                   ) : (
@@ -831,7 +792,8 @@ function RouteComponent() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Kirim Klaim ke DC</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Apakah Anda yakin ingin mengirim klaim ini ke DC (Data Center)?
+                    Apakah Anda yakin ingin mengirim klaim ini ke DC (Data
+                    Center)?
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -847,7 +809,10 @@ function RouteComponent() {
               </AlertDialogContent>
             </AlertDialog>
 
-            <AlertDialog open={hapusDialogOpen} onOpenChange={setHapusDialogOpen}>
+            <AlertDialog
+              open={hapusDialogOpen}
+              onOpenChange={setHapusDialogOpen}
+            >
               <AlertDialogTrigger asChild>
                 <Button
                   variant="destructive"
@@ -866,7 +831,8 @@ function RouteComponent() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Hapus Klaim</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Apakah Anda yakin ingin menghapus klaim ini? Tindakan ini tidak dapat dibatalkan.
+                    Apakah Anda yakin ingin menghapus klaim ini? Tindakan ini
+                    tidak dapat dibatalkan.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
