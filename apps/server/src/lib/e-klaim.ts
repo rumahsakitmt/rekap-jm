@@ -97,17 +97,18 @@ export async function requestEKlaim(payload: any): Promise<any> {
       body: encryptedJson
     });
 
-    let responseText = await response.text();
+    const responseText = (await response.text()).trim();
 
-    // Clean up response text if it has leading/trailing newlines (translating PHP's logic cleanly)
-    const parts = responseText.split('\n');
-    if (parts.length >= 3) {
-      responseText = parts.slice(1, -1).join('\n');
-    } else if (parts.length === 2 && parts[0] === "") {
-      responseText = parts[1];
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${responseText}`);
     }
 
-    const decryptedJson = mc_decrypt(responseText.trim(), EKLAIM_CONFIG.KEY);
+    // Log raw response for debugging decryption issues
+    console.log("[E-Klaim] Raw response length:", responseText.length);
+    console.log("[E-Klaim] Raw response snippet:", responseText.substring(0, 200));
+
+    // mc_decrypt removes all whitespace internally; no need to strip lines here.
+    const decryptedJson = mc_decrypt(responseText, EKLAIM_CONFIG.KEY);
     return JSON.parse(decryptedJson);
   } catch (error) {
     console.error("E-Klaim Request Error:", error);
