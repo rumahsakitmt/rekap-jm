@@ -712,27 +712,29 @@ function RouteComponent() {
       </Card>
 
       <div className="flex gap-3">
-        <Button
-          onClick={handleSimpan}
-          disabled={simpanKlaim.isPending || hapusKlaim.isPending}
-          className="flex-1"
-        >
-          {simpanKlaim.isPending ? (
-            <>
-              <Loader2 className="mr-2 size-4 animate-spin" />
-              <SpinnerVerb />
-            </>
-          ) : (
-            <>
-              <Save className="mr-2 size-4" />
-              Simpan Klaim
-            </>
-          )}
-        </Button>
-        {data.isKlaimed && (
+        {!data.isKlaimed ? (
+          <Button
+            onClick={handleSimpan}
+            disabled={simpanKlaim.isPending}
+            className="flex-1"
+          >
+            {simpanKlaim.isPending ? (
+              <>
+                <Loader2 className="mr-2 size-4 animate-spin" />
+                <SpinnerVerb />
+              </>
+            ) : (
+              <>
+                <Save className="mr-2 size-4" />
+                Simpan Klaim
+              </>
+            )}
+          </Button>
+        ) : (
           <Button
             variant="destructive"
-            disabled={simpanKlaim.isPending || hapusKlaim.isPending}
+            className="flex-1"
+            disabled={hapusKlaim.isPending}
             onClick={() => {
               if (confirm("Yakin ingin menghapus klaim ini?")) {
                 hapusKlaim.mutate({
