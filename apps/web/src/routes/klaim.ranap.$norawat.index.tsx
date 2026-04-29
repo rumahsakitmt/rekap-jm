@@ -120,6 +120,24 @@ function DiagnosaProsedurCard({
     );
   }, [diagnosa, prosedur, diagnosaInacbg, prosedurInacbg]);
 
+  // Keep IDRG and INACBG in sync
+  const handleDiagnosaIdrgChange = (value: string[]) => {
+    setDiagnosaIdrg(value);
+    setDiagnosaInacbgState(value);
+  };
+  const handleProsedurIdrgChange = (value: string[]) => {
+    setProsedurIdrg(value);
+    setProsedurInacbgState(value);
+  };
+  const handleDiagnosaInacbgChange = (value: string[]) => {
+    setDiagnosaInacbgState(value);
+    setDiagnosaIdrg(value);
+  };
+  const handleProsedurInacbgChange = (value: string[]) => {
+    setProsedurInacbgState(value);
+    setProsedurIdrg(value);
+  };
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -134,7 +152,7 @@ function DiagnosaProsedurCard({
             <Label className="text-sm font-medium">Diagnosa IDRG</Label>
             <DiagnosaCombobox
               value={diagnosaIdrg}
-              onChange={setDiagnosaIdrg}
+              onChange={handleDiagnosaIdrgChange}
               placeholder="Cari diagnosa IDRG..."
               inacbgOnly={false}
             />
@@ -143,7 +161,7 @@ function DiagnosaProsedurCard({
             <Label className="text-sm font-medium">Prosedur IDRG</Label>
             <ProsedurCombobox
               value={prosedurIdrg}
-              onChange={setProsedurIdrg}
+              onChange={handleProsedurIdrgChange}
               placeholder="Cari prosedur IDRG..."
               inacbgOnly={false}
             />
@@ -157,7 +175,7 @@ function DiagnosaProsedurCard({
             <Label className="text-sm font-medium">Diagnosa INACBG</Label>
             <DiagnosaCombobox
               value={diagnosaInacbgState}
-              onChange={setDiagnosaInacbgState}
+              onChange={handleDiagnosaInacbgChange}
               placeholder="Cari diagnosa INACBG..."
               inacbgOnly={true}
             />
@@ -166,7 +184,7 @@ function DiagnosaProsedurCard({
             <Label className="text-sm font-medium">Prosedur INACBG</Label>
             <ProsedurCombobox
               value={prosedurInacbgState}
-              onChange={setProsedurInacbgState}
+              onChange={handleProsedurInacbgChange}
               placeholder="Cari prosedur INACBG..."
               inacbgOnly={true}
             />
