@@ -97,17 +97,20 @@ export async function requestEKlaim(payload: any): Promise<any> {
       body: encryptedJson
     });
 
-    const responseText = (await response.text()).trim();
+    let responseText = (await response.text()).trim();
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${responseText}`);
     }
 
-    // Log raw response for debugging decryption issues
-    console.log("[E-Klaim] Raw response length:", responseText.length);
-    console.log("[E-Klaim] Raw response snippet:", responseText.substring(0, 200));
+    // INACBG API may wrap encrypted payload in PEM-like headers.
+    const pemMatch = responseText.match(
+      /----BEGIN ENCRYPTED DATA----\r?\n?([\s\S]+?)\r?\n?----END ENCRYPTED DATA----/
+    );
+    if (pemMatch) {
+      responseText = pemMatch[1];
+    }
 
-    // mc_decrypt removes all whitespace internally; no need to strip lines here.
     const decryptedJson = mc_decrypt(responseText, EKLAIM_CONFIG.KEY);
     return JSON.parse(decryptedJson);
   } catch (error) {
