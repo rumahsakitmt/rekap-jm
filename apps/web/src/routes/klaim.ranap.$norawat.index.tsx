@@ -19,6 +19,17 @@ import {
 } from "@/components/klaim/diagnosa-combobox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/klaim/ranap/$norawat/")({
@@ -336,6 +347,8 @@ function RouteComponent() {
   const [prosedurInacbgState, setProsedurInacbgState] = useState<string[]>([]);
   const [diagnosaStatuses, setDiagnosaStatuses] = useState<string[]>([]);
   const [prosedurStatuses, setProsedurStatuses] = useState<string[]>([]);
+  const [kirimDialogOpen, setKirimDialogOpen] = useState(false);
+  const [hapusDialogOpen, setHapusDialogOpen] = useState(false);
 
   // Sync statuses when codes change
   const syncStatuses = (
@@ -800,44 +813,78 @@ function RouteComponent() {
           </Button>
         ) : (
           <>
-            <Button
-              className="flex-1"
-              disabled={kirimKlaim.isPending}
-              onClick={() => {
-                if (confirm("Yakin ingin mengirim klaim ini ke DC?")) {
-                  kirimKlaim.mutate({
-                    no_sep: data.nosep,
-                  });
-                }
-              }}
-            >
-              {kirimKlaim.isPending ? (
-                <Loader2 className="mr-2 size-4 animate-spin" />
-              ) : (
-                <Send className="mr-2 size-4" />
-              )}
-              Kirim Klaim
-            </Button>
-            <Button
-              variant="destructive"
-              className="flex-1"
-              disabled={hapusKlaim.isPending}
-              onClick={() => {
-                if (confirm("Yakin ingin menghapus klaim ini?")) {
-                  hapusKlaim.mutate({
-                    no_sep: data.nosep,
-                    coder_nik: "7602091611930001",
-                  });
-                }
-              }}
-            >
-              {hapusKlaim.isPending ? (
-                <Loader2 className="mr-2 size-4 animate-spin" />
-              ) : (
-                <Trash2 className="mr-2 size-4" />
-              )}
-              Hapus Klaim
-            </Button>
+            <AlertDialog open={kirimDialogOpen} onOpenChange={setKirimDialogOpen}>
+              <AlertDialogTrigger asChild>
+                <Button
+                  className="flex-1"
+                  disabled={kirimKlaim.isPending}
+                >
+                  {kirimKlaim.isPending ? (
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                  ) : (
+                    <Send className="mr-2 size-4" />
+                  )}
+                  Kirim Klaim
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Kirim Klaim ke DC</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Apakah Anda yakin ingin mengirim klaim ini ke DC (Data Center)?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Batal</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => {
+                      kirimKlaim.mutate({ no_sep: data.nosep });
+                    }}
+                  >
+                    Kirim
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog open={hapusDialogOpen} onOpenChange={setHapusDialogOpen}>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="destructive"
+                  className="flex-1"
+                  disabled={hapusKlaim.isPending}
+                >
+                  {hapusKlaim.isPending ? (
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="mr-2 size-4" />
+                  )}
+                  Hapus Klaim
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Hapus Klaim</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Apakah Anda yakin ingin menghapus klaim ini? Tindakan ini tidak dapat dibatalkan.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Batal</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={() => {
+                      hapusKlaim.mutate({
+                        no_sep: data.nosep,
+                        coder_nik: "7602091611930001",
+                      });
+                    }}
+                  >
+                    Hapus
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </>
         )}
       </div>
