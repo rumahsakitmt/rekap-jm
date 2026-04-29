@@ -150,7 +150,7 @@ export async function BuatKlaimBaru(
   if (msg?.metadata?.message === "Ok") {
     await db.delete(inacbg_klaim_baru).where(eq(inacbg_klaim_baru.no_sep, nomor_sep));
     await db.insert(inacbg_klaim_baru).values({
-      no_sep: msg.response.claim_number,
+      no_sep: nomor_sep,
       patient_id: msg.response.patient_id,
       admission_id: msg.response.admission_id,
       hospital_admission_id: msg.response.hospital_admission_id,
@@ -177,7 +177,7 @@ export async function BuatKlaimBaruInternal(
   if (msg?.metadata?.message === "Ok") {
     await db.delete(inacbg_klaim_baru_internal).where(eq(inacbg_klaim_baru_internal.no_sep, nomor_sep));
     await db.insert(inacbg_klaim_baru_internal).values({
-      no_sep: msg.response.claim_number,
+      no_sep: nomor_sep,
       patient_id: msg.response.patient_id,
       admission_id: msg.response.admission_id,
       hospital_admission_id: msg.response.hospital_admission_id,
@@ -204,9 +204,10 @@ export async function BuatKlaimBaru2(
   const msg = await requestEKlaim(request);
   if (msg?.metadata?.message === "Ok") {
 
-    await db.delete(inacbg_klaim_baru2).where(eq(inacbg_klaim_baru2.no_sep, nomor_sep));
+    await db.delete(inacbg_klaim_baru2).where(eq(inacbg_klaim_baru2.no_rawat, norawat));
     await db.insert(inacbg_klaim_baru2).values({
-      no_sep: msg.response.claim_number,
+      no_rawat: norawat,
+      no_sep: nomor_sep,
       patient_id: msg.response.patient_id,
       admission_id: msg.response.admission_id,
       hospital_admission_id: msg.response.hospital_admission_id,
@@ -242,12 +243,30 @@ export async function HapusDataPasien(nomor_rm: string, coder_nik: string) {
   return msg;
 }
 
+// These fields are not accepted by the `set_claim_data` endpoint and must be sent via separate APIs.
+const SET_CLAIM_EXCLUDED_KEYS = [
+  "diagnosa",
+  "procedure",
+  "diagnosa_inagrouper",
+  "procedure_inagrouper",
+  "diagnosainacbg",
+  "procedureinacbg",
+];
+
+function cleanSetClaimData(data: any) {
+  const clone = { ...data };
+  for (const key of SET_CLAIM_EXCLUDED_KEYS) {
+    delete clone[key];
+  }
+  return clone;
+}
+
 // Minimal wrapper for UpdateDataKlaim2 which passes all raw data properties without side-effect DB querying
 export async function UpdateDataKlaim2(data: any) {
   // data should contain: nomor_sep, nomor_kartu, tgl_masuk, dll.
   const request = {
     metadata: { method: "set_claim_data", nomor_sep: data.nomor_sep },
-    data: data,
+    data: cleanSetClaimData(data),
   };
   const msg = await requestEKlaim(request);
 
@@ -268,7 +287,7 @@ export async function UpdateDataKlaim2(data: any) {
     }
   } else {
     respon = "Gagal";
-    console.error("Respon Update Klaim : " + msg?.metadata?.message);
+    console.error("[E-Klaim] UpdateDataKlaim2 failed:", msg?.metadata?.message, JSON.stringify(msg));
   }
   return { respon, msg };
 }
@@ -276,7 +295,7 @@ export async function UpdateDataKlaim2(data: any) {
 export async function UpdateDataKlaim3(data: any) {
   const request = {
     metadata: { method: "set_claim_data", nomor_sep: data.nomor_sep },
-    data: data,
+    data: cleanSetClaimData(data),
   };
   const msg = await requestEKlaim(request);
 
@@ -297,7 +316,7 @@ export async function UpdateDataKlaim3(data: any) {
     }
   } else {
     respon = "Gagal";
-    console.error("Respon Update Klaim 3 : " + msg?.metadata?.message);
+    console.error("[E-Klaim] UpdateDataKlaim3 failed:", msg?.metadata?.message, JSON.stringify(msg));
   }
   return { respon, msg };
 }
@@ -305,7 +324,7 @@ export async function UpdateDataKlaim3(data: any) {
 export async function UpdateDataKlaim(data: any) {
   const request = {
     metadata: { method: "set_claim_data", nomor_sep: data.nomor_sep },
-    data: data,
+    data: cleanSetClaimData(data),
   };
   const msg = await requestEKlaim(request);
 
@@ -326,7 +345,7 @@ export async function UpdateDataKlaim(data: any) {
     }
   } else {
     respon = "Gagal";
-    console.error("Respon Update Klaim : " + msg?.metadata?.message);
+    console.error("[E-Klaim] UpdateDataKlaim failed:", msg?.metadata?.message, JSON.stringify(msg));
   }
   return { respon, msg };
 }
@@ -334,7 +353,7 @@ export async function UpdateDataKlaim(data: any) {
 export async function UpdateDataKlaimInternal(data: any) {
   const request = {
     metadata: { method: "set_claim_data", nomor_sep: data.nomor_sep },
-    data: data,
+    data: cleanSetClaimData(data),
   };
   const msg = await requestEKlaim(request);
 
@@ -355,7 +374,7 @@ export async function UpdateDataKlaimInternal(data: any) {
     }
   } else {
     respon = "Gagal";
-    console.error("Respon Update Klaim Internal : " + msg?.metadata?.message);
+    console.error("[E-Klaim] UpdateDataKlaimInternal failed:", msg?.metadata?.message, JSON.stringify(msg));
   }
   return { respon, msg };
 }

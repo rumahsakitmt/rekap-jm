@@ -899,8 +899,12 @@ export const klaimRouter = router({
             cara_masuk: cara_masuk,
           };
 
-          await UpdateDataKlaim3(klaimData);
-          return { success: true, message: "Berhasil" };
+          const res = await UpdateDataKlaim3(klaimData);
+          if (res.respon === "Berhasil") {
+            return { success: true, message: "Berhasil" };
+          } else {
+            return { success: false, message: res.msg?.metadata?.message || "Gagal Update Data Klaim" };
+          }
         } else {
           return { success: false, message: "Semua field harus isi..!!!" };
         }
@@ -967,7 +971,7 @@ export const klaimRouter = router({
           if (res.respon === "Berhasil") {
             return { success: true, message: "Berhasil" };
           } else {
-            return { success: false, message: "Gagal Update Data Klaim" };
+            return { success: false, message: res.msg?.metadata?.message || "Gagal Update Data Klaim" };
           }
         } else {
           return { success: false, message: "Semua field harus isi..!!!" };

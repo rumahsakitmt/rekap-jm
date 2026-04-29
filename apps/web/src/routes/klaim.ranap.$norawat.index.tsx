@@ -336,7 +336,7 @@ function RouteComponent() {
     simpanKlaim.mutate({
       no_rawat: data.noRawat,
       tgl_registrasi: data.tglRegistrasi,
-      codernik: "12345", // Assuming a valid coder nik, this might need to come from context/auth
+      codernik: "7602091611930001", // Assuming a valid coder nik, this might need to come from context/auth
       nosep: data.nosep,
       nokartu: data.noKartu,
       nm_pasien: data.nmPasien,
@@ -514,29 +514,6 @@ function RouteComponent() {
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Diagnosa IDRG</Label>
-              <DiagnosaCombobox
-                value={diagnosaIdrg}
-                onChange={setDiagnosaIdrg}
-                placeholder="Cari diagnosa IDRG..."
-                inacbgOnly={false}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Prosedur IDRG</Label>
-              <ProsedurCombobox
-                value={prosedurIdrg}
-                onChange={setProsedurIdrg}
-                placeholder="Cari prosedur IDRG..."
-                inacbgOnly={false}
-              />
-            </div>
-          </div>
-
-          <Separator />
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
               <Label className="text-sm font-medium">Diagnosa INACBG</Label>
               <DiagnosaCombobox
                 value={diagnosaInacbgState}
@@ -552,6 +529,28 @@ function RouteComponent() {
                 onChange={setProsedurInacbgState}
                 placeholder="Cari prosedur INACBG..."
                 inacbgOnly={true}
+              />
+            </div>
+          </div>
+
+          <Separator />
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Diagnosa IDRG</Label>
+              <DiagnosaCombobox
+                value={diagnosaIdrg}
+                onChange={setDiagnosaIdrg}
+                placeholder="Cari diagnosa IDRG..."
+                inacbgOnly={false}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Prosedur IDRG</Label>
+              <ProsedurCombobox
+                value={prosedurIdrg}
+                onChange={setProsedurIdrg}
+                placeholder="Cari prosedur IDRG..."
+                inacbgOnly={false}
               />
             </div>
           </div>
