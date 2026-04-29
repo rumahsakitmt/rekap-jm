@@ -334,46 +334,67 @@ function RouteComponent() {
   const [prosedurIdrg, setProsedurIdrg] = useState<string[]>([]);
   const [diagnosaInacbgState, setDiagnosaInacbgState] = useState<string[]>([]);
   const [prosedurInacbgState, setProsedurInacbgState] = useState<string[]>([]);
+  const [diagnosaStatuses, setDiagnosaStatuses] = useState<string[]>([]);
+  const [prosedurStatuses, setProsedurStatuses] = useState<string[]>([]);
+
+  // Sync statuses when codes change
+  const syncStatuses = (
+    newCodes: string[],
+    oldCodes: string[],
+    oldStatuses: string[],
+  ): string[] => {
+    const map = new Map<string, string>();
+    oldCodes.forEach((c, i) => map.set(c, oldStatuses[i] || "Ralan"));
+    return newCodes.map((c) => map.get(c) || "Ralan");
+  };
 
   // Keep IDRG and INACBG in sync
   const handleDiagnosaIdrgChange = (value: string[]) => {
     setDiagnosaIdrg(value);
     setDiagnosaInacbgState(value);
+    setDiagnosaStatuses((prev) => syncStatuses(value, diagnosaIdrg, prev));
   };
   const handleProsedurIdrgChange = (value: string[]) => {
     setProsedurIdrg(value);
     setProsedurInacbgState(value);
+    setProsedurStatuses((prev) => syncStatuses(value, prosedurIdrg, prev));
   };
   const handleDiagnosaInacbgChange = (value: string[]) => {
     setDiagnosaInacbgState(value);
     setDiagnosaIdrg(value);
+    setDiagnosaStatuses((prev) => syncStatuses(value, diagnosaInacbgState, prev));
   };
   const handleProsedurInacbgChange = (value: string[]) => {
     setProsedurInacbgState(value);
     setProsedurIdrg(value);
+    setProsedurStatuses((prev) => syncStatuses(value, prosedurInacbgState, prev));
   };
 
   useEffect(() => {
     if (data) {
-      setDiagnosaIdrg(
-        data.diagnosa ? data.diagnosa.split("#").filter(Boolean) : [],
+      const dIdrg = data.diagnosa ? data.diagnosa.split("#").filter(Boolean) : [];
+      const pIdrg = data.prosedur ? data.prosedur.split("#").filter(Boolean) : [];
+      const dInacbg = data.diagnosaInacbg
+        ? data.diagnosaInacbg.split("#").filter(Boolean)
+        : data.diagnosa
+          ? data.diagnosa.split("#").filter(Boolean)
+          : [];
+      const pInacbg = data.prosedurInacbg
+        ? data.prosedurInacbg.split("#").filter(Boolean)
+        : data.prosedur
+          ? data.prosedur.split("#").filter(Boolean)
+          : [];
+
+      setDiagnosaIdrg(dIdrg);
+      setProsedurIdrg(pIdrg);
+      setDiagnosaInacbgState(dInacbg);
+      setProsedurInacbgState(pInacbg);
+
+      setDiagnosaStatuses(
+        data.diagnosaStatus ? data.diagnosaStatus.split("#").filter(Boolean) : dIdrg.map(() => "Ralan"),
       );
-      setProsedurIdrg(
-        data.prosedur ? data.prosedur.split("#").filter(Boolean) : [],
-      );
-      setDiagnosaInacbgState(
-        data.diagnosaInacbg
-          ? data.diagnosaInacbg.split("#").filter(Boolean)
-          : data.diagnosa
-            ? data.diagnosa.split("#").filter(Boolean)
-            : [],
-      );
-      setProsedurInacbgState(
-        data.prosedurInacbg
-          ? data.prosedurInacbg.split("#").filter(Boolean)
-          : data.prosedur
-            ? data.prosedur.split("#").filter(Boolean)
-            : [],
+      setProsedurStatuses(
+        data.prosedurStatus ? data.prosedurStatus.split("#").filter(Boolean) : pIdrg.map(() => "Ralan"),
       );
     }
   }, [data]);
@@ -446,6 +467,8 @@ function RouteComponent() {
       procedure: prosedurIdrg.join("#"),
       diagnosainacbg: diagnosaInacbgState.join("#"),
       procedureinacbg: prosedurInacbgState.join("#"),
+      diagnosa_status: diagnosaStatuses.join("#"),
+      prosedur_status: prosedurStatuses.join("#"),
 
       // Billing
       prosedur_non_bedah: String(data.billing.prosedurNonBedah),
@@ -615,7 +638,14 @@ function RouteComponent() {
                 placeholder="Cari diagnosa INACBG..."
                 inacbgOnly={true}
                 noRawat={data.noRawat}
-                statuses={data.diagnosaInacbgStatus ? data.diagnosaInacbgStatus.split("#").filter(Boolean) : []}
+                statuses={diagnosaStatuses}
+                onStatusChange={(idx, status) => {
+                  setDiagnosaStatuses((prev) => {
+                    const next = [...prev];
+                    next[idx] = status;
+                    return next;
+                  });
+                }}
               />
             </div>
             <div className="space-y-2">
@@ -626,7 +656,14 @@ function RouteComponent() {
                 placeholder="Cari prosedur INACBG..."
                 inacbgOnly={true}
                 noRawat={data.noRawat}
-                statuses={data.prosedurInacbgStatus ? data.prosedurInacbgStatus.split("#").filter(Boolean) : []}
+                statuses={prosedurStatuses}
+                onStatusChange={(idx, status) => {
+                  setProsedurStatuses((prev) => {
+                    const next = [...prev];
+                    next[idx] = status;
+                    return next;
+                  });
+                }}
               />
             </div>
           </div>
@@ -641,7 +678,14 @@ function RouteComponent() {
                 placeholder="Cari diagnosa IDRG..."
                 inacbgOnly={false}
                 noRawat={data.noRawat}
-                statuses={data.diagnosaStatus ? data.diagnosaStatus.split("#").filter(Boolean) : []}
+                statuses={diagnosaStatuses}
+                onStatusChange={(idx, status) => {
+                  setDiagnosaStatuses((prev) => {
+                    const next = [...prev];
+                    next[idx] = status;
+                    return next;
+                  });
+                }}
               />
             </div>
             <div className="space-y-2">
@@ -652,7 +696,14 @@ function RouteComponent() {
                 placeholder="Cari prosedur IDRG..."
                 inacbgOnly={false}
                 noRawat={data.noRawat}
-                statuses={data.prosedurStatus ? data.prosedurStatus.split("#").filter(Boolean) : []}
+                statuses={prosedurStatuses}
+                onStatusChange={(idx, status) => {
+                  setProsedurStatuses((prev) => {
+                    const next = [...prev];
+                    next[idx] = status;
+                    return next;
+                  });
+                }}
               />
             </div>
           </div>

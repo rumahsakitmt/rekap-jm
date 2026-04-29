@@ -50,10 +50,14 @@ async function hasDiagnosaProsedurChanged(
 async function syncDiagnosaProsedurDb(
   no_rawat: string,
   diagnosa: string | undefined,
-  procedure: string | undefined
+  procedure: string | undefined,
+  diagnosa_status: string | undefined,
+  prosedur_status: string | undefined,
 ) {
   const diagCodes = diagnosa ? diagnosa.split("#").filter(Boolean) : [];
   const procCodes = procedure ? procedure.split("#").filter(Boolean) : [];
+  const diagStatuses = diagnosa_status ? diagnosa_status.split("#").filter(Boolean) : [];
+  const procStatuses = prosedur_status ? prosedur_status.split("#").filter(Boolean) : [];
 
   // Delete ALL rows for this no_rawat regardless of status to avoid duplication
   await db
@@ -64,7 +68,7 @@ async function syncDiagnosaProsedurDb(
       diagCodes.map((code, idx) => ({
         no_rawat,
         kd_penyakit: code,
-        status: "Ranap" as const,
+        status: (diagStatuses[idx] || "Ralan") as "Ranap" | "Ralan",
         prioritas: idx + 1,
         status_penyakit: "Baru" as const,
       }))
@@ -79,7 +83,7 @@ async function syncDiagnosaProsedurDb(
       procCodes.map((code, idx) => ({
         no_rawat,
         kode: code,
-        status: "Ranap" as const,
+        status: (procStatuses[idx] || "Ralan") as "Ranap" | "Ralan",
         prioritas: idx + 1,
       }))
     );
@@ -834,6 +838,8 @@ export const klaimRouter = router({
       procedure: z.string().optional(),
       diagnosainacbg: z.string().optional(),
       procedureinacbg: z.string().optional(),
+      diagnosa_status: z.string().optional(),
+      prosedur_status: z.string().optional(),
       prosedur_non_bedah: z.string().optional(),
       prosedur_bedah: z.string().optional(),
       konsultasi: z.string().optional(),
@@ -911,6 +917,8 @@ export const klaimRouter = router({
         procedure,
         diagnosainacbg,
         procedureinacbg,
+        diagnosa_status,
+        prosedur_status,
         tarif_poli_eks,
         nama_dokter,
         prosedur_non_bedah,
@@ -1034,7 +1042,7 @@ export const klaimRouter = router({
           if (res.respon === "Berhasil") {
             const changed = await hasDiagnosaProsedurChanged(no_rawat, diagnosa, procedure);
             if (changed) {
-              await syncDiagnosaProsedurDb(no_rawat, diagnosa, procedure);
+              await syncDiagnosaProsedurDb(no_rawat, diagnosa, procedure, diagnosa_status, prosedur_status);
             }
             return { success: true, message: "Berhasil" };
           } else {
@@ -1106,7 +1114,7 @@ export const klaimRouter = router({
           if (res.respon === "Berhasil") {
             const changed = await hasDiagnosaProsedurChanged(no_rawat, diagnosa, procedure);
             if (changed) {
-              await syncDiagnosaProsedurDb(no_rawat, diagnosa, procedure);
+              await syncDiagnosaProsedurDb(no_rawat, diagnosa, procedure, diagnosa_status, prosedur_status);
             }
             return { success: true, message: "Berhasil" };
           } else {

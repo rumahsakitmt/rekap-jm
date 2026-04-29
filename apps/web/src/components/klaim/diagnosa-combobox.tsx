@@ -32,6 +32,7 @@ interface DiagnosaComboboxProps {
   disabled?: boolean;
   noRawat?: string;
   statuses?: string[]; // Parallel array of statuses per code
+  onStatusChange?: (index: number, status: string) => void;
 }
 
 export function DiagnosaCombobox({
@@ -42,6 +43,7 @@ export function DiagnosaCombobox({
   disabled = false,
   noRawat,
   statuses,
+  onStatusChange,
 }: DiagnosaComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -191,9 +193,14 @@ export function DiagnosaCombobox({
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs font-medium">{kode}</span>
                     {status && (
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${status === 'Ranap' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
+                      <button
+                        type="button"
+                        disabled={disabled || !onStatusChange}
+                        onClick={() => onStatusChange?.(idx, status === "Ranap" ? "Ralan" : "Ranap")}
+                        className={`text-[10px] px-1.5 py-0.5 rounded font-medium transition-colors disabled:opacity-100 disabled:cursor-default ${status === 'Ranap' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'} ${!disabled && onStatusChange ? 'cursor-pointer' : ''}`}
+                      >
                         {status}
-                      </span>
+                      </button>
                     )}
                   </div>
                   {nama && (
@@ -228,6 +235,7 @@ interface ProsedurComboboxProps {
   disabled?: boolean;
   noRawat?: string;
   statuses?: string[]; // Parallel array of statuses per code
+  onStatusChange?: (index: number, status: string) => void;
 }
 
 export function ProsedurCombobox({
@@ -238,6 +246,7 @@ export function ProsedurCombobox({
   disabled = false,
   noRawat,
   statuses,
+  onStatusChange,
 }: ProsedurComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -387,9 +396,14 @@ export function ProsedurCombobox({
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs font-medium">{kode}</span>
                     {status && (
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${status === 'Ranap' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
+                      <button
+                        type="button"
+                        disabled={disabled || !onStatusChange}
+                        onClick={() => onStatusChange?.(idx, status === "Ranap" ? "Ralan" : "Ranap")}
+                        className={`text-[10px] px-1.5 py-0.5 rounded font-medium transition-colors disabled:opacity-100 disabled:cursor-default ${status === 'Ranap' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'} ${!disabled && onStatusChange ? 'cursor-pointer' : ''}`}
+                      >
                         {status}
-                      </span>
+                      </button>
                     )}
                   </div>
                   {nama && (
