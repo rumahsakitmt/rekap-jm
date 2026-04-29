@@ -11,7 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
   DiagnosaCombobox,
@@ -288,6 +288,23 @@ function RouteComponent() {
         });
       } else {
         toast.error(result.message || "Gagal menyimpan klaim");
+      }
+    },
+    onError: (err: any) => {
+      toast.error(`Error: ${err.message}`);
+    },
+  });
+
+  const hapusKlaim = useMutation({
+    ...trpc.klaim.hapusKlaim.mutationOptions(),
+    onSuccess: (result: any) => {
+      if (result.success) {
+        toast.success(result.message || "Klaim berhasil dihapus");
+        queryClient.invalidateQueries({
+          queryKey: trpc.klaim.getKlaimRanap.queryKey({ noRawat: norawat }),
+        });
+      } else {
+        toast.error(result.message || "Gagal menghapus klaim");
       }
     },
     onError: (err: any) => {
@@ -580,6 +597,8 @@ function RouteComponent() {
                 onChange={handleDiagnosaInacbgChange}
                 placeholder="Cari diagnosa INACBG..."
                 inacbgOnly={true}
+                noRawat={data.noRawat}
+                statuses={data.diagnosaInacbgStatus ? data.diagnosaInacbgStatus.split("#").filter(Boolean) : []}
               />
             </div>
             <div className="space-y-2">
@@ -589,6 +608,8 @@ function RouteComponent() {
                 onChange={handleProsedurInacbgChange}
                 placeholder="Cari prosedur INACBG..."
                 inacbgOnly={true}
+                noRawat={data.noRawat}
+                statuses={data.prosedurInacbgStatus ? data.prosedurInacbgStatus.split("#").filter(Boolean) : []}
               />
             </div>
           </div>
@@ -602,6 +623,8 @@ function RouteComponent() {
                 onChange={handleDiagnosaIdrgChange}
                 placeholder="Cari diagnosa IDRG..."
                 inacbgOnly={false}
+                noRawat={data.noRawat}
+                statuses={data.diagnosaStatus ? data.diagnosaStatus.split("#").filter(Boolean) : []}
               />
             </div>
             <div className="space-y-2">
@@ -611,6 +634,8 @@ function RouteComponent() {
                 onChange={handleProsedurIdrgChange}
                 placeholder="Cari prosedur IDRG..."
                 inacbgOnly={false}
+                noRawat={data.noRawat}
+                statuses={data.prosedurStatus ? data.prosedurStatus.split("#").filter(Boolean) : []}
               />
             </div>
           </div>
@@ -686,23 +711,46 @@ function RouteComponent() {
         </CardContent>
       </Card>
 
-      <Button
-        onClick={handleSimpan}
-        disabled={simpanKlaim.isPending}
-        className="w-full"
-      >
-        {simpanKlaim.isPending ? (
-          <>
-            <Loader2 className="mr-2 size-4 animate-spin" />
-            <SpinnerVerb />
-          </>
-        ) : (
-          <>
-            <Save className="mr-2 size-4" />
-            Simpan Klaim
-          </>
+      <div className="flex gap-3">
+        <Button
+          onClick={handleSimpan}
+          disabled={simpanKlaim.isPending || hapusKlaim.isPending}
+          className="flex-1"
+        >
+          {simpanKlaim.isPending ? (
+            <>
+              <Loader2 className="mr-2 size-4 animate-spin" />
+              <SpinnerVerb />
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 size-4" />
+              Simpan Klaim
+            </>
+          )}
+        </Button>
+        {data.isKlaimed && (
+          <Button
+            variant="destructive"
+            disabled={simpanKlaim.isPending || hapusKlaim.isPending}
+            onClick={() => {
+              if (confirm("Yakin ingin menghapus klaim ini?")) {
+                hapusKlaim.mutate({
+                  no_sep: data.nosep,
+                  coder_nik: "7602091611930001",
+                });
+              }
+            }}
+          >
+            {hapusKlaim.isPending ? (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            ) : (
+              <Trash2 className="mr-2 size-4" />
+            )}
+            Hapus Klaim
+          </Button>
         )}
-      </Button>
+      </div>
     </div>
   );
 }

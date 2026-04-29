@@ -97,9 +97,9 @@ export const klaimRouter = router({
 
   // Get penyakit by codes (for displaying names of selected items)
   getPenyakitByCodes: publicProcedure
-    .input(z.object({ codes: z.array(z.string()) }))
+    .input(z.object({ codes: z.array(z.string()), noRawat: z.string().optional() }))
     .query(async ({ input }) => {
-      const { codes } = input;
+      const { codes, noRawat } = input;
       if (codes.length === 0) return [];
 
       const results = await db
@@ -112,7 +112,16 @@ export const klaimRouter = router({
         .from(penyakit)
         .where(sql`${penyakit.kd_penyakit} IN (${sql.join(codes.map(c => sql`${c}`), sql`, `)})`);
 
-      return results;
+      if (noRawat) {
+        const statusRows = await db
+          .select({ kd_penyakit: diagnosa_pasien.kd_penyakit, status: diagnosa_pasien.status })
+          .from(diagnosa_pasien)
+          .where(eq(diagnosa_pasien.no_rawat, noRawat));
+        const statusMap = new Map(statusRows.map(r => [r.kd_penyakit, r.status]));
+        return results.map(r => ({ ...r, status: statusMap.get(r.kode) || null }));
+      }
+
+      return results.map(r => ({ ...r, status: null }));
     }),
 
   // Search for ICD-9 procedures
@@ -154,9 +163,9 @@ export const klaimRouter = router({
 
   // Get ICD9 by codes (for displaying names of selected items)
   getIcd9ByCodes: publicProcedure
-    .input(z.object({ codes: z.array(z.string()) }))
+    .input(z.object({ codes: z.array(z.string()), noRawat: z.string().optional() }))
     .query(async ({ input }) => {
-      const { codes } = input;
+      const { codes, noRawat } = input;
       if (codes.length === 0) return [];
 
       const results = await db
@@ -169,7 +178,16 @@ export const klaimRouter = router({
         .from(icd9)
         .where(sql`${icd9.kode} IN (${sql.join(codes.map(c => sql`${c}`), sql`, `)})`);
 
-      return results;
+      if (noRawat) {
+        const statusRows = await db
+          .select({ kode: prosedur_pasien.kode, status: prosedur_pasien.status })
+          .from(prosedur_pasien)
+          .where(eq(prosedur_pasien.no_rawat, noRawat));
+        const statusMap = new Map(statusRows.map(r => [r.kode, r.status]));
+        return results.map(r => ({ ...r, status: statusMap.get(r.kode) || null }));
+      }
+
+      return results.map(r => ({ ...r, status: null }));
     }),
 
   listKlaimRanap: publicProcedure
@@ -492,47 +510,55 @@ export const klaimRouter = router({
 
       // 8. Diagnoses
       const diagRows = await queryRows(sql`
-        SELECT kd_penyakit
+        SELECT kd_penyakit, status
         FROM diagnosa_pasien
-        WHERE no_rawat = ${noRawat} AND status = 'Ranap'
+        WHERE no_rawat = ${noRawat}
         ORDER BY prioritas ASC
       `);
       let diagnosa = diagRows.map((r) => r.kd_penyakit as string).join("#");
+      const diagnosaStatus = diagRows.map((r) => r.status as string).join("#");
       if (!diagnosa && diagAwal) {
         diagnosa = diagAwal;
       }
 
       // 9. Procedures
       const procRows = await queryRows(sql`
-        SELECT kode
+        SELECT kode, status
         FROM prosedur_pasien
-        WHERE no_rawat = ${noRawat} AND status = 'Ranap'
+        WHERE no_rawat = ${noRawat}
         ORDER BY prioritas ASC
       `);
       const prosedur = procRows.map((r) => r.kode as string).join("#");
+      const prosedurStatus = procRows.map((r) => r.status as string).join("#");
 
       // 10. INACBG Diagnoses (im='0')
       const diagInacbgRows = await db
-        .select({ kd_penyakit: diagnosa_pasien.kd_penyakit })
+        .select({ kd_penyakit: diagnosa_pasien.kd_penyakit, status: diagnosa_pasien.status })
         .from(diagnosa_pasien)
         .innerJoin(penyakit, eq(diagnosa_pasien.kd_penyakit, penyakit.kd_penyakit))
-        .where(and(eq(penyakit.im, '0'), eq(diagnosa_pasien.no_rawat, noRawat), eq(diagnosa_pasien.status, 'Ranap')))
+        .where(and(eq(penyakit.im, '0'), eq(diagnosa_pasien.no_rawat, noRawat)))
         .orderBy(asc(diagnosa_pasien.prioritas));
 
       const diagnosaInacbg = diagInacbgRows
         .map((r) => r.kd_penyakit)
         .join("#");
+      const diagnosaInacbgStatus = diagInacbgRows
+        .map((r) => r.status)
+        .join("#");
 
       // 11. INACBG Procedures (im='0')
       const procInacbgRows = await db
-        .select({ kode: prosedur_pasien.kode })
+        .select({ kode: prosedur_pasien.kode, status: prosedur_pasien.status })
         .from(prosedur_pasien)
         .innerJoin(icd9, eq(prosedur_pasien.kode, icd9.kode))
-        .where(and(eq(icd9.im, '0'), eq(prosedur_pasien.no_rawat, noRawat), eq(prosedur_pasien.status, 'Ranap')))
+        .where(and(eq(icd9.im, '0'), eq(prosedur_pasien.no_rawat, noRawat)))
         .orderBy(asc(prosedur_pasien.prioritas));
 
       const prosedurInacbg = procInacbgRows
         .map((r) => r.kode)
+        .join("#");
+      const prosedurInacbgStatus = procInacbgRows
+        .map((r) => r.status)
         .join("#");
 
       // 12. Billing costs
@@ -655,6 +681,16 @@ export const klaimRouter = router({
       `);
       const allDokter = allDokterRows.map((r) => r.nm_dokter as string);
 
+      // 16. Check if already klaim-ed
+      let isKlaimed = false;
+      if (nosep) {
+        const klaimedRows = await db
+          .select({ no_sep: inacbg_grouping_stage12.no_sep })
+          .from(inacbg_grouping_stage12)
+          .where(eq(inacbg_grouping_stage12.no_sep, nosep));
+        isKlaimed = klaimedRows.length > 0;
+      }
+
       return {
         // Patient info
         noRawat: reg.no_rawat as string,
@@ -693,6 +729,10 @@ export const klaimRouter = router({
         prosedur,
         diagnosaInacbg,
         prosedurInacbg,
+        diagnosaStatus,
+        prosedurStatus,
+        diagnosaInacbgStatus,
+        prosedurInacbgStatus,
 
         // Billing
         billing: {
@@ -726,6 +766,9 @@ export const klaimRouter = router({
 
         // Doctors list for dropdown
         allDokter,
+
+        // Klaim status
+        isKlaimed,
       };
     }),
 
@@ -1031,5 +1074,24 @@ export const klaimRouter = router({
           return { success: false, message: "Semua field harus isi..!!!" };
         }
       }
+    }),
+
+  hapusKlaim: publicProcedure
+    .input(
+      z.object({
+        no_sep: z.string(),
+        coder_nik: z.string(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { no_sep, coder_nik } = input;
+      // Un-finalize the claim before attempting deletion
+      await EditUlangKlaim(no_sep);
+      const msg = await MenghapusKlaim(no_sep, coder_nik);
+      if (msg?.metadata?.message === "Ok") {
+        await db.delete(inacbg_grouping_stage12).where(eq(inacbg_grouping_stage12.no_sep, no_sep));
+        return { success: true, message: "Klaim berhasil dihapus" };
+      }
+      return { success: false, message: msg?.metadata?.message || "Gagal menghapus klaim" };
     }),
 });

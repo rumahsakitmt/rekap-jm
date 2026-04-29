@@ -30,6 +30,8 @@ interface DiagnosaComboboxProps {
   placeholder?: string;
   inacbgOnly?: boolean;
   disabled?: boolean;
+  noRawat?: string;
+  statuses?: string[]; // Parallel array of statuses per code
 }
 
 export function DiagnosaCombobox({
@@ -38,6 +40,8 @@ export function DiagnosaCombobox({
   placeholder = "Cari diagnosa...",
   inacbgOnly = false,
   disabled = false,
+  noRawat,
+  statuses,
 }: DiagnosaComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -57,15 +61,16 @@ export function DiagnosaCombobox({
   const { data: selectedData } = useQuery({
     ...trpc.klaim.getPenyakitByCodes.queryOptions({
       codes: value,
+      noRawat,
     }),
     enabled: value.length > 0,
   });
 
   // Create a map of code -> details for quick lookup
   const dataMap = React.useMemo(() => {
-    const map = new Map<string, { nama: string; ap: string; vc: string }>();
+    const map = new Map<string, { nama: string; ap: string; vc: string; status: string | null }>();
     selectedData?.forEach((item) => {
-      map.set(item.kode, { nama: item.nama || "", ap: item.ap as string, vc: item.vc as string });
+      map.set(item.kode, { nama: item.nama || "", ap: item.ap as string, vc: item.vc as string, status: item.status as string | null });
     });
     return map;
   }, [selectedData]);
@@ -173,15 +178,24 @@ export function DiagnosaCombobox({
 
       {value.length > 0 && (
         <div className="flex flex-col gap-1">
-          {value.map((kode) => {
-            const nama = dataMap.get(kode)?.nama;
+          {value.map((kode, idx) => {
+            const item = dataMap.get(kode);
+            const nama = item?.nama;
+            const status = statuses?.[idx];
             return (
               <div
-                key={kode}
+                key={`${kode}-${idx}`}
                 className="flex items-start gap-2 rounded-md border bg-muted/50 p-2"
               >
                 <div className="flex-1 min-w-0">
-                  <div className="font-mono text-xs font-medium">{kode}</div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-medium">{kode}</span>
+                    {status && (
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${status === 'Ranap' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
+                        {status}
+                      </span>
+                    )}
+                  </div>
                   {nama && (
                     <div className="text-xs text-muted-foreground line-clamp-2">
                       {nama}
@@ -212,6 +226,8 @@ interface ProsedurComboboxProps {
   placeholder?: string;
   inacbgOnly?: boolean;
   disabled?: boolean;
+  noRawat?: string;
+  statuses?: string[]; // Parallel array of statuses per code
 }
 
 export function ProsedurCombobox({
@@ -220,6 +236,8 @@ export function ProsedurCombobox({
   placeholder = "Cari prosedur...",
   inacbgOnly = false,
   disabled = false,
+  noRawat,
+  statuses,
 }: ProsedurComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -239,15 +257,16 @@ export function ProsedurCombobox({
   const { data: selectedData } = useQuery({
     ...trpc.klaim.getIcd9ByCodes.queryOptions({
       codes: value,
+      noRawat,
     }),
     enabled: value.length > 0,
   });
 
   // Create a map of code -> details for quick lookup
   const dataMap = React.useMemo(() => {
-    const map = new Map<string, { nama: string; ap: string; vc: string }>();
+    const map = new Map<string, { nama: string; ap: string; vc: string; status: string | null }>();
     selectedData?.forEach((item) => {
-      map.set(item.kode, { nama: item.nama || "", ap: item.ap as string, vc: item.vc as string });
+      map.set(item.kode, { nama: item.nama || "", ap: item.ap as string, vc: item.vc as string, status: item.status as string | null });
     });
     return map;
   }, [selectedData]);
@@ -355,15 +374,24 @@ export function ProsedurCombobox({
 
       {value.length > 0 && (
         <div className="flex flex-col gap-1">
-          {value.map((kode) => {
-            const nama = dataMap.get(kode)?.nama;
+          {value.map((kode, idx) => {
+            const item = dataMap.get(kode);
+            const nama = item?.nama;
+            const status = statuses?.[idx];
             return (
               <div
-                key={kode}
+                key={`${kode}-${idx}`}
                 className="flex items-start gap-2 rounded-md border bg-muted/50 p-2"
               >
                 <div className="flex-1 min-w-0">
-                  <div className="font-mono text-xs font-medium">{kode}</div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-medium">{kode}</span>
+                    {status && (
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${status === 'Ranap' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
+                        {status}
+                      </span>
+                    )}
+                  </div>
                   {nama && (
                     <div className="text-xs text-muted-foreground line-clamp-2">
                       {nama}
