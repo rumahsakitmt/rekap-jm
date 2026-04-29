@@ -125,6 +125,7 @@ function RouteComponent() {
                   <TableHead >Pasien</TableHead>
                   <TableHead className="w-[200px]">Dokter</TableHead>
                   <TableHead className="w-[200px]">Diagnosa / Prosedur</TableHead>
+                  <TableHead className="w-[80px] text-center">Status</TableHead>
                   <TableHead className="w-[80px] text-center">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
@@ -143,6 +144,9 @@ function RouteComponent() {
                       </TableCell>
                       <TableCell>
                         <Skeleton className="h-12 w-full" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-8 w-full" />
                       </TableCell>
                       <TableCell>
                         <Skeleton className="h-8 w-full" />
@@ -242,6 +246,15 @@ function RouteComponent() {
                         </div>
                       </TableCell>
                       <TableCell className="text-center align-top">
+                        {row.isKlaimed ? (
+                          <Badge variant="default" className="bg-green-600 hover:bg-green-700">
+                            Terklaim
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">Belum</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center align-top">
                         <Link
                           to="/klaim/ranap/$norawat"
                           params={{ norawat: row.noRawat }}
@@ -261,7 +274,7 @@ function RouteComponent() {
                 ) : (
                   <TableRow>
                     <TableCell
-                      colSpan={5}
+                      colSpan={6}
                       className="text-center text-muted-foreground py-8"
                     >
                       Tidak ada data

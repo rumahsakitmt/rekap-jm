@@ -2,7 +2,7 @@ import { router, publicProcedure } from "../lib/trpc";
 import { db } from "../db";
 import { and, asc, eq, like, or, sql } from "drizzle-orm";
 import { z } from "zod";
-import { diagnosa_pasien, penyakit, prosedur_pasien, icd9 } from "@/db/schema";
+import { diagnosa_pasien, penyakit, prosedur_pasien, icd9, inacbg_grouping_stage12 } from "@/db/schema";
 import {
   EKLAIM_CONFIG,
   BuatKlaimBaru2,
@@ -277,6 +277,18 @@ export const klaimRouter = router({
       const countResult = await queryRows(countQuery);
       const total = Number(countResult[0]?.total || 0);
 
+      const seps = rows.map((r) => r.no_sep as string).filter(Boolean);
+      const klaimedSet = new Set<string>();
+      if (seps.length > 0) {
+        const klaimedRows = await db
+          .select({ no_sep: inacbg_grouping_stage12.no_sep })
+          .from(inacbg_grouping_stage12)
+          .where(sql`${inacbg_grouping_stage12.no_sep} IN (${sql.join(seps.map((s) => sql`${s}`), sql`, `)})`);
+        for (const kr of klaimedRows) {
+          klaimedSet.add(kr.no_sep);
+        }
+      }
+
       const data = rows.map((r) => ({
         noSep: r.no_sep as string,
         noRawat: r.no_rawat as string,
@@ -293,6 +305,7 @@ export const klaimRouter = router({
         nmDokter: (r.nm_dokter as string) || "",
         allDiagnosa: (r.all_diagnosa as string) || "",
         allProsedur: (r.all_prosedur as string) || "",
+        isKlaimed: klaimedSet.has(r.no_sep as string),
       }));
 
       return {
