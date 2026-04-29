@@ -11,7 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Save, Loader2, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Trash2, Send } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
   DiagnosaCombobox,
@@ -305,6 +305,23 @@ function RouteComponent() {
         });
       } else {
         toast.error(result.message || "Gagal menghapus klaim");
+      }
+    },
+    onError: (err: any) => {
+      toast.error(`Error: ${err.message}`);
+    },
+  });
+
+  const kirimKlaim = useMutation({
+    ...trpc.klaim.kirimKlaim.mutationOptions(),
+    onSuccess: (result: any) => {
+      if (result.success) {
+        toast.success(result.message || "Klaim berhasil dikirim");
+        queryClient.invalidateQueries({
+          queryKey: trpc.klaim.getKlaimRanap.queryKey({ noRawat: norawat }),
+        });
+      } else {
+        toast.error(result.message || "Gagal mengirim klaim");
       }
     },
     onError: (err: any) => {
@@ -711,7 +728,7 @@ function RouteComponent() {
         </CardContent>
       </Card>
 
-      <div className="flex gap-3">
+      <div className="flex flex-col gap-3">
         {!data.isKlaimed ? (
           <Button
             onClick={handleSimpan}
@@ -731,26 +748,46 @@ function RouteComponent() {
             )}
           </Button>
         ) : (
-          <Button
-            variant="destructive"
-            className="flex-1"
-            disabled={hapusKlaim.isPending}
-            onClick={() => {
-              if (confirm("Yakin ingin menghapus klaim ini?")) {
-                hapusKlaim.mutate({
-                  no_sep: data.nosep,
-                  coder_nik: "7602091611930001",
-                });
-              }
-            }}
-          >
-            {hapusKlaim.isPending ? (
-              <Loader2 className="mr-2 size-4 animate-spin" />
-            ) : (
-              <Trash2 className="mr-2 size-4" />
-            )}
-            Hapus Klaim
-          </Button>
+          <>
+            <Button
+              className="flex-1"
+              disabled={kirimKlaim.isPending}
+              onClick={() => {
+                if (confirm("Yakin ingin mengirim klaim ini ke DC?")) {
+                  kirimKlaim.mutate({
+                    no_sep: data.nosep,
+                  });
+                }
+              }}
+            >
+              {kirimKlaim.isPending ? (
+                <Loader2 className="mr-2 size-4 animate-spin" />
+              ) : (
+                <Send className="mr-2 size-4" />
+              )}
+              Kirim Klaim
+            </Button>
+            <Button
+              variant="destructive"
+              className="flex-1"
+              disabled={hapusKlaim.isPending}
+              onClick={() => {
+                if (confirm("Yakin ingin menghapus klaim ini?")) {
+                  hapusKlaim.mutate({
+                    no_sep: data.nosep,
+                    coder_nik: "7602091611930001",
+                  });
+                }
+              }}
+            >
+              {hapusKlaim.isPending ? (
+                <Loader2 className="mr-2 size-4 animate-spin" />
+              ) : (
+                <Trash2 className="mr-2 size-4" />
+              )}
+              Hapus Klaim
+            </Button>
+          </>
         )}
       </div>
     </div>

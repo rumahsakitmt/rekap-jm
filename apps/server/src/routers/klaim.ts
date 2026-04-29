@@ -2,7 +2,7 @@ import { router, publicProcedure } from "../lib/trpc";
 import { db } from "../db";
 import { and, asc, eq, like, or, sql } from "drizzle-orm";
 import { z } from "zod";
-import { diagnosa_pasien, penyakit, prosedur_pasien, icd9, inacbg_grouping_stage12 } from "@/db/schema";
+import { diagnosa_pasien, penyakit, prosedur_pasien, icd9, inacbg_grouping_stage12, inacbg_data_terkirim2 } from "@/db/schema";
 import {
   EKLAIM_CONFIG,
   BuatKlaimBaru2,
@@ -10,6 +10,7 @@ import {
   MenghapusKlaim,
   UpdateDataKlaim2,
   UpdateDataKlaim3,
+  KirimKlaimIndividualKeDC,
 } from "../lib/e-klaim";
 
 type Row = Record<string, unknown>;
@@ -17,6 +18,33 @@ type Row = Record<string, unknown>;
 async function queryRows(query: ReturnType<typeof sql>) {
   const [rows] = await db.execute(query);
   return rows as unknown as Row[];
+}
+
+async function hasDiagnosaProsedurChanged(
+  no_rawat: string,
+  diagnosa: string | undefined,
+  procedure: string | undefined
+): Promise<boolean> {
+  const incomingDiag = diagnosa ? diagnosa.split("#").filter(Boolean).join("#") : "";
+  const incomingProc = procedure ? procedure.split("#").filter(Boolean).join("#") : "";
+
+  const existingDiagRows = await db
+    .select({ kd_penyakit: diagnosa_pasien.kd_penyakit })
+    .from(diagnosa_pasien)
+    .where(and(eq(diagnosa_pasien.no_rawat, no_rawat), eq(diagnosa_pasien.status, "Ranap")))
+    .orderBy(asc(diagnosa_pasien.prioritas));
+
+  const existingDiag = existingDiagRows.map((r) => r.kd_penyakit).join("#");
+
+  const existingProcRows = await db
+    .select({ kode: prosedur_pasien.kode })
+    .from(prosedur_pasien)
+    .where(and(eq(prosedur_pasien.no_rawat, no_rawat), eq(prosedur_pasien.status, "Ranap")))
+    .orderBy(asc(prosedur_pasien.prioritas));
+
+  const existingProc = existingProcRows.map((r) => r.kode).join("#");
+
+  return incomingDiag !== existingDiag || incomingProc !== existingProc;
 }
 
 async function syncDiagnosaProsedurDb(
@@ -683,12 +711,19 @@ export const klaimRouter = router({
 
       // 16. Check if already klaim-ed
       let isKlaimed = false;
+      let isSent = false;
       if (nosep) {
         const klaimedRows = await db
           .select({ no_sep: inacbg_grouping_stage12.no_sep })
           .from(inacbg_grouping_stage12)
           .where(eq(inacbg_grouping_stage12.no_sep, nosep));
         isKlaimed = klaimedRows.length > 0;
+
+        const sentRows = await db
+          .select({ no_sep: inacbg_data_terkirim2.no_sep })
+          .from(inacbg_data_terkirim2)
+          .where(eq(inacbg_data_terkirim2.no_sep, nosep));
+        isSent = sentRows.length > 0;
       }
 
       return {
@@ -769,6 +804,7 @@ export const klaimRouter = router({
 
         // Klaim status
         isKlaimed,
+        isSent,
       };
     }),
 
@@ -996,7 +1032,10 @@ export const klaimRouter = router({
 
           const res = await UpdateDataKlaim3(klaimData);
           if (res.respon === "Berhasil") {
-            await syncDiagnosaProsedurDb(no_rawat, diagnosa, procedure);
+            const changed = await hasDiagnosaProsedurChanged(no_rawat, diagnosa, procedure);
+            if (changed) {
+              await syncDiagnosaProsedurDb(no_rawat, diagnosa, procedure);
+            }
             return { success: true, message: "Berhasil" };
           } else {
             return { success: false, message: res.msg?.metadata?.message || "Gagal Update Data Klaim" };
@@ -1065,7 +1104,10 @@ export const klaimRouter = router({
 
           const res = await UpdateDataKlaim2(klaimData);
           if (res.respon === "Berhasil") {
-            await syncDiagnosaProsedurDb(no_rawat, diagnosa, procedure);
+            const changed = await hasDiagnosaProsedurChanged(no_rawat, diagnosa, procedure);
+            if (changed) {
+              await syncDiagnosaProsedurDb(no_rawat, diagnosa, procedure);
+            }
             return { success: true, message: "Berhasil" };
           } else {
             return { success: false, message: res.msg?.metadata?.message || "Gagal Update Data Klaim" };
@@ -1085,13 +1127,44 @@ export const klaimRouter = router({
     )
     .mutation(async ({ input }) => {
       const { no_sep, coder_nik } = input;
-      // Un-finalize the claim before attempting deletion
-      await EditUlangKlaim(no_sep);
-      const msg = await MenghapusKlaim(no_sep, coder_nik);
+      let msg: any;
+
+      try {
+        await EditUlangKlaim(no_sep);
+      } catch {
+        // ignore if already unfinalized or deleted on remote
+      }
+
+      try {
+        msg = await MenghapusKlaim(no_sep, coder_nik);
+      } catch {
+        // ignore API errors (e.g., claim already deleted, network issue)
+      }
+
+      // Always clean local DB regardless of API response
+      await db.delete(inacbg_grouping_stage12).where(eq(inacbg_grouping_stage12.no_sep, no_sep));
+
       if (msg?.metadata?.message === "Ok") {
-        await db.delete(inacbg_grouping_stage12).where(eq(inacbg_grouping_stage12.no_sep, no_sep));
         return { success: true, message: "Klaim berhasil dihapus" };
       }
-      return { success: false, message: msg?.metadata?.message || "Gagal menghapus klaim" };
+
+      // Claim was already deleted in API or returned another message,
+      // but local DB has been cleaned. Return success so UI refreshes properly.
+      return { success: true, message: msg?.metadata?.message || "Klaim berhasil dihapus" };
+    }),
+
+  kirimKlaim: publicProcedure
+    .input(
+      z.object({
+        no_sep: z.string(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { no_sep } = input;
+      const msg = await KirimKlaimIndividualKeDC(no_sep);
+      if (msg?.metadata?.message === "Ok") {
+        return { success: true, message: "Klaim berhasil dikirim" };
+      }
+      return { success: false, message: msg?.metadata?.message || "Gagal mengirim klaim" };
     }),
 });

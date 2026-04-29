@@ -8,7 +8,7 @@ import {
   inacbg_grouping_stage12,
   inacbg_grouping_stage1_internal,
   inacbg_klaim_baru_internal,
-  inacbg_data_terkirim_internal
+  inacbg_data_terkirim_internal,
 } from "@/db/schema";
 import * as crypto from "crypto";
 import { eq } from "drizzle-orm";
@@ -85,16 +85,17 @@ export function mc_decrypt(str: string, strkey: string): string {
 }
 
 export async function requestEKlaim(payload: any): Promise<any> {
-  const requestStr = typeof payload === "string" ? payload : JSON.stringify(payload);
+  const requestStr =
+    typeof payload === "string" ? payload : JSON.stringify(payload);
   const encryptedJson = mc_encrypt(requestStr, EKLAIM_CONFIG.KEY);
 
   try {
     const response = await fetch(EKLAIM_CONFIG.URL_WS, {
       method: "POST",
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
+        "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: encryptedJson
+      body: encryptedJson,
     });
 
     let responseText = (await response.text()).trim();
@@ -105,7 +106,7 @@ export async function requestEKlaim(payload: any): Promise<any> {
 
     // INACBG API may wrap encrypted payload in PEM-like headers.
     const pemMatch = responseText.match(
-      /----BEGIN ENCRYPTED DATA----\r?\n?([\s\S]+?)\r?\n?----END ENCRYPTED DATA----/
+      /----BEGIN ENCRYPTED DATA----\r?\n?([\s\S]+?)\r?\n?----END ENCRYPTED DATA----/,
     );
     if (pemMatch) {
       responseText = pemMatch[1];
@@ -140,7 +141,7 @@ export async function BuatKlaimBaru(
   nomor_rm: string,
   nama_pasien: string,
   tgl_lahir: string,
-  gender: string
+  gender: string,
 ) {
   const request = {
     metadata: { method: "new_claim" },
@@ -148,7 +149,9 @@ export async function BuatKlaimBaru(
   };
   const msg = await requestEKlaim(request);
   if (msg?.metadata?.message === "Ok") {
-    await db.delete(inacbg_klaim_baru).where(eq(inacbg_klaim_baru.no_sep, nomor_sep));
+    await db
+      .delete(inacbg_klaim_baru)
+      .where(eq(inacbg_klaim_baru.no_sep, nomor_sep));
     await db.insert(inacbg_klaim_baru).values({
       no_sep: nomor_sep,
       patient_id: msg.response.patient_id,
@@ -167,7 +170,7 @@ export async function BuatKlaimBaruInternal(
   nomor_rm: string,
   nama_pasien: string,
   tgl_lahir: string,
-  gender: string
+  gender: string,
 ) {
   const request = {
     metadata: { method: "new_claim" },
@@ -175,7 +178,9 @@ export async function BuatKlaimBaruInternal(
   };
   const msg = await requestEKlaim(request);
   if (msg?.metadata?.message === "Ok") {
-    await db.delete(inacbg_klaim_baru_internal).where(eq(inacbg_klaim_baru_internal.no_sep, nomor_sep));
+    await db
+      .delete(inacbg_klaim_baru_internal)
+      .where(eq(inacbg_klaim_baru_internal.no_sep, nomor_sep));
     await db.insert(inacbg_klaim_baru_internal).values({
       no_sep: nomor_sep,
       patient_id: msg.response.patient_id,
@@ -195,7 +200,7 @@ export async function BuatKlaimBaru2(
   nama_pasien: string,
   tgl_lahir: string,
   gender: string,
-  norawat: string
+  norawat: string,
 ) {
   const request = {
     metadata: { method: "new_claim" },
@@ -203,8 +208,9 @@ export async function BuatKlaimBaru2(
   };
   const msg = await requestEKlaim(request);
   if (msg?.metadata?.message === "Ok") {
-
-    await db.delete(inacbg_klaim_baru2).where(eq(inacbg_klaim_baru2.no_rawat, norawat));
+    await db
+      .delete(inacbg_klaim_baru2)
+      .where(eq(inacbg_klaim_baru2.no_rawat, norawat));
     await db.insert(inacbg_klaim_baru2).values({
       no_rawat: norawat,
       no_sep: nomor_sep,
@@ -224,7 +230,7 @@ export async function UpdateDataPasien(
   nomor_rm: string,
   nama_pasien: string,
   tgl_lahir: string,
-  gender: string
+  gender: string,
 ) {
   const request = {
     metadata: { method: "update_patient", nomor_rm: nomor_rmlama },
@@ -272,7 +278,9 @@ export async function UpdateDataKlaim2(data: any) {
 
   let respon = "Berhasil";
   if (msg?.metadata?.message === "Ok") {
-    await db.delete(inacbg_data_terkirim2).where(eq(inacbg_data_terkirim2.no_sep, data.nomor_sep));
+    await db
+      .delete(inacbg_data_terkirim2)
+      .where(eq(inacbg_data_terkirim2.no_sep, data.nomor_sep));
     await db.insert(inacbg_data_terkirim2).values({
       no_sep: data.nomor_sep,
       nik: data.coder_nik,
@@ -282,12 +290,20 @@ export async function UpdateDataKlaim2(data: any) {
     await SetProsedurDRG(data.nomor_sep, data.procedure);
     const groupingStr = await GroupingDRG(data.nomor_sep);
     if (groupingStr === "Ok") {
-      await InacBGToDRG(data.nomor_sep, data.diagnosainacbg, data.procedureinacbg);
+      await InacBGToDRG(
+        data.nomor_sep,
+        data.diagnosainacbg,
+        data.procedureinacbg,
+      );
       await GroupingStage12(data.nomor_sep, data.coder_nik);
     }
   } else {
     respon = "Gagal";
-    console.error("[E-Klaim] UpdateDataKlaim2 failed:", msg?.metadata?.message, JSON.stringify(msg));
+    console.error(
+      "[E-Klaim] UpdateDataKlaim2 failed:",
+      msg?.metadata?.message,
+      JSON.stringify(msg),
+    );
   }
   return { respon, msg };
 }
@@ -301,7 +317,9 @@ export async function UpdateDataKlaim3(data: any) {
 
   let respon = "Berhasil";
   if (msg?.metadata?.message === "Ok") {
-    await db.delete(inacbg_data_terkirim2).where(eq(inacbg_data_terkirim2.no_sep, data.nomor_sep));
+    await db
+      .delete(inacbg_data_terkirim2)
+      .where(eq(inacbg_data_terkirim2.no_sep, data.nomor_sep));
     await db.insert(inacbg_data_terkirim2).values({
       no_sep: data.nomor_sep,
       nik: data.coder_nik,
@@ -311,12 +329,20 @@ export async function UpdateDataKlaim3(data: any) {
     await SetProsedurDRG(data.nomor_sep, data.procedure);
     const groupingStr = await GroupingDRG(data.nomor_sep);
     if (groupingStr === "Ok") {
-      await InacBGToDRG(data.nomor_sep, data.diagnosainacbg, data.procedureinacbg);
+      await InacBGToDRG(
+        data.nomor_sep,
+        data.diagnosainacbg,
+        data.procedureinacbg,
+      );
       await GroupingStage13(data.nomor_sep, data.coder_nik);
     }
   } else {
     respon = "Gagal";
-    console.error("[E-Klaim] UpdateDataKlaim3 failed:", msg?.metadata?.message, JSON.stringify(msg));
+    console.error(
+      "[E-Klaim] UpdateDataKlaim3 failed:",
+      msg?.metadata?.message,
+      JSON.stringify(msg),
+    );
   }
   return { respon, msg };
 }
@@ -330,7 +356,9 @@ export async function UpdateDataKlaim(data: any) {
 
   let respon = "Berhasil";
   if (msg?.metadata?.message === "Ok") {
-    await db.delete(inacbg_data_terkirim).where(eq(inacbg_data_terkirim.no_sep, data.nomor_sep));
+    await db
+      .delete(inacbg_data_terkirim)
+      .where(eq(inacbg_data_terkirim.no_sep, data.nomor_sep));
     await db.insert(inacbg_data_terkirim).values({
       no_sep: data.nomor_sep,
       nik: data.coder_nik,
@@ -340,12 +368,20 @@ export async function UpdateDataKlaim(data: any) {
     await SetProsedurDRG(data.nomor_sep, data.procedure);
     const groupingStr = await GroupingDRG(data.nomor_sep);
     if (groupingStr === "Ok") {
-      await InacBGToDRG(data.nomor_sep, data.diagnosainacbg, data.procedureinacbg);
+      await InacBGToDRG(
+        data.nomor_sep,
+        data.diagnosainacbg,
+        data.procedureinacbg,
+      );
       await GroupingStage1(data.nomor_sep, data.coder_nik);
     }
   } else {
     respon = "Gagal";
-    console.error("[E-Klaim] UpdateDataKlaim failed:", msg?.metadata?.message, JSON.stringify(msg));
+    console.error(
+      "[E-Klaim] UpdateDataKlaim failed:",
+      msg?.metadata?.message,
+      JSON.stringify(msg),
+    );
   }
   return { respon, msg };
 }
@@ -359,7 +395,9 @@ export async function UpdateDataKlaimInternal(data: any) {
 
   let respon = "Berhasil";
   if (msg?.metadata?.message === "Ok") {
-    await db.delete(inacbg_data_terkirim_internal).where(eq(inacbg_data_terkirim_internal.no_sep, data.nomor_sep));
+    await db
+      .delete(inacbg_data_terkirim_internal)
+      .where(eq(inacbg_data_terkirim_internal.no_sep, data.nomor_sep));
     await db.insert(inacbg_data_terkirim_internal).values({
       no_sep: data.nomor_sep,
       nik: data.coder_nik,
@@ -369,12 +407,20 @@ export async function UpdateDataKlaimInternal(data: any) {
     await SetProsedurDRG(data.nomor_sep, data.procedure);
     const groupingStr = await GroupingDRG(data.nomor_sep);
     if (groupingStr === "Ok") {
-      await InacBGToDRG(data.nomor_sep, data.diagnosainacbg, data.procedureinacbg);
+      await InacBGToDRG(
+        data.nomor_sep,
+        data.diagnosainacbg,
+        data.procedureinacbg,
+      );
       await GroupingStage1Internal(data.nomor_sep, data.coder_nik);
     }
   } else {
     respon = "Gagal";
-    console.error("[E-Klaim] UpdateDataKlaimInternal failed:", msg?.metadata?.message, JSON.stringify(msg));
+    console.error(
+      "[E-Klaim] UpdateDataKlaimInternal failed:",
+      msg?.metadata?.message,
+      JSON.stringify(msg),
+    );
   }
   return { respon, msg };
 }
@@ -407,7 +453,11 @@ export async function SetProsedurDRG(nomor_sep: string, procedure: string) {
   }
 }
 
-export async function UpdateDataProsedur(nomor_sep: string, procedure: string, coder_nik: string) {
+export async function UpdateDataProsedur(
+  nomor_sep: string,
+  procedure: string,
+  coder_nik: string,
+) {
   const request = {
     metadata: { method: "set_claim_data", nomor_sep },
     data: { procedure, coder_nik },
@@ -455,7 +505,9 @@ export async function GroupingStage1(nomor_sep: string, coder_nik: string) {
   };
   const msg = await requestEKlaim(request);
   if (msg?.metadata?.message === "Ok") {
-    await db.delete(inacbg_grouping_stage1).where(eq(inacbg_grouping_stage1.no_sep, nomor_sep));
+    await db
+      .delete(inacbg_grouping_stage1)
+      .where(eq(inacbg_grouping_stage1.no_sep, nomor_sep));
     await db.insert(inacbg_grouping_stage1).values({
       no_sep: nomor_sep,
       code_cbg: msg.response_inacbg.cbg.code,
@@ -467,14 +519,19 @@ export async function GroupingStage1(nomor_sep: string, coder_nik: string) {
   return msg;
 }
 
-export async function GroupingStage1Internal(nomor_sep: string, coder_nik: string) {
+export async function GroupingStage1Internal(
+  nomor_sep: string,
+  coder_nik: string,
+) {
   const request = {
     metadata: { method: "grouper", stage: "1", grouper: "inacbg" },
     data: { nomor_sep },
   };
   const msg = await requestEKlaim(request);
   if (msg?.metadata?.message === "Ok") {
-    await db.delete(inacbg_grouping_stage1_internal).where(eq(inacbg_grouping_stage1_internal.no_sep, nomor_sep));
+    await db
+      .delete(inacbg_grouping_stage1_internal)
+      .where(eq(inacbg_grouping_stage1_internal.no_sep, nomor_sep));
     await db.insert(inacbg_grouping_stage1_internal).values({
       no_sep: nomor_sep,
       code_cbg: msg.response_inacbg.cbg.code,
@@ -493,7 +550,9 @@ export async function GroupingStage12(nomor_sep: string, coder_nik: string) {
   };
   const msg = await requestEKlaim(request);
   if (msg?.metadata?.message === "Ok") {
-    await db.delete(inacbg_grouping_stage12).where(eq(inacbg_grouping_stage12.no_sep, nomor_sep));
+    await db
+      .delete(inacbg_grouping_stage12)
+      .where(eq(inacbg_grouping_stage12.no_sep, nomor_sep));
     await db.insert(inacbg_grouping_stage12).values({
       no_sep: nomor_sep,
       code_cbg: msg.response_inacbg.cbg.code,
@@ -512,7 +571,9 @@ export async function GroupingStage13(nomor_sep: string, coder_nik: string) {
   };
   const msg = await requestEKlaim(request);
   if (msg?.metadata?.message === "Ok") {
-    await db.delete(inacbg_grouping_stage12).where(eq(inacbg_grouping_stage12.no_sep, nomor_sep));
+    await db
+      .delete(inacbg_grouping_stage12)
+      .where(eq(inacbg_grouping_stage12.no_sep, nomor_sep));
     await db.insert(inacbg_grouping_stage12).values({
       no_sep: nomor_sep,
       code_cbg: msg.response_inacbg.cbg.code,
@@ -534,7 +595,11 @@ export async function GroupingStage2(nomor_sep: string, special_cmg: string) {
   return msg;
 }
 
-export async function InacBGToDRG(nomor_sep: string, diagnosainacbg: string, procedureinacbg: string) {
+export async function InacBGToDRG(
+  nomor_sep: string,
+  diagnosainacbg: string,
+  procedureinacbg: string,
+) {
   const request = {
     metadata: { method: "idrg_to_inacbg_import" },
     data: { nomor_sep },
@@ -593,7 +658,11 @@ export async function EditUlangKlaim(nomor_sep: string) {
   });
 }
 
-export async function KirimKlaimPeriodeKeDC(start_dt: string, stop_dt: string, jenis_rawat: string) {
+export async function KirimKlaimPeriodeKeDC(
+  start_dt: string,
+  stop_dt: string,
+  jenis_rawat: string,
+) {
   return await requestEKlaim({
     metadata: { method: "send_claim" },
     data: { start_dt, stop_dt, jenis_rawat, date_type: "2" },
@@ -607,7 +676,11 @@ export async function KirimKlaimIndividualKeDC(nomor_sep: string) {
   });
 }
 
-export async function MenarikDataKlaimPeriode(start_dt: string, stop_dt: string, jenis_rawat: string) {
+export async function MenarikDataKlaimPeriode(
+  start_dt: string,
+  stop_dt: string,
+  jenis_rawat: string,
+) {
   return await requestEKlaim({
     metadata: { method: "pull_claim" },
     data: { start_dt, stop_dt, jenis_rawat },
@@ -629,10 +702,16 @@ export async function MengambilSetatusPerklaim(nomor_sep: string) {
 }
 
 export async function MenghapusKlaim(nomor_sep: string, coder_nik: string) {
-  return await requestEKlaim({
+  const msg = await requestEKlaim({
     metadata: { method: "delete_claim" },
     data: { nomor_sep, coder_nik },
   });
+
+  await db
+    .delete(inacbg_klaim_baru2)
+    .where(eq(inacbg_klaim_baru2.no_sep, nomor_sep));
+
+  return msg;
 }
 
 export async function CetakKlaim(nomor_sep: string) {
@@ -641,4 +720,3 @@ export async function CetakKlaim(nomor_sep: string) {
     data: { nomor_sep },
   });
 }
-
