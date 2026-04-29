@@ -13,10 +13,18 @@ import {
 import * as crypto from "crypto";
 import { eq } from "drizzle-orm";
 
+function getEnvVar(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Environment variable ${name} is required but not set.`);
+  }
+  return value;
+}
+
 export const EKLAIM_CONFIG = {
-  KEY: process.env.ECLAIM_CONFIG_KEY!,
-  URL_WS: process.env.ECLAIM_CONFIG_URL_WS!,
-  KELAS_RS: process.env.ECLAIM_CONFIG_KELAS_RS!,
+  KEY: getEnvVar("ECLAIM_CONFIG_KEY"),
+  URL_WS: getEnvVar("ECLAIM_CONFIG_URL_WS"),
+  KELAS_RS: getEnvVar("ECLAIM_CONFIG_KELAS_RS"),
 };
 
 export function mc_encrypt(data: string, strkey: string): string {
