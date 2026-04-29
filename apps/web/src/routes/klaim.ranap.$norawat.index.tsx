@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 import {
   Card,
@@ -11,13 +11,15 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Save } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
   DiagnosaCombobox,
   ProsedurCombobox,
 } from "@/components/klaim/diagnosa-combobox";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/klaim/ranap/$norawat/")({
   component: RouteComponent,
@@ -52,13 +54,7 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
-function InfoRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: React.ReactNode;
-}) {
+function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="grid grid-cols-[200px_auto_1fr] gap-2 py-1.5 text-sm">
       <span className="text-muted-foreground">{label}</span>
@@ -107,20 +103,20 @@ function DiagnosaProsedurCard({
   const [diagnosaIdrg, setDiagnosaIdrg] = useState<string[]>(idrgDiagnosa);
   const [prosedurIdrg, setProsedurIdrg] = useState<string[]>(idrgProsedur);
   const [diagnosaInacbgState, setDiagnosaInacbgState] = useState<string[]>(
-    diagnosaInacbg ? diagnosaInacbg.split("#").filter(Boolean) : idrgDiagnosa
+    diagnosaInacbg ? diagnosaInacbg.split("#").filter(Boolean) : idrgDiagnosa,
   );
   const [prosedurInacbgState, setProsedurInacbgState] = useState<string[]>(
-    prosedurInacbg ? prosedurInacbg.split("#").filter(Boolean) : idrgProsedur
+    prosedurInacbg ? prosedurInacbg.split("#").filter(Boolean) : idrgProsedur,
   );
 
   useEffect(() => {
     setDiagnosaIdrg(diagnosa ? diagnosa.split("#").filter(Boolean) : []);
     setProsedurIdrg(prosedur ? prosedur.split("#").filter(Boolean) : []);
     setDiagnosaInacbgState(
-      diagnosaInacbg ? diagnosaInacbg.split("#").filter(Boolean) : idrgDiagnosa
+      diagnosaInacbg ? diagnosaInacbg.split("#").filter(Boolean) : idrgDiagnosa,
     );
     setProsedurInacbgState(
-      prosedurInacbg ? prosedurInacbg.split("#").filter(Boolean) : idrgProsedur
+      prosedurInacbg ? prosedurInacbg.split("#").filter(Boolean) : idrgProsedur,
     );
   }, [diagnosa, prosedur, diagnosaInacbg, prosedurInacbg]);
 
@@ -181,12 +177,212 @@ function DiagnosaProsedurCard({
   );
 }
 
+interface SimpanKlaimInput {
+  no_rawat: string;
+  tgl_registrasi: string;
+  codernik: string;
+  nosep: string;
+  nokartu: string;
+  nm_pasien: string;
+  keluar: string;
+  kelas_rawat: string;
+  cara_masuk: string;
+  diagnosa: string;
+  procedure: string;
+  diagnosainacbg: string;
+  procedureinacbg: string;
+  prosedur_non_bedah: string;
+  prosedur_bedah: string;
+  konsultasi: string;
+  tenaga_ahli: string;
+  keperawatan: string;
+  penunjang: string;
+  radiologi: string;
+  laboratorium: string;
+  pelayanan_darah: string;
+  rehabilitasi: string;
+  kamar: string;
+  rawat_intensif: string;
+  obat: string;
+  obat_kronis: string;
+  obat_kemoterapi: string;
+  alkes: string;
+  bmhp: string;
+  sewa_alat: string;
+  tarif_poli_eks: string;
+  nama_dokter: string;
+  jk: string;
+  tgl_lahir: string;
+  jnsrawat: string;
+  sistole: string;
+  diastole: string;
+  discharge_status: string;
+  birth_weight: string;
+  upgrade_class_ind: string;
+  upgrade_class_class: string;
+  no_rkm_medis: string;
+}
+
+interface SimpanKlaimResult {
+  success: boolean;
+  message?: string;
+}
+
 function RouteComponent() {
   const { norawat } = Route.useParams();
 
   const { data, isLoading, error } = useQuery(
-    trpc.klaim.getKlaimRanap.queryOptions({ noRawat: norawat })
+    trpc.klaim.getKlaimRanap.queryOptions({ noRawat: norawat }),
   );
+
+  const simpanKlaim = useMutation({
+    ...trpc.klaim.simpanKlaim.mutationOptions(),
+    onSuccess: (result: any) => {
+      if (result.success) {
+        toast.success("Klaim berhasil disimpan");
+      } else {
+        toast.error(result.message || "Gagal menyimpan klaim");
+      }
+    },
+    onError: (err: any) => {
+      toast.error(`Error: ${err.message}`);
+    },
+  });
+
+  // Local state to hold the actively selected diagnosa and prosedur before saving
+  const [diagnosaIdrg, setDiagnosaIdrg] = useState<string[]>([]);
+  const [prosedurIdrg, setProsedurIdrg] = useState<string[]>([]);
+  const [diagnosaInacbgState, setDiagnosaInacbgState] = useState<string[]>([]);
+  const [prosedurInacbgState, setProsedurInacbgState] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (data) {
+      setDiagnosaIdrg(
+        data.diagnosa ? data.diagnosa.split("#").filter(Boolean) : [],
+      );
+      setProsedurIdrg(
+        data.prosedur ? data.prosedur.split("#").filter(Boolean) : [],
+      );
+      setDiagnosaInacbgState(
+        data.diagnosaInacbg
+          ? data.diagnosaInacbg.split("#").filter(Boolean)
+          : data.diagnosa
+            ? data.diagnosa.split("#").filter(Boolean)
+            : [],
+      );
+      setProsedurInacbgState(
+        data.prosedurInacbg
+          ? data.prosedurInacbg.split("#").filter(Boolean)
+          : data.prosedur
+            ? data.prosedur.split("#").filter(Boolean)
+            : [],
+      );
+    }
+  }, [data]);
+
+  const handleSimpan = () => {
+    if (!data) return;
+
+    console.log({
+      no_rawat: data.noRawat,
+      tgl_registrasi: data.tglRegistrasi,
+      codernik: "12345", // Assuming a valid coder nik, this might need to come from context/auth
+      nosep: data.nosep,
+      nokartu: data.noKartu,
+      nm_pasien: data.nmPasien,
+      keluar: data.tglKeluar,
+      kelas_rawat: data.klsRawat,
+      cara_masuk: data.caraMasuk,
+      // For IDRG / INACBG
+      diagnosa: diagnosaIdrg.join("#"),
+      procedure: prosedurIdrg.join("#"),
+      diagnosainacbg: diagnosaInacbgState.join("#"),
+      procedureinacbg: prosedurInacbgState.join("#"),
+
+      // Billing
+      prosedur_non_bedah: String(data.billing.prosedurNonBedah),
+      prosedur_bedah: String(data.billing.prosedurBedah),
+      konsultasi: String(data.billing.konsultasi),
+      tenaga_ahli: String(data.billing.tenagaAhli),
+      keperawatan: String(data.billing.keperawatan),
+      penunjang: String(data.billing.penunjang),
+      radiologi: String(data.billing.radiologi),
+      laboratorium: String(data.billing.laboratorium),
+      pelayanan_darah: String(data.billing.pelayananDarah),
+      rehabilitasi: String(data.billing.rehabilitasi),
+      kamar: String(data.billing.kamar),
+      rawat_intensif: String(data.billing.rawatIntensif),
+      obat: String(data.billing.obat),
+      obat_kronis: String(data.billing.obatKronis),
+      obat_kemoterapi: String(data.billing.obatKemoterapi),
+      alkes: String(data.billing.alkes),
+      bmhp: String(data.billing.bmhp),
+      sewa_alat: String(data.billing.sewaAlat),
+      tarif_poli_eks: String(data.billing.tarifPoliEks),
+
+      nama_dokter: data.nmDokter,
+      jk: data.jk,
+      tgl_lahir: data.tglLahir,
+      jnsrawat: data.jnsRawat,
+      sistole: data.sistole,
+      diastole: data.diastole,
+      discharge_status: data.dischargeStatus,
+      birth_weight: data.birthWeight,
+      upgrade_class_ind: data.upgradeClassInd,
+      upgrade_class_class: data.upgradeClassClass,
+      no_rkm_medis: data.noRkmMedis,
+    });
+
+    simpanKlaim.mutate({
+      no_rawat: data.noRawat,
+      tgl_registrasi: data.tglRegistrasi,
+      codernik: "12345", // Assuming a valid coder nik, this might need to come from context/auth
+      nosep: data.nosep,
+      nokartu: data.noKartu,
+      nm_pasien: data.nmPasien,
+      keluar: data.tglKeluar,
+      kelas_rawat: data.klsRawat,
+      cara_masuk: data.caraMasuk,
+      // For IDRG / INACBG
+      diagnosa: diagnosaIdrg.join("#"),
+      procedure: prosedurIdrg.join("#"),
+      diagnosainacbg: diagnosaInacbgState.join("#"),
+      procedureinacbg: prosedurInacbgState.join("#"),
+
+      // Billing
+      prosedur_non_bedah: String(data.billing.prosedurNonBedah),
+      prosedur_bedah: String(data.billing.prosedurBedah),
+      konsultasi: String(data.billing.konsultasi),
+      tenaga_ahli: String(data.billing.tenagaAhli),
+      keperawatan: String(data.billing.keperawatan),
+      penunjang: String(data.billing.penunjang),
+      radiologi: String(data.billing.radiologi),
+      laboratorium: String(data.billing.laboratorium),
+      pelayanan_darah: String(data.billing.pelayananDarah),
+      rehabilitasi: String(data.billing.rehabilitasi),
+      kamar: String(data.billing.kamar),
+      rawat_intensif: String(data.billing.rawatIntensif),
+      obat: String(data.billing.obat),
+      obat_kronis: String(data.billing.obatKronis),
+      obat_kemoterapi: String(data.billing.obatKemoterapi),
+      alkes: String(data.billing.alkes),
+      bmhp: String(data.billing.bmhp),
+      sewa_alat: String(data.billing.sewaAlat),
+      tarif_poli_eks: String(data.billing.tarifPoliEks),
+
+      nama_dokter: data.nmDokter,
+      jk: data.jk,
+      tgl_lahir: data.tglLahir,
+      jnsrawat: data.jnsRawat,
+      sistole: data.sistole,
+      diastole: data.diastole,
+      discharge_status: data.dischargeStatus,
+      birth_weight: data.birthWeight,
+      upgrade_class_ind: data.upgradeClassInd,
+      upgrade_class_class: data.upgradeClassClass,
+      no_rkm_medis: data.noRkmMedis,
+    });
+  };
 
   if (isLoading) return <LoadingSkeleton />;
 
@@ -212,22 +408,32 @@ function RouteComponent() {
 
   const totalBilling = Object.values(data.billing).reduce(
     (sum, val) => sum + val,
-    0
+    0,
   );
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <Link
-          to="/klaim/ranap"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-          Kembali
-        </Link>
-        <Separator orientation="vertical" className="data-[orientation=vertical]:h-4" />
-        <h1 className="text-lg font-semibold">Detail Klaim Ranap</h1>
-        <Badge variant="outline">{data.noRawat}</Badge>
+    <div className="space-y-4 pb-20">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Link
+            to="/klaim/ranap"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="size-4" />
+            Kembali
+          </Link>
+          <Separator
+            orientation="vertical"
+            className="data-[orientation=vertical]:h-4"
+          />
+          <h1 className="text-lg font-semibold">Detail Klaim Ranap</h1>
+          <Badge variant="outline">{data.noRawat}</Badge>
+        </div>
+
+        <Button onClick={handleSimpan} disabled={simpanKlaim.isPending}>
+          <Save className="mr-2 size-4" />
+          {simpanKlaim.isPending ? "Menyimpan..." : "Simpan Klaim"}
+        </Button>
       </div>
 
       {/* Patient Info & Admission */}
@@ -268,14 +474,17 @@ function RouteComponent() {
               value={caraMasukLabels[data.caraMasuk] || data.caraMasuk}
             />
             <InfoRow label="Tgl. Keluar" value={data.tglKeluar} />
-            <InfoRow label="Kelas Rawat" value={data.klsRawat ? `Kelas ${data.klsRawat}` : "-"} />
-            <InfoRow label="Jenis Rawat" value={data.jnsRawat === "1" ? "Rawat Inap" : "Rawat Jalan"} />
+            <InfoRow
+              label="Kelas Rawat"
+              value={data.klsRawat ? `Kelas ${data.klsRawat}` : "-"}
+            />
+            <InfoRow
+              label="Jenis Rawat"
+              value={data.jnsRawat === "1" ? "Rawat Inap" : "Rawat Jalan"}
+            />
             <InfoRow label="Sistole" value={data.sistole} />
             <InfoRow label="Diastole" value={data.diastole} />
-            <InfoRow
-              label="Status Pulang"
-              value={data.dischargeStatusLabel}
-            />
+            <InfoRow label="Status Pulang" value={data.dischargeStatusLabel} />
             <InfoRow
               label="Indikator Upgrade Kelas"
               value={data.upgradeClassInd === "1" ? "Ya" : "Tidak"}
@@ -295,12 +504,59 @@ function RouteComponent() {
       </div>
 
       {/* Diagnoses & Procedures */}
-      <DiagnosaProsedurCard
-        diagnosa={data.diagnosa}
-        prosedur={data.prosedur}
-        diagnosaInacbg={data.diagnosaInacbg}
-        prosedurInacbg={data.prosedurInacbg}
-      />
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Diagnosa & Prosedur</CardTitle>
+          <CardDescription>
+            Klik untuk mencari dan memilih diagnosa/prosedur
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Diagnosa IDRG</Label>
+              <DiagnosaCombobox
+                value={diagnosaIdrg}
+                onChange={setDiagnosaIdrg}
+                placeholder="Cari diagnosa IDRG..."
+                inacbgOnly={false}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Prosedur IDRG</Label>
+              <ProsedurCombobox
+                value={prosedurIdrg}
+                onChange={setProsedurIdrg}
+                placeholder="Cari prosedur IDRG..."
+                inacbgOnly={false}
+              />
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Diagnosa INACBG</Label>
+              <DiagnosaCombobox
+                value={diagnosaInacbgState}
+                onChange={setDiagnosaInacbgState}
+                placeholder="Cari diagnosa INACBG..."
+                inacbgOnly={true}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Prosedur INACBG</Label>
+              <ProsedurCombobox
+                value={prosedurInacbgState}
+                onChange={setProsedurInacbgState}
+                placeholder="Cari prosedur INACBG..."
+                inacbgOnly={true}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Billing */}
       <Card>
@@ -321,26 +577,14 @@ function RouteComponent() {
                 label="Prosedur Bedah"
                 value={data.billing.prosedurBedah}
               />
-              <BillingRow
-                label="Konsultasi"
-                value={data.billing.konsultasi}
-              />
-              <BillingRow
-                label="Tenaga Ahli"
-                value={data.billing.tenagaAhli}
-              />
+              <BillingRow label="Konsultasi" value={data.billing.konsultasi} />
+              <BillingRow label="Tenaga Ahli" value={data.billing.tenagaAhli} />
               <BillingRow
                 label="Keperawatan"
                 value={data.billing.keperawatan}
               />
-              <BillingRow
-                label="Penunjang"
-                value={data.billing.penunjang}
-              />
-              <BillingRow
-                label="Radiologi"
-                value={data.billing.radiologi}
-              />
+              <BillingRow label="Penunjang" value={data.billing.penunjang} />
+              <BillingRow label="Radiologi" value={data.billing.radiologi} />
               <BillingRow
                 label="Laboratorium"
                 value={data.billing.laboratorium}
@@ -361,20 +605,14 @@ function RouteComponent() {
                 value={data.billing.rawatIntensif}
               />
               <BillingRow label="Obat" value={data.billing.obat} />
-              <BillingRow
-                label="Obat Kronis"
-                value={data.billing.obatKronis}
-              />
+              <BillingRow label="Obat Kronis" value={data.billing.obatKronis} />
               <BillingRow
                 label="Obat Kemoterapi"
                 value={data.billing.obatKemoterapi}
               />
               <BillingRow label="Alkes" value={data.billing.alkes} />
               <BillingRow label="BMHP" value={data.billing.bmhp} />
-              <BillingRow
-                label="Sewa Alat"
-                value={data.billing.sewaAlat}
-              />
+              <BillingRow label="Sewa Alat" value={data.billing.sewaAlat} />
               <BillingRow
                 label="Tarif Poli Eksekutif"
                 value={data.billing.tarifPoliEks}

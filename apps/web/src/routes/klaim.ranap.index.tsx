@@ -24,6 +24,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 const claimSearchSchema = z.object({
   page: z.number().catch(1).optional(),
   limit: z.number().catch(50).optional(),
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
+  keyword: z.string().optional(),
 });
 
 export const Route = createFileRoute("/klaim/ranap/")({
@@ -33,30 +36,38 @@ export const Route = createFileRoute("/klaim/ranap/")({
 
 function RouteComponent() {
   const search = Route.useSearch();
+  const navigate = Route.useNavigate();
   const page = search.page || 1;
   const limit = search.limit || 50;
 
   const [dateFrom, setDateFrom] = useState<Date | undefined>(
-    startOfMonth(new Date()),
+    search.dateFrom ? new Date(search.dateFrom) : startOfMonth(new Date()),
   );
   const [dateTo, setDateTo] = useState<Date | undefined>(
-    endOfMonth(new Date()),
+    search.dateTo ? new Date(search.dateTo) : endOfMonth(new Date()),
   );
-  const [keyword, setKeyword] = useState("");
-  const [appliedKeyword, setAppliedKeyword] = useState("");
+  const [keyword, setKeyword] = useState(search.keyword || "");
 
   const { data, isLoading } = useQuery(
     trpc.klaim.listKlaimRanap.queryOptions({
-      dateFrom: dateFrom ?? startOfMonth(new Date()),
-      dateTo: dateTo ?? endOfMonth(new Date()),
-      keyword: appliedKeyword || undefined,
+      dateFrom: search.dateFrom ? new Date(search.dateFrom) : startOfMonth(new Date()),
+      dateTo: search.dateTo ? new Date(search.dateTo) : endOfMonth(new Date()),
+      keyword: search.keyword || undefined,
       page,
       limit,
     }),
   );
 
   const handleSearch = () => {
-    setAppliedKeyword(keyword);
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        page: 1,
+        dateFrom: dateFrom ? format(dateFrom, "yyyy-MM-dd") : undefined,
+        dateTo: dateTo ? format(dateTo, "yyyy-MM-dd") : undefined,
+        keyword: keyword || undefined,
+      }),
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

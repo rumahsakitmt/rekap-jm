@@ -34,7 +34,7 @@ export { detail_pemberian_obat } from "./detail_pemberian_obat";
 export { paketOperasi } from "./paket_operasi";
 export { master_triase_macam_kasus } from "./master_triase_macam_kasus";
 export { master_triase_pemeriksaan } from "./master_triase_pemeriksaan";
-export { data_triase_igd} from "./data_triase_igd"
+export { data_triase_igd } from "./data_triase_igd"
 export { data_triase_igddetail_skala1 } from "./data_triase_igddetail_skala1";
 export { data_triase_igddetail_skala2 } from "./data_triase_igddetail_skala2";
 export { data_triase_igddetail_skala3 } from "./data_triase_igddetail_skala3";
@@ -52,4 +52,12 @@ export { penyakit } from "./penyakit";
 export { icd9 } from "./icd9";
 export { pemeriksaan_ralan } from "./pemeriksaan_ralan";
 export { pemeriksaan_ranap } from "./pemeriksaan_ranap";
-
+export { inacbg_klaim_baru } from "./inacbg_klaim_baru";
+export { inacbg_klaim_baru2 } from "./inacbg_klaim_baru2";
+export { inacbg_data_terkirim } from "./inacbg_data_terkirim";
+export { inacbg_data_terkirim2 } from "./inacbg_data_terkirim2";
+export { inacbg_grouping_stage1 } from "./inacbg_grouping_stage1";
+export { inacbg_grouping_stage12 } from "./inacbg_grouping_stage12";
+export { inacbg_grouping_stage1_internal } from "./inacbg_grouping_stage1_internal";
+export { inacbg_klaim_baru_internal } from "./inacbg_klaim_baru_internal";
+export { inacbg_data_terkirim_internal } from "./inacbg_data_terkirim_internal";

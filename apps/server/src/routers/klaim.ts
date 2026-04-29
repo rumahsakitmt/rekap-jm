@@ -3,6 +3,14 @@ import { db } from "../db";
 import { and, asc, eq, like, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { diagnosa_pasien, penyakit, prosedur_pasien, icd9 } from "@/db/schema";
+import {
+  EKLAIM_CONFIG,
+  BuatKlaimBaru2,
+  EditUlangKlaim,
+  MenghapusKlaim,
+  UpdateDataKlaim2,
+  UpdateDataKlaim3,
+} from "../lib/e-klaim";
 
 type Row = Record<string, unknown>;
 
@@ -368,9 +376,10 @@ export const klaimRouter = router({
       let klsNaik = "";
       let asalRujukan = "";
       let klsRawat = "";
+      let diagAwal = "";
 
       const bsRows = await queryRows(sql`
-        SELECT klsnaik, asal_rujukan, klsrawat
+        SELECT klsnaik, asal_rujukan, klsrawat, diagawal
         FROM bridging_sep
         WHERE no_rawat = ${noRawat}
         LIMIT 1
@@ -379,9 +388,10 @@ export const klaimRouter = router({
         klsNaik = (bsRows[0].klsnaik as string) || "";
         asalRujukan = (bsRows[0].asal_rujukan as string) || "";
         klsRawat = (bsRows[0].klsrawat as string) || "";
+        diagAwal = (bsRows[0].diagawal as string) || "";
       } else {
         const bsiRows = await queryRows(sql`
-          SELECT klsnaik, asal_rujukan
+          SELECT klsnaik, asal_rujukan, diagawal
           FROM bridging_sep_internal
           WHERE no_rawat = ${noRawat}
           LIMIT 1
@@ -389,6 +399,7 @@ export const klaimRouter = router({
         if (bsiRows[0]) {
           klsNaik = (bsiRows[0].klsnaik as string) || "";
           asalRujukan = (bsiRows[0].asal_rujukan as string) || "";
+          diagAwal = (bsiRows[0].diagawal as string) || "";
         }
       }
 
@@ -434,7 +445,10 @@ export const klaimRouter = router({
         WHERE no_rawat = ${noRawat}
         ORDER BY prioritas ASC
       `);
-      const diagnosa = diagRows.map((r) => r.kd_penyakit as string).join("#");
+      let diagnosa = diagRows.map((r) => r.kd_penyakit as string).join("#");
+      if (!diagnosa && diagAwal) {
+        diagnosa = diagAwal;
+      }
 
       // 9. Procedures
       const procRows = await queryRows(sql`
@@ -661,5 +675,303 @@ export const klaimRouter = router({
         // Doctors list for dropdown
         allDokter,
       };
+    }),
+
+  simpanKlaim: publicProcedure
+    .input(z.object({
+      no_rawat: z.string().optional(),
+      tgl_registrasi: z.string().optional(),
+      codernik: z.string().optional(),
+      nosep: z.string().optional(),
+      nokartu: z.string().optional(),
+      nm_pasien: z.string().optional(),
+      keluar: z.string().optional(),
+      kelas_rawat: z.string().optional(),
+      cara_masuk: z.string().optional(),
+      adl_sub_acute: z.string().optional(),
+      adl_chronic: z.string().optional(),
+      icu_indikator: z.string().optional(),
+      icu_los: z.string().optional(),
+      ventilator_hour: z.string().optional(),
+      upgrade_class_ind: z.string().optional(),
+      upgrade_class_class: z.string().optional(),
+      upgrade_class_los: z.string().optional(),
+      add_payment_pct: z.string().optional(),
+      birth_weight: z.string().optional(),
+      discharge_status: z.string().optional(),
+      diagnosa: z.string().optional(),
+      procedure: z.string().optional(),
+      diagnosainacbg: z.string().optional(),
+      procedureinacbg: z.string().optional(),
+      prosedur_non_bedah: z.string().optional(),
+      prosedur_bedah: z.string().optional(),
+      konsultasi: z.string().optional(),
+      tenaga_ahli: z.string().optional(),
+      keperawatan: z.string().optional(),
+      penunjang: z.string().optional(),
+      radiologi: z.string().optional(),
+      laboratorium: z.string().optional(),
+      pelayanan_darah: z.string().optional(),
+      rehabilitasi: z.string().optional(),
+      kamar: z.string().optional(),
+      rawat_intensif: z.string().optional(),
+      obat: z.string().optional(),
+      obat_kronis: z.string().optional(),
+      obat_kemoterapi: z.string().optional(),
+      alkes: z.string().optional(),
+      bmhp: z.string().optional(),
+      sewa_alat: z.string().optional(),
+      tarif_poli_eks: z.string().optional(),
+      nama_dokter: z.string().optional(),
+      jk: z.string().optional(),
+      tgl_lahir: z.string().optional(),
+      jnsrawat: z.string().optional(),
+      sistole: z.string().optional(),
+      diastole: z.string().optional(),
+      carabayar: z.string().optional(),
+      statuskirim: z.string().optional(),
+      corona: z.string().optional(),
+      no_rkm_medis: z.string().optional(),
+      pemulasaraan_jenazah: z.string().optional(),
+      kantong_jenazah: z.string().optional(),
+      peti_jenazah: z.string().optional(),
+      plastik_erat: z.string().optional(),
+      desinfektan_jenazah: z.string().optional(),
+      mobil_jenazah: z.string().optional(),
+      desinfektan_mobil_jenazah: z.string().optional(),
+      covid19_status_cd: z.string().optional(),
+      nomor_kartu_t: z.string().optional(),
+      episodes1: z.string().optional(),
+      episodes2: z.string().optional(),
+      episodes3: z.string().optional(),
+      episodes4: z.string().optional(),
+      episodes5: z.string().optional(),
+      episodes6: z.string().optional(),
+      covid19_cc_ind: z.string().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const {
+        no_rawat,
+        nosep,
+        nokartu,
+        nm_pasien,
+        corona,
+        jk,
+        tgl_lahir,
+        codernik,
+        nomor_kartu_t,
+        no_rkm_medis,
+        tgl_registrasi,
+        keluar,
+        jnsrawat,
+        kelas_rawat,
+        adl_sub_acute,
+        adl_chronic,
+        icu_indikator,
+        icu_los,
+        ventilator_hour,
+        upgrade_class_ind,
+        upgrade_class_class,
+        upgrade_class_los,
+        add_payment_pct,
+        birth_weight,
+        discharge_status,
+        diagnosa,
+        procedure,
+        diagnosainacbg,
+        procedureinacbg,
+        tarif_poli_eks,
+        nama_dokter,
+        prosedur_non_bedah,
+        prosedur_bedah,
+        konsultasi,
+        tenaga_ahli,
+        keperawatan,
+        penunjang,
+        radiologi,
+        laboratorium,
+        pelayanan_darah,
+        rehabilitasi,
+        kamar,
+        rawat_intensif,
+        obat,
+        obat_kronis,
+        obat_kemoterapi,
+        alkes,
+        bmhp,
+        sewa_alat,
+        pemulasaraan_jenazah,
+        kantong_jenazah,
+        peti_jenazah,
+        plastik_erat,
+        desinfektan_jenazah,
+        mobil_jenazah,
+        desinfektan_mobil_jenazah,
+        covid19_status_cd,
+        covid19_cc_ind,
+        sistole,
+        diastole,
+        cara_masuk,
+      } = input;
+
+      let gender = "2";
+      if (jk === "L") {
+        gender = "1";
+      }
+
+      if (corona === "PasienCorona") {
+        const episodesArr = [];
+        if (input.episodes1 && input.episodes1 !== "0") episodesArr.push(`1;${input.episodes1}`);
+        if (input.episodes2 && input.episodes2 !== "0") episodesArr.push(`2;${input.episodes2}`);
+        if (input.episodes3 && input.episodes3 !== "0") episodesArr.push(`3;${input.episodes3}`);
+        if (input.episodes4 && input.episodes4 !== "0") episodesArr.push(`4;${input.episodes4}`);
+        if (input.episodes5 && input.episodes5 !== "0") episodesArr.push(`5;${input.episodes5}`);
+        if (input.episodes6 && input.episodes6 !== "0") episodesArr.push(`6;${input.episodes6}`);
+        const episodes = episodesArr.join("#");
+
+        if (no_rawat && nosep && nokartu && nomor_kartu_t) {
+          await MenghapusKlaim(nosep, codernik || "");
+          await BuatKlaimBaru2(nokartu, nosep, no_rkm_medis || "", nm_pasien || "", `${tgl_lahir} 00:00:00`, gender, no_rawat);
+          await EditUlangKlaim(nosep);
+
+          const klaimData = {
+            nomor_sep: nosep,
+            nomor_kartu: nokartu,
+            tgl_masuk: tgl_registrasi,
+            tgl_pulang: keluar,
+            jenis_rawat: jnsrawat,
+            kelas_rawat: kelas_rawat,
+            adl_sub_acute: adl_sub_acute,
+            adl_chronic: adl_chronic,
+            icu_indikator: icu_indikator,
+            icu_los: icu_los,
+            ventilator_hour: ventilator_hour,
+            upgrade_class_ind: upgrade_class_ind,
+            upgrade_class_class: upgrade_class_class,
+            upgrade_class_los: upgrade_class_los,
+            add_payment_pct: add_payment_pct,
+            birth_weight: birth_weight,
+            discharge_status: discharge_status,
+            diagnosa: diagnosa,
+            procedure: procedure,
+            diagnosa_inagrouper: diagnosainacbg,
+            procedure_inagrouper: procedureinacbg,
+            tarif_poli_eks: tarif_poli_eks,
+            nama_dokter: nama_dokter,
+            kode_tarif: EKLAIM_CONFIG.KELAS_RS,
+            payor_id: "71",
+            payor_cd: "COVID-19",
+            cob_cd: "#",
+            coder_nik: codernik,
+            tarif_rs: {
+              prosedur_non_bedah: prosedur_non_bedah,
+              prosedur_bedah: prosedur_bedah,
+              konsultasi: konsultasi,
+              tenaga_ahli: tenaga_ahli,
+              keperawatan: keperawatan,
+              penunjang: penunjang,
+              radiologi: radiologi,
+              laboratorium: laboratorium,
+              pelayanan_darah: pelayanan_darah,
+              rehabilitasi: rehabilitasi,
+              kamar: kamar,
+              rawat_intensif: rawat_intensif,
+              obat: obat,
+              obat_kronis: obat_kronis,
+              obat_kemoterapi: obat_kemoterapi,
+              alkes: alkes,
+              bmhp: bmhp,
+              sewa_alat: sewa_alat,
+            },
+            pemulasaraan_jenazah: pemulasaraan_jenazah,
+            kantong_jenazah: kantong_jenazah,
+            peti_jenazah: peti_jenazah,
+            plastik_erat: plastik_erat,
+            desinfektan_jenazah: desinfektan_jenazah,
+            mobil_jenazah: mobil_jenazah,
+            desinfektan_mobil_jenazah: desinfektan_mobil_jenazah,
+            covid19_status_cd: covid19_status_cd,
+            nomor_kartu_t: nomor_kartu_t,
+            episodes: episodes,
+            covid19_cc_ind: covid19_cc_ind,
+            sistole: sistole,
+            diastole: diastole,
+            cara_masuk: cara_masuk,
+          };
+
+          await UpdateDataKlaim3(klaimData);
+          return { success: true, message: "Berhasil" };
+        } else {
+          return { success: false, message: "Semua field harus isi..!!!" };
+        }
+      } else {
+        if (no_rawat && nosep && nokartu) {
+          await BuatKlaimBaru2(nokartu, nosep, no_rkm_medis || "", nm_pasien || "", `${tgl_lahir} 00:00:00`, gender, no_rawat);
+          await EditUlangKlaim(nosep);
+
+          const klaimData = {
+            nomor_sep: nosep,
+            nomor_kartu: nokartu,
+            tgl_masuk: tgl_registrasi,
+            tgl_pulang: keluar,
+            jenis_rawat: jnsrawat,
+            kelas_rawat: kelas_rawat,
+            adl_sub_acute: adl_sub_acute,
+            adl_chronic: adl_chronic,
+            icu_indikator: icu_indikator,
+            icu_los: icu_los,
+            ventilator_hour: ventilator_hour,
+            upgrade_class_ind: upgrade_class_ind,
+            upgrade_class_class: upgrade_class_class,
+            upgrade_class_los: upgrade_class_los,
+            add_payment_pct: add_payment_pct,
+            birth_weight: birth_weight,
+            discharge_status: discharge_status,
+            diagnosa: diagnosa,
+            procedure: procedure,
+            diagnosa_inagrouper: diagnosainacbg,
+            procedure_inagrouper: procedureinacbg,
+            tarif_poli_eks: tarif_poli_eks,
+            nama_dokter: nama_dokter,
+            kode_tarif: EKLAIM_CONFIG.KELAS_RS,
+            payor_id: "3",
+            payor_cd: "JKN",
+            cob_cd: "#",
+            coder_nik: codernik,
+            tarif_rs: {
+              prosedur_non_bedah: prosedur_non_bedah,
+              prosedur_bedah: prosedur_bedah,
+              konsultasi: konsultasi,
+              tenaga_ahli: tenaga_ahli,
+              keperawatan: keperawatan,
+              penunjang: penunjang,
+              radiologi: radiologi,
+              laboratorium: laboratorium,
+              pelayanan_darah: pelayanan_darah,
+              rehabilitasi: rehabilitasi,
+              kamar: kamar,
+              rawat_intensif: rawat_intensif,
+              obat: obat,
+              obat_kronis: obat_kronis,
+              obat_kemoterapi: obat_kemoterapi,
+              alkes: alkes,
+              bmhp: bmhp,
+              sewa_alat: sewa_alat,
+            },
+            sistole: sistole,
+            diastole: diastole,
+            cara_masuk: cara_masuk,
+          };
+
+          const res = await UpdateDataKlaim2(klaimData);
+          if (res.respon === "Berhasil") {
+            return { success: true, message: "Berhasil" };
+          } else {
+            return { success: false, message: "Gagal Update Data Klaim" };
+          }
+        } else {
+          return { success: false, message: "Semua field harus isi..!!!" };
+        }
+      }
     }),
 });
