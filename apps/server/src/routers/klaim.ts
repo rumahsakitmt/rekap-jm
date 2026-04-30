@@ -2,7 +2,7 @@ import { router, publicProcedure } from "../lib/trpc";
 import { db } from "../db";
 import { and, asc, eq, like, or, sql } from "drizzle-orm";
 import { z } from "zod";
-import { diagnosa_pasien, penyakit, prosedur_pasien, icd9, inacbg_grouping_stage12, inacbg_data_terkirim2 } from "@/db/schema";
+import { diagnosa_pasien, penyakit, prosedur_pasien, icd9, inacbg_grouping_stage12, inacbg_data_terkirim2, inacbg_coder_nik } from "@/db/schema";
 import {
   EKLAIM_CONFIG,
   BuatKlaimBaru2,
@@ -1198,5 +1198,22 @@ export const klaimRouter = router({
         return { success: true, message: "Klaim berhasil dikirim" };
       }
       return { success: false, message: msg?.metadata?.message || "Gagal mengirim klaim" };
+    }),
+
+  validasiCoderNik: publicProcedure
+    .input(
+      z.object({
+        coder_nik: z.string(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const { coder_nik } = input;
+      const rows = await db
+        .select()
+        .from(inacbg_coder_nik)
+        .where(eq(inacbg_coder_nik.no_ik, coder_nik))
+        .limit(1);
+
+      return { valid: rows.length > 0 };
     }),
 });

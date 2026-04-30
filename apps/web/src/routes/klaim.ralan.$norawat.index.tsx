@@ -97,7 +97,7 @@ function RouteComponent() {
     simpanKlaim.mutate({
       no_rawat: data.noRawat,
       tgl_registrasi: data.tglRegistrasi,
-      codernik: import.meta.env.VITE_CODER_NIK || "",
+      codernik: sessionStorage.getItem("coder_nik") || "",
       nosep: data.nosep,
       nokartu: data.noKartu,
       nm_pasien: data.nmPasien,
@@ -206,7 +206,7 @@ function RouteComponent() {
         onHapus={() =>
           hapusKlaim.mutate({
             no_sep: data.nosep,
-            coder_nik: import.meta.env.VITE_CODER_NIK || "",
+            coder_nik: sessionStorage.getItem("coder_nik") || "",
           })
         }
       />

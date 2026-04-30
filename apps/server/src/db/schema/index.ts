@@ -61,3 +61,4 @@ export { inacbg_grouping_stage12 } from "./inacbg_grouping_stage12";
 export { inacbg_grouping_stage1_internal } from "./inacbg_grouping_stage1_internal";
 export { inacbg_klaim_baru_internal } from "./inacbg_klaim_baru_internal";
 export { inacbg_data_terkirim_internal } from "./inacbg_data_terkirim_internal";
+export { inacbg_coder_nik } from "./inacbg_coder_nik";

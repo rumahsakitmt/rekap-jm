@@ -27,6 +27,7 @@ const claimSearchSchema = z.object({
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
   keyword: z.string().optional(),
+  coder_nik: z.string().optional(),
 });
 
 export const Route = createFileRoute("/klaim/ranap/")({
@@ -167,6 +168,7 @@ function RouteComponent() {
                       className="underline underline-offset-2"
                       to="/klaim/ranap/$norawat"
                       params={{ norawat: row.noRawat }}
+                      search={(prev) => prev}
                     >
                       {row.noSep}
                     </Link>
@@ -182,6 +184,7 @@ function RouteComponent() {
                     <Link
                       to="/klaim/ranap/$norawat"
                       params={{ norawat: row.noRawat }}
+                      search={(prev) => prev}
                     >
                       {row.namaPasien}
                     </Link>

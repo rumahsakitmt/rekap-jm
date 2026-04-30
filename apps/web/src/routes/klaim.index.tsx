@@ -5,5 +5,5 @@ export const Route = createFileRoute("/klaim/")({
 });
 
 function RouteComponent() {
-  return <Navigate to="/klaim/ranap" />;
+  return <Navigate to="/klaim/ranap" search={(prev) => prev} />;
 }
