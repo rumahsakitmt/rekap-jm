@@ -12,7 +12,7 @@
     "db:studio": "drizzle-kit studio",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "pm2:start": "pm2 start ecosystem.config.cjs --env production",
+    "pm2:start": "pm2 start ecosystem.config.cjs --only server --env production",
     "pm2:dev": "pm2 start ecosystem.config.cjs --only server-dev",
     "pm2:stop": "pm2 stop ecosystem.config.cjs",
     "pm2:restart": "pm2 restart ecosystem.config.cjs",

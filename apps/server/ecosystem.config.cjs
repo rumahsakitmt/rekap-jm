@@ -9,6 +9,9 @@ module.exports = {
       env: {
         NODE_ENV: "production",
       },
+      env_production: {
+        NODE_ENV: "production",
+      },
       max_memory_restart: "1G",
       log_date_format: "YYYY-MM-DD HH:mm:ss Z",
     },
