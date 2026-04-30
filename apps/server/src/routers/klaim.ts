@@ -90,6 +90,154 @@ async function syncDiagnosaProsedurDb(
   }
 }
 
+async function fetchKlaimList(input: {
+  dateFrom: Date;
+  dateTo: Date;
+  keyword?: string;
+  limit: number;
+  page: number;
+  jnsPelayanan: string;
+}) {
+  const { dateFrom, dateTo, keyword, limit, page, jnsPelayanan } = input;
+  const dateFromStr = dateFrom.toISOString().slice(0, 10);
+  const dateToStr = dateTo.toISOString().slice(0, 10);
+
+  const offsetVal = (page - 1) * limit;
+
+  let mainQuery;
+  let countQuery;
+  if (keyword) {
+    const kw = `%${keyword}%`;
+    countQuery = sql`
+      SELECT COUNT(*) as total
+      FROM bridging_sep
+      INNER JOIN reg_periksa ON reg_periksa.no_rawat = bridging_sep.no_rawat
+      INNER JOIN dokter ON reg_periksa.kd_dokter = dokter.kd_dokter
+      WHERE bridging_sep.tglsep BETWEEN ${dateFromStr} AND ${dateToStr}
+        AND bridging_sep.jnspelayanan = ${jnsPelayanan}
+        AND (
+          bridging_sep.no_sep LIKE ${kw}
+          OR bridging_sep.nomr LIKE ${kw}
+          OR bridging_sep.nama_pasien LIKE ${kw}
+          OR bridging_sep.no_rawat LIKE ${kw}
+          OR bridging_sep.no_kartu LIKE ${kw}
+        )
+    `;
+    mainQuery = sql`
+      SELECT
+        bridging_sep.no_sep,
+        bridging_sep.no_rawat,
+        bridging_sep.nomr,
+        bridging_sep.nama_pasien,
+        bridging_sep.tglsep,
+        bridging_sep.no_kartu,
+        bridging_sep.jnspelayanan,
+        bridging_sep.nmpolitujuan,
+        bridging_sep.diagawal,
+        bridging_sep.nmdiagnosaawal,
+        bridging_sep.klsrawat,
+        bridging_sep.tglpulang,
+        dokter.nm_dokter,
+        (SELECT GROUP_CONCAT(kd_penyakit ORDER BY prioritas ASC SEPARATOR ', ') FROM diagnosa_pasien WHERE no_rawat = bridging_sep.no_rawat) as all_diagnosa,
+        (SELECT GROUP_CONCAT(kode ORDER BY prioritas ASC SEPARATOR ', ') FROM prosedur_pasien WHERE no_rawat = bridging_sep.no_rawat) as all_prosedur
+      FROM bridging_sep
+      INNER JOIN reg_periksa ON reg_periksa.no_rawat = bridging_sep.no_rawat
+      INNER JOIN dokter ON reg_periksa.kd_dokter = dokter.kd_dokter
+      WHERE bridging_sep.tglsep BETWEEN ${dateFromStr} AND ${dateToStr}
+        AND bridging_sep.jnspelayanan = ${jnsPelayanan}
+        AND (
+          bridging_sep.no_sep LIKE ${kw}
+          OR bridging_sep.nomr LIKE ${kw}
+          OR bridging_sep.nama_pasien LIKE ${kw}
+          OR bridging_sep.no_rawat LIKE ${kw}
+          OR bridging_sep.no_kartu LIKE ${kw}
+        )
+      ORDER BY bridging_sep.tglsep
+      LIMIT ${limit} OFFSET ${offsetVal}
+    `;
+  } else {
+    countQuery = sql`
+      SELECT COUNT(*) as total
+      FROM bridging_sep
+      INNER JOIN reg_periksa ON reg_periksa.no_rawat = bridging_sep.no_rawat
+      INNER JOIN dokter ON reg_periksa.kd_dokter = dokter.kd_dokter
+      WHERE bridging_sep.tglsep BETWEEN ${dateFromStr} AND ${dateToStr}
+        AND bridging_sep.jnspelayanan = ${jnsPelayanan}
+    `;
+    mainQuery = sql`
+      SELECT
+        bridging_sep.no_sep,
+        bridging_sep.no_rawat,
+        bridging_sep.nomr,
+        bridging_sep.nama_pasien,
+        bridging_sep.tglsep,
+        bridging_sep.no_kartu,
+        bridging_sep.jnspelayanan,
+        bridging_sep.nmpolitujuan,
+        bridging_sep.diagawal,
+        bridging_sep.nmdiagnosaawal,
+        bridging_sep.klsrawat,
+        bridging_sep.tglpulang,
+        dokter.nm_dokter,
+        (SELECT GROUP_CONCAT(kd_penyakit ORDER BY prioritas ASC SEPARATOR ', ') FROM diagnosa_pasien WHERE no_rawat = bridging_sep.no_rawat) as all_diagnosa,
+        (SELECT GROUP_CONCAT(kode ORDER BY prioritas ASC SEPARATOR ', ') FROM prosedur_pasien WHERE no_rawat = bridging_sep.no_rawat) as all_prosedur
+      FROM bridging_sep
+      INNER JOIN reg_periksa ON reg_periksa.no_rawat = bridging_sep.no_rawat
+      INNER JOIN dokter ON reg_periksa.kd_dokter = dokter.kd_dokter
+      WHERE bridging_sep.tglsep BETWEEN ${dateFromStr} AND ${dateToStr}
+        AND bridging_sep.jnspelayanan = ${jnsPelayanan}
+      ORDER BY bridging_sep.tglsep
+      LIMIT ${limit} OFFSET ${offsetVal}
+    `;
+  }
+
+  const rows = await queryRows(mainQuery);
+  const countResult = await queryRows(countQuery);
+  const total = Number(countResult[0]?.total || 0);
+
+  const seps = rows.map((r) => r.no_sep as string).filter(Boolean);
+  const klaimedSet = new Set<string>();
+  if (seps.length > 0) {
+    const klaimedRows = await db
+      .select({ no_sep: inacbg_grouping_stage12.no_sep })
+      .from(inacbg_grouping_stage12)
+      .where(sql`${inacbg_grouping_stage12.no_sep} IN (${sql.join(seps.map((s) => sql`${s}`), sql`, `)})`);
+    for (const kr of klaimedRows) {
+      klaimedSet.add(kr.no_sep);
+    }
+  }
+
+  const data = rows.map((r) => ({
+    noSep: r.no_sep as string,
+    noRawat: r.no_rawat as string,
+    nomr: r.nomr as string,
+    namaPasien: r.nama_pasien as string,
+    tglSep: r.tglsep as string,
+    noKartu: (r.no_kartu as string) || "",
+    jnsPelayanan: r.jnspelayanan as string,
+    nmPolitujuan: (r.nmpolitujuan as string) || "",
+    diagAwal: (r.diagawal as string) || "",
+    nmDiagnosaAwal: (r.nmdiagnosaawal as string) || "",
+    klsRawat: (r.klsrawat as string) || "",
+    tglPulang: r.tglpulang as string | null,
+    nmDokter: (r.nm_dokter as string) || "",
+    allDiagnosa: (r.all_diagnosa as string) || "",
+    allProsedur: (r.all_prosedur as string) || "",
+    isKlaimed: klaimedSet.has(r.no_sep as string),
+  }));
+
+  return {
+    data,
+    pagination: {
+      total,
+      limit,
+      offset: offsetVal,
+      page,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+}
+
 export const klaimRouter = router({
   // Search for ICD-10 diagnoses (penyakit)
   searchPenyakit: publicProcedure
@@ -232,143 +380,19 @@ export const klaimRouter = router({
         page: z.number().optional().default(1),
       }),
     )
-    .query(async ({ input }) => {
-      const { dateFrom, dateTo, keyword, limit, page } = input;
-      const dateFromStr = dateFrom.toISOString().slice(0, 10);
-      const dateToStr = dateTo.toISOString().slice(0, 10);
+    .query(async ({ input }) => fetchKlaimList({ ...input, jnsPelayanan: "1" })),
 
-      const limitVal = limit || 50;
-      const offsetVal = (page - 1) * limitVal;
-
-      let mainQuery;
-      let countQuery;
-      if (keyword) {
-        const kw = `%${keyword}%`;
-        countQuery = sql`
-          SELECT COUNT(*) as total
-          FROM bridging_sep
-          INNER JOIN reg_periksa ON reg_periksa.no_rawat = bridging_sep.no_rawat
-          INNER JOIN dokter ON reg_periksa.kd_dokter = dokter.kd_dokter
-          WHERE bridging_sep.tglsep BETWEEN ${dateFromStr} AND ${dateToStr}
-            AND (
-              bridging_sep.no_sep LIKE ${kw}
-              OR bridging_sep.nomr LIKE ${kw}
-              OR bridging_sep.nama_pasien LIKE ${kw}
-              OR bridging_sep.no_rawat LIKE ${kw}
-              OR bridging_sep.no_kartu LIKE ${kw}
-            )
-        `;
-        mainQuery = sql`
-          SELECT
-            bridging_sep.no_sep,
-            bridging_sep.no_rawat,
-            bridging_sep.nomr,
-            bridging_sep.nama_pasien,
-            bridging_sep.tglsep,
-            bridging_sep.no_kartu,
-            bridging_sep.jnspelayanan,
-            bridging_sep.nmpolitujuan,
-            bridging_sep.diagawal,
-            bridging_sep.nmdiagnosaawal,
-            bridging_sep.klsrawat,
-            bridging_sep.tglpulang,
-            dokter.nm_dokter,
-            (SELECT GROUP_CONCAT(kd_penyakit ORDER BY prioritas ASC SEPARATOR ', ') FROM diagnosa_pasien WHERE no_rawat = bridging_sep.no_rawat) as all_diagnosa,
-            (SELECT GROUP_CONCAT(kode ORDER BY prioritas ASC SEPARATOR ', ') FROM prosedur_pasien WHERE no_rawat = bridging_sep.no_rawat) as all_prosedur
-          FROM bridging_sep
-          INNER JOIN reg_periksa ON reg_periksa.no_rawat = bridging_sep.no_rawat
-          INNER JOIN dokter ON reg_periksa.kd_dokter = dokter.kd_dokter
-          WHERE bridging_sep.tglsep BETWEEN ${dateFromStr} AND ${dateToStr}
-            AND (
-              bridging_sep.no_sep LIKE ${kw}
-              OR bridging_sep.nomr LIKE ${kw}
-              OR bridging_sep.nama_pasien LIKE ${kw}
-              OR bridging_sep.no_rawat LIKE ${kw}
-              OR bridging_sep.no_kartu LIKE ${kw}
-            )
-          ORDER BY bridging_sep.tglsep
-          LIMIT ${limitVal} OFFSET ${offsetVal}
-        `;
-      } else {
-        countQuery = sql`
-          SELECT COUNT(*) as total
-          FROM bridging_sep
-          INNER JOIN reg_periksa ON reg_periksa.no_rawat = bridging_sep.no_rawat
-          INNER JOIN dokter ON reg_periksa.kd_dokter = dokter.kd_dokter
-          WHERE bridging_sep.tglsep BETWEEN ${dateFromStr} AND ${dateToStr}
-        `;
-        mainQuery = sql`
-          SELECT
-            bridging_sep.no_sep,
-            bridging_sep.no_rawat,
-            bridging_sep.nomr,
-            bridging_sep.nama_pasien,
-            bridging_sep.tglsep,
-            bridging_sep.no_kartu,
-            bridging_sep.jnspelayanan,
-            bridging_sep.nmpolitujuan,
-            bridging_sep.diagawal,
-            bridging_sep.nmdiagnosaawal,
-            bridging_sep.klsrawat,
-            bridging_sep.tglpulang,
-            dokter.nm_dokter,
-            (SELECT GROUP_CONCAT(kd_penyakit ORDER BY prioritas ASC SEPARATOR ', ') FROM diagnosa_pasien WHERE no_rawat = bridging_sep.no_rawat) as all_diagnosa,
-            (SELECT GROUP_CONCAT(kode ORDER BY prioritas ASC SEPARATOR ', ') FROM prosedur_pasien WHERE no_rawat = bridging_sep.no_rawat) as all_prosedur
-          FROM bridging_sep
-          INNER JOIN reg_periksa ON reg_periksa.no_rawat = bridging_sep.no_rawat
-          INNER JOIN dokter ON reg_periksa.kd_dokter = dokter.kd_dokter
-          WHERE bridging_sep.tglsep BETWEEN ${dateFromStr} AND ${dateToStr}
-          ORDER BY bridging_sep.tglsep
-          LIMIT ${limitVal} OFFSET ${offsetVal}
-        `;
-      }
-
-      const rows = await queryRows(mainQuery);
-      const countResult = await queryRows(countQuery);
-      const total = Number(countResult[0]?.total || 0);
-
-      const seps = rows.map((r) => r.no_sep as string).filter(Boolean);
-      const klaimedSet = new Set<string>();
-      if (seps.length > 0) {
-        const klaimedRows = await db
-          .select({ no_sep: inacbg_grouping_stage12.no_sep })
-          .from(inacbg_grouping_stage12)
-          .where(sql`${inacbg_grouping_stage12.no_sep} IN (${sql.join(seps.map((s) => sql`${s}`), sql`, `)})`);
-        for (const kr of klaimedRows) {
-          klaimedSet.add(kr.no_sep);
-        }
-      }
-
-      const data = rows.map((r) => ({
-        noSep: r.no_sep as string,
-        noRawat: r.no_rawat as string,
-        nomr: r.nomr as string,
-        namaPasien: r.nama_pasien as string,
-        tglSep: r.tglsep as string,
-        noKartu: (r.no_kartu as string) || "",
-        jnsPelayanan: r.jnspelayanan as string,
-        nmPolitujuan: (r.nmpolitujuan as string) || "",
-        diagAwal: (r.diagawal as string) || "",
-        nmDiagnosaAwal: (r.nmdiagnosaawal as string) || "",
-        klsRawat: (r.klsrawat as string) || "",
-        tglPulang: r.tglpulang as string | null,
-        nmDokter: (r.nm_dokter as string) || "",
-        allDiagnosa: (r.all_diagnosa as string) || "",
-        allProsedur: (r.all_prosedur as string) || "",
-        isKlaimed: klaimedSet.has(r.no_sep as string),
-      }));
-
-      return {
-        data,
-        pagination: {
-          total,
-          limit: limitVal,
-          offset: offsetVal,
-          page,
-          totalPages: Math.ceil(total / limitVal),
-        },
-      };
-    }),
+  listKlaimRalan: publicProcedure
+    .input(
+      z.object({
+        dateFrom: z.coerce.date(),
+        dateTo: z.coerce.date(),
+        keyword: z.string().optional(),
+        limit: z.number().optional().default(50),
+        page: z.number().optional().default(1),
+      }),
+    )
+    .query(async ({ input }) => fetchKlaimList({ ...input, jnsPelayanan: "2" })),
 
   getKlaimRanap: publicProcedure
     .input(z.object({ noRawat: z.string() }))

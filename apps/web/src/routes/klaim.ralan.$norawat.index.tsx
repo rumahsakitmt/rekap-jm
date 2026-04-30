@@ -15,7 +15,7 @@ import { DiagnosaProsedurCard } from "@/components/klaim/diagnosa-prosedur-card"
 import { BillingCard } from "@/components/klaim/billing-card";
 import { KlaimActionButtons } from "@/components/klaim/klaim-action-buttons";
 
-export const Route = createFileRoute("/klaim/ranap/$norawat/")({
+export const Route = createFileRoute("/klaim/ralan/$norawat/")({
   component: RouteComponent,
 });
 
@@ -182,7 +182,7 @@ function RouteComponent() {
             orientation="vertical"
             className="data-[orientation=vertical]:h-4"
           />
-          <h1 className="text-lg font-semibold">Detail Klaim Ranap</h1>
+          <h1 className="text-lg font-semibold">Detail Klaim Ralan</h1>
           <Badge variant="outline">{data.noRawat}</Badge>
         </div>
       </div>

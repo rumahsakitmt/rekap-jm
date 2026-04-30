@@ -13,10 +13,9 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DatePicker } from "@/components/date-picker";
-import { Search, FileText } from "lucide-react";
+import { Search } from "lucide-react";
 import { useState } from "react";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,7 +28,7 @@ const claimSearchSchema = z.object({
   keyword: z.string().optional(),
 });
 
-export const Route = createFileRoute("/klaim/ranap/")({
+export const Route = createFileRoute("/klaim/ralan/")({
   validateSearch: claimSearchSchema,
   component: RouteComponent,
 });
@@ -49,7 +48,7 @@ function RouteComponent() {
   const [keyword, setKeyword] = useState(search.keyword || "");
 
   const { data, isLoading } = useQuery(
-    trpc.klaim.listKlaimRanap.queryOptions({
+    trpc.klaim.listKlaimRalan.queryOptions({
       dateFrom: search.dateFrom
         ? new Date(search.dateFrom)
         : startOfMonth(new Date()),
@@ -131,7 +130,7 @@ function RouteComponent() {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              Array.from({ length: 7 }).map((_, i) => (
+              Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
                   <TableCell>
                     <Skeleton className="h-12 w-full" />
@@ -144,6 +143,9 @@ function RouteComponent() {
                   </TableCell>
                   <TableCell>
                     <Skeleton className="h-12 w-full" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-8 w-full" />
                   </TableCell>
                   <TableCell>
                     <Skeleton className="h-8 w-full" />
@@ -165,7 +167,7 @@ function RouteComponent() {
                   <TableCell>
                     <Link
                       className="underline underline-offset-2"
-                      to="/klaim/ranap/$norawat"
+                      to="/klaim/ralan/$norawat"
                       params={{ norawat: row.noRawat }}
                     >
                       {row.noSep}
@@ -180,7 +182,7 @@ function RouteComponent() {
                   </TableCell>
                   <TableCell className="font-bold">
                     <Link
-                      to="/klaim/ranap/$norawat"
+                      to="/klaim/ralan/$norawat"
                       params={{ norawat: row.noRawat }}
                     >
                       {row.namaPasien}
@@ -240,7 +242,7 @@ function RouteComponent() {
       {data?.pagination && (
         <DataTablePagination
           pagination={data.pagination}
-          from="/klaim/ranap/"
+          from="/klaim/ralan/"
         />
       )}
     </div>
