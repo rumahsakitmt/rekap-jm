@@ -14,6 +14,7 @@ import { Route as ReportRawatJalanRouteImport } from './routes/report-rawat-jala
 import { Route as ReportRawatInapRouteImport } from './routes/report-rawat-inap'
 import { Route as RekapRouteImport } from './routes/rekap'
 import { Route as PreviewRouteImport } from './routes/preview'
+import { Route as PasienCleanupRouteImport } from './routes/pasien-cleanup'
 import { Route as ObatRouteImport } from './routes/obat'
 import { Route as KlaimRouteImport } from './routes/klaim'
 import { Route as IgdRouteImport } from './routes/igd'
@@ -61,6 +62,11 @@ const RekapRoute = RekapRouteImport.update({
 const PreviewRoute = PreviewRouteImport.update({
   id: '/preview',
   path: '/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PasienCleanupRoute = PasienCleanupRouteImport.update({
+  id: '/pasien-cleanup',
+  path: '/pasien-cleanup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ObatRoute = ObatRouteImport.update({
@@ -185,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/igd': typeof IgdRouteWithChildren
   '/klaim': typeof KlaimRouteWithChildren
   '/obat': typeof ObatRouteWithChildren
+  '/pasien-cleanup': typeof PasienCleanupRoute
   '/preview': typeof PreviewRoute
   '/rekap': typeof RekapRouteWithChildren
   '/report-rawat-inap': typeof ReportRawatInapRoute
@@ -214,6 +221,7 @@ export interface FileRoutesByTo {
   '/bridging': typeof BridgingRoute
   '/igd': typeof IgdRouteWithChildren
   '/obat': typeof ObatRouteWithChildren
+  '/pasien-cleanup': typeof PasienCleanupRoute
   '/preview': typeof PreviewRoute
   '/rekap': typeof RekapRouteWithChildren
   '/report-rawat-inap': typeof ReportRawatInapRoute
@@ -245,6 +253,7 @@ export interface FileRoutesById {
   '/igd': typeof IgdRouteWithChildren
   '/klaim': typeof KlaimRouteWithChildren
   '/obat': typeof ObatRouteWithChildren
+  '/pasien-cleanup': typeof PasienCleanupRoute
   '/preview': typeof PreviewRoute
   '/rekap': typeof RekapRouteWithChildren
   '/report-rawat-inap': typeof ReportRawatInapRoute
@@ -277,6 +286,7 @@ export interface FileRouteTypes {
     | '/igd'
     | '/klaim'
     | '/obat'
+    | '/pasien-cleanup'
     | '/preview'
     | '/rekap'
     | '/report-rawat-inap'
@@ -306,6 +316,7 @@ export interface FileRouteTypes {
     | '/bridging'
     | '/igd'
     | '/obat'
+    | '/pasien-cleanup'
     | '/preview'
     | '/rekap'
     | '/report-rawat-inap'
@@ -336,6 +347,7 @@ export interface FileRouteTypes {
     | '/igd'
     | '/klaim'
     | '/obat'
+    | '/pasien-cleanup'
     | '/preview'
     | '/rekap'
     | '/report-rawat-inap'
@@ -367,6 +379,7 @@ export interface RootRouteChildren {
   IgdRoute: typeof IgdRouteWithChildren
   KlaimRoute: typeof KlaimRouteWithChildren
   ObatRoute: typeof ObatRouteWithChildren
+  PasienCleanupRoute: typeof PasienCleanupRoute
   PreviewRoute: typeof PreviewRoute
   RekapRoute: typeof RekapRouteWithChildren
   ReportRawatInapRoute: typeof ReportRawatInapRoute
@@ -409,6 +422,13 @@ declare module '@tanstack/react-router' {
       path: '/preview'
       fullPath: '/preview'
       preLoaderRoute: typeof PreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pasien-cleanup': {
+      id: '/pasien-cleanup'
+      path: '/pasien-cleanup'
+      fullPath: '/pasien-cleanup'
+      preLoaderRoute: typeof PasienCleanupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/obat': {
@@ -657,6 +677,7 @@ const rootRouteChildren: RootRouteChildren = {
   IgdRoute: IgdRouteWithChildren,
   KlaimRoute: KlaimRouteWithChildren,
   ObatRoute: ObatRouteWithChildren,
+  PasienCleanupRoute: PasienCleanupRoute,
   PreviewRoute: PreviewRoute,
   RekapRoute: RekapRouteWithChildren,
   ReportRawatInapRoute: ReportRawatInapRoute,

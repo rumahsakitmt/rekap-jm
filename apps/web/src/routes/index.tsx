@@ -10,14 +10,14 @@ import {
   Stethoscope,
   ClockAlert,
   Siren,
+  ScanLine,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   component: HomeComponent,
 });
 
-function HomeComponent() {
-  const links = [
+const links = [
     {
       title: "Rekap",
       items: [
@@ -74,8 +74,19 @@ function HomeComponent() {
         },
       ],
     },
+    {
+      title: "Pasien",
+      items: [
+        {
+          to: "/pasien-cleanup",
+          label: "Normalisasi No. RM",
+          Icon: ScanLine,
+        },
+      ],
+    },
   ] as const;
 
+function HomeComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center relative">
       <div
