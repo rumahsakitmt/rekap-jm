@@ -11,6 +11,12 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
   Table,
   TableBody,
   TableCell,
@@ -32,6 +38,8 @@ import {
   CalendarDays,
   CircleAlert,
   HeartPulse,
+  IdCard,
+  List,
   MapPin,
   Phone,
   Search,
@@ -498,22 +506,69 @@ function PatientDetailSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-7">
-          {isLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 5 }, (_, index) => (
-                <Skeleton key={index} className="h-36 w-full" />
-              ))}
-            </div>
-          ) : rows.length === 0 ? (
-            <div className="grid h-full min-h-64 place-items-center text-center">
-              <p className="text-sm text-muted-foreground">
-                Tidak ada detail pasien pada periode ini.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {rows.map((patient, index) => (
+        <Tabs defaultValue="rm-list" className="min-h-0 flex-1 gap-0">
+          <div className="shrink-0 border-b px-4 py-3 sm:px-7">
+            <TabsList className="h-10 w-full rounded-none">
+              <TabsTrigger value="rm-list" className="rounded-none">
+                <List /> Daftar No. RM
+              </TabsTrigger>
+              <TabsTrigger value="patient-details" className="rounded-none">
+                <UserRound /> Detail pasien
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent
+            value="rm-list"
+            className="min-h-0 overflow-y-auto px-4 py-4 sm:px-7"
+          >
+            {isLoading ? (
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {Array.from({ length: 12 }, (_, index) => (
+                  <Skeleton key={index} className="h-16 w-full" />
+                ))}
+              </div>
+            ) : rows.length === 0 ? (
+              <EmptyPatientDetails />
+            ) : (
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {rows.map((patient, index) => (
+                  <div
+                    key={patient.visitNumber + "-rm-" + patient.medicalRecordNumber}
+                    className="group flex min-w-0 items-center gap-3 border bg-card px-3 py-3 transition-colors hover:border-primary/60 hover:bg-primary/5"
+                  >
+                    <span className="grid size-7 shrink-0 place-items-center bg-muted font-mono text-[11px] text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary">
+                      {index + 1}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                        No. RM
+                      </p>
+                      <p className="truncate font-mono text-sm font-semibold text-primary">
+                        {patient.medicalRecordNumber}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent
+            value="patient-details"
+            className="min-h-0 overflow-y-auto px-4 py-4 sm:px-7"
+          >
+            {isLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 5 }, (_, index) => (
+                  <Skeleton key={index} className="h-36 w-full" />
+                ))}
+              </div>
+            ) : rows.length === 0 ? (
+              <EmptyPatientDetails />
+            ) : (
+              <div className="space-y-3">
+                {rows.map((patient, index) => (
                 <article
                   key={patient.visitNumber + "-" + patient.medicalRecordNumber}
                   className="border bg-card transition-colors hover:border-primary/50"
@@ -598,12 +653,26 @@ function PatientDetailSheet({
                     />
                   </div>
                 </article>
-              ))}
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function EmptyPatientDetails() {
+  return (
+    <div className="grid h-full min-h-64 place-items-center text-center">
+      <div>
+        <IdCard className="mx-auto mb-3 size-8 text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">
+          Tidak ada detail pasien pada periode ini.
+        </p>
+      </div>
+    </div>
   );
 }
 
