@@ -1,5 +1,6 @@
 import { DatePicker } from "@/components/date-picker";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -34,6 +35,7 @@ import { endOfMonth, format, startOfMonth } from "date-fns";
 import { id } from "date-fns/locale";
 import {
   Activity,
+  ArrowLeft,
   ArrowRight,
   CalendarDays,
   CircleAlert,
@@ -91,15 +93,56 @@ const ageColumns = [
   { key: "age70Plus", label: "70+" },
 ] as const;
 
+const detailPageSize = 100;
+
 function SurveilensRawatInapPage() {
   const { dateFrom, dateTo } = Route.useSearch();
   const navigate = Route.useNavigate();
+
+  return (
+    <SurveilensPage
+      careType="Ranap"
+      careLabel="rawat inap"
+      title="Surveilens Rawat Inap"
+      dateFrom={dateFrom}
+      dateTo={dateTo}
+      onDateChange={(key, date) => {
+        navigate({
+          search: (previous) => ({
+            ...previous,
+            [key]: format(date, "yyyy-MM-dd"),
+          }),
+        });
+      }}
+    />
+  );
+}
+
+export function SurveilensPage({
+  careType,
+  careLabel,
+  title,
+  dateFrom,
+  dateTo,
+  onDateChange,
+}: {
+  careType: "Ranap" | "Ralan";
+  careLabel: "rawat inap" | "rawat jalan";
+  title: string;
+  dateFrom: string;
+  dateTo: string;
+  onDateChange: (key: "dateFrom" | "dateTo", date: Date) => void;
+}) {
   const [keyword, setKeyword] = useState("");
   const [selectedDisease, setSelectedDisease] =
     useState<SelectedDisease | null>(null);
 
   const summaryQuery = useQuery({
-    ...trpc.surveilensRawatInap.summary.queryOptions({ dateFrom, dateTo }),
+    ...trpc.surveilensRawatInap.summary.queryOptions({
+      dateFrom,
+      dateTo,
+      careType,
+    }),
     placeholderData: keepPreviousData,
   });
 
@@ -107,6 +150,7 @@ function SurveilensRawatInapPage() {
     ...trpc.surveilensRawatInap.details.queryOptions({
       dateFrom,
       dateTo,
+      careType,
       diseaseCode: selectedDisease?.code ?? "",
     }),
     enabled: selectedDisease !== null,
@@ -136,16 +180,6 @@ function SurveilensRawatInapPage() {
     [summaryQuery.data],
   );
 
-  const setDate = (key: "dateFrom" | "dateTo", date?: Date) => {
-    if (!date) return;
-    navigate({
-      search: (previous) => ({
-        ...previous,
-        [key]: format(date, "yyyy-MM-dd"),
-      }),
-    });
-  };
-
   return (
     <main className="min-h-[calc(100vh-73px)] overflow-hidden bg-[radial-gradient(circle_at_top_left,var(--color-primary)/0.08,transparent_28%)] px-3 py-5 sm:px-5 lg:px-8 lg:py-8">
       <div className="mx-auto max-w-[1800px] space-y-5">
@@ -158,10 +192,10 @@ function SurveilensRawatInapPage() {
                 Epidemiologi rumah sakit
               </div>
               <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-                Surveilens Rawat Inap
+                {title}
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-                Distribusi diagnosis utama pasien rawat inap berdasarkan usia,
+                Distribusi diagnosis utama pasien {careLabel} berdasarkan usia,
                 jenis kelamin, dan status kematian. Klik baris penyakit untuk
                 melihat seluruh No. RM dan identitas pasiennya.
               </p>
@@ -174,7 +208,9 @@ function SurveilensRawatInapPage() {
                 </span>
                 <DatePicker
                   date={new Date(dateFrom)}
-                  setDate={(date) => setDate("dateFrom", date)}
+                  setDate={(date) => {
+                    if (date) onDateChange("dateFrom", date);
+                  }}
                 />
               </label>
               <label className="space-y-2">
@@ -183,7 +219,9 @@ function SurveilensRawatInapPage() {
                 </span>
                 <DatePicker
                   date={new Date(dateTo)}
-                  setDate={(date) => setDate("dateTo", date)}
+                  setDate={(date) => {
+                    if (date) onDateChange("dateTo", date);
+                  }}
                 />
               </label>
             </div>
@@ -195,7 +233,7 @@ function SurveilensRawatInapPage() {
             icon={HeartPulse}
             label="Total kasus"
             value={totals.cases}
-            helper="Diagnosis utama ranap"
+            helper={careType === "Ranap" ? "Diagnosis utama ranap" : "Diagnosis utama ralan"}
           />
           <MetricCard
             icon={UsersRound}
@@ -272,6 +310,7 @@ function SurveilensRawatInapPage() {
       </div>
 
       <PatientDetailSheet
+        key={selectedDisease?.code ?? "no-disease"}
         disease={selectedDisease}
         open={selectedDisease !== null}
         onOpenChange={(open) => {
@@ -485,6 +524,11 @@ function PatientDetailSheet({
   rows: DetailRow[];
   isLoading: boolean;
 }) {
+  const [page, setPage] = useState(1);
+  const pageCount = Math.max(1, Math.ceil(rows.length / detailPageSize));
+  const firstItem = (page - 1) * detailPageSize;
+  const visibleRows = rows.slice(firstItem, firstItem + detailPageSize);
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full gap-0 overflow-hidden p-0 sm:max-w-3xl">
@@ -532,13 +576,13 @@ function PatientDetailSheet({
               <EmptyPatientDetails />
             ) : (
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {rows.map((patient, index) => (
+                {visibleRows.map((patient, index) => (
                   <div
                     key={patient.visitNumber + "-rm-" + patient.medicalRecordNumber}
                     className="group flex min-w-0 items-center gap-3 border bg-card px-3 py-3 transition-colors hover:border-primary/60 hover:bg-primary/5"
                   >
                     <span className="grid size-7 shrink-0 place-items-center bg-muted font-mono text-[11px] text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary">
-                      {index + 1}
+                      {firstItem + index + 1}
                     </span>
                     <div className="min-w-0">
                       <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
@@ -568,7 +612,7 @@ function PatientDetailSheet({
               <EmptyPatientDetails />
             ) : (
               <div className="space-y-3">
-                {rows.map((patient, index) => (
+                {visibleRows.map((patient, index) => (
                 <article
                   key={patient.visitNumber + "-" + patient.medicalRecordNumber}
                   className="border bg-card transition-colors hover:border-primary/50"
@@ -576,7 +620,7 @@ function PatientDetailSheet({
                   <div className="flex items-start justify-between gap-3 border-b bg-muted/20 px-4 py-3">
                     <div className="flex min-w-0 items-center gap-3">
                       <span className="grid size-8 shrink-0 place-items-center bg-primary/10 font-mono text-xs font-bold text-primary">
-                        {index + 1}
+                        {firstItem + index + 1}
                       </span>
                       <div className="min-w-0">
                         <p className="truncate font-semibold">
@@ -657,6 +701,41 @@ function PatientDetailSheet({
               </div>
             )}
           </TabsContent>
+
+          {!isLoading && rows.length > detailPageSize ? (
+            <div className="flex shrink-0 items-center justify-between gap-3 border-t bg-muted/20 px-4 py-3 sm:px-7">
+              <p className="text-xs text-muted-foreground">
+                Menampilkan {firstItem + 1}–
+                {Math.min(firstItem + detailPageSize, rows.length)} dari{" "}
+                {rows.length.toLocaleString("id-ID")} No. RM
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={page === 1}
+                  onClick={() => setPage((current) => Math.max(1, current - 1))}
+                >
+                  <ArrowLeft /> Sebelumnya
+                </Button>
+                <span className="min-w-16 text-center font-mono text-xs">
+                  {page}/{pageCount}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={page === pageCount}
+                  onClick={() =>
+                    setPage((current) => Math.min(pageCount, current + 1))
+                  }
+                >
+                  Berikutnya <ArrowRight />
+                </Button>
+              </div>
+            </div>
+          ) : null}
         </Tabs>
       </SheetContent>
     </Sheet>

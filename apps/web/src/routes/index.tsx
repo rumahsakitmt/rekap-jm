@@ -33,6 +33,11 @@ const links = [
           label: "Surveilens Rawat Inap",
           Icon: Activity,
         },
+        {
+          to: "/rekap/surveilens-rawat-jalan",
+          label: "Surveilens Rawat Jalan",
+          Icon: Activity,
+        },
       ],
     },
     {

@@ -6,6 +6,7 @@ import { z } from "zod";
 const dateRangeFields = {
   dateFrom: z.string().date(),
   dateTo: z.string().date(),
+  careType: z.enum(["Ranap", "Ralan"]).default("Ranap"),
 };
 
 const dateRangeSchemaBase = z.object(dateRangeFields);
@@ -71,7 +72,7 @@ const asDateString = (value: string | Date | null) =>
 
 export const surveilensRawatInapRouter = router({
   summary: publicProcedure.input(dateRangeSchema).query(async ({ input }) => {
-    const { dateFrom, dateTo } = input;
+    const { dateFrom, dateTo, careType } = input;
     const query = sql`
       SELECT
         cases.kd_penyakit AS diseaseCode,
@@ -120,7 +121,7 @@ export const surveilensRawatInapRouter = router({
           FROM diagnosa_pasien AS all_diagnoses
           INNER JOIN reg_periksa AS all_registrations
             ON all_registrations.no_rawat = all_diagnoses.no_rawat
-          WHERE all_diagnoses.status = 'Ranap'
+          WHERE all_diagnoses.status = ${careType}
             AND all_registrations.tgl_registrasi BETWEEN ${dateFrom} AND ${dateTo}
           GROUP BY all_diagnoses.kd_penyakit, all_registrations.no_rkm_medis
         ) AS occurrences
@@ -130,7 +131,7 @@ export const surveilensRawatInapRouter = router({
           SELECT DISTINCT no_rkm_medis FROM pasien_mati
         ) AS deceased
           ON deceased.no_rkm_medis = reg_periksa.no_rkm_medis
-        WHERE diagnosa_pasien.status = 'Ranap'
+        WHERE diagnosa_pasien.status = ${careType}
           AND diagnosa_pasien.prioritas = 1
           AND diagnosa_pasien.kd_penyakit <> '-'
           AND reg_periksa.tgl_registrasi BETWEEN ${dateFrom} AND ${dateTo}
@@ -165,7 +166,7 @@ export const surveilensRawatInapRouter = router({
   }),
 
   details: publicProcedure.input(detailSchema).query(async ({ input }) => {
-    const { dateFrom, dateTo, diseaseCode } = input;
+    const { dateFrom, dateTo, diseaseCode, careType } = input;
     const query = sql`
       SELECT
         pasien.no_rkm_medis AS medicalRecordNumber,
@@ -188,7 +189,7 @@ export const surveilensRawatInapRouter = router({
         SELECT DISTINCT no_rkm_medis FROM pasien_mati
       ) AS deceased
         ON deceased.no_rkm_medis = pasien.no_rkm_medis
-      WHERE diagnosa_pasien.status = 'Ranap'
+      WHERE diagnosa_pasien.status = ${careType}
         AND diagnosa_pasien.prioritas = 1
         AND diagnosa_pasien.kd_penyakit = ${diseaseCode}
         AND reg_periksa.tgl_registrasi BETWEEN ${dateFrom} AND ${dateTo}
