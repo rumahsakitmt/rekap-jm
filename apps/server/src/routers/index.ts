@@ -17,6 +17,7 @@ import { triaseRouter } from "./triase";
 import { pegawaiRouter } from "./pegawai";
 import { klaimRouter } from "./klaim";
 import { pasienRouter } from "./pasien";
+import { surveilensRawatInapRouter } from "./surveilens-rawat-inap";
 
 export const appRouter = router({
   healthCheck: publicProcedure.query(async () => {
@@ -52,5 +53,6 @@ export const appRouter = router({
   pegawai: pegawaiRouter,
   klaim: klaimRouter,
   pasien: pasienRouter,
+  surveilensRawatInap: surveilensRawatInapRouter,
 });
 export type AppRouter = typeof appRouter;

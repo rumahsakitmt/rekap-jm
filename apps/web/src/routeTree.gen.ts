@@ -26,6 +26,7 @@ import { Route as TarifRawatInapRouteImport } from './routes/tarif.rawat-inap'
 import { Route as TarifRadiologiRouteImport } from './routes/tarif.radiologi'
 import { Route as TarifOperasiRouteImport } from './routes/tarif.operasi'
 import { Route as TarifLabRouteImport } from './routes/tarif.lab'
+import { Route as RekapSurveilensRawatInapRouteImport } from './routes/rekap.surveilens-rawat-inap'
 import { Route as RekapRawatJalanRouteImport } from './routes/rekap.rawat-jalan'
 import { Route as RekapRawatInapRouteImport } from './routes/rekap.rawat-inap'
 import { Route as ObatStokRouteImport } from './routes/obat.stok'
@@ -124,6 +125,12 @@ const TarifLabRoute = TarifLabRouteImport.update({
   path: '/lab',
   getParentRoute: () => TarifRoute,
 } as any)
+const RekapSurveilensRawatInapRoute =
+  RekapSurveilensRawatInapRouteImport.update({
+    id: '/surveilens-rawat-inap',
+    path: '/surveilens-rawat-inap',
+    getParentRoute: () => RekapRoute,
+  } as any)
 const RekapRawatJalanRoute = RekapRawatJalanRouteImport.update({
   id: '/rawat-jalan',
   path: '/rawat-jalan',
@@ -202,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/obat/stok': typeof ObatStokRoute
   '/rekap/rawat-inap': typeof RekapRawatInapRoute
   '/rekap/rawat-jalan': typeof RekapRawatJalanRoute
+  '/rekap/surveilens-rawat-inap': typeof RekapSurveilensRawatInapRoute
   '/tarif/lab': typeof TarifLabRoute
   '/tarif/operasi': typeof TarifOperasiRoute
   '/tarif/radiologi': typeof TarifRadiologiRoute
@@ -232,6 +240,7 @@ export interface FileRoutesByTo {
   '/obat/stok': typeof ObatStokRoute
   '/rekap/rawat-inap': typeof RekapRawatInapRoute
   '/rekap/rawat-jalan': typeof RekapRawatJalanRoute
+  '/rekap/surveilens-rawat-inap': typeof RekapSurveilensRawatInapRoute
   '/tarif/lab': typeof TarifLabRoute
   '/tarif/operasi': typeof TarifOperasiRoute
   '/tarif/radiologi': typeof TarifRadiologiRoute
@@ -264,6 +273,7 @@ export interface FileRoutesById {
   '/obat/stok': typeof ObatStokRoute
   '/rekap/rawat-inap': typeof RekapRawatInapRoute
   '/rekap/rawat-jalan': typeof RekapRawatJalanRoute
+  '/rekap/surveilens-rawat-inap': typeof RekapSurveilensRawatInapRoute
   '/tarif/lab': typeof TarifLabRoute
   '/tarif/operasi': typeof TarifOperasiRoute
   '/tarif/radiologi': typeof TarifRadiologiRoute
@@ -297,6 +307,7 @@ export interface FileRouteTypes {
     | '/obat/stok'
     | '/rekap/rawat-inap'
     | '/rekap/rawat-jalan'
+    | '/rekap/surveilens-rawat-inap'
     | '/tarif/lab'
     | '/tarif/operasi'
     | '/tarif/radiologi'
@@ -327,6 +338,7 @@ export interface FileRouteTypes {
     | '/obat/stok'
     | '/rekap/rawat-inap'
     | '/rekap/rawat-jalan'
+    | '/rekap/surveilens-rawat-inap'
     | '/tarif/lab'
     | '/tarif/operasi'
     | '/tarif/radiologi'
@@ -358,6 +370,7 @@ export interface FileRouteTypes {
     | '/obat/stok'
     | '/rekap/rawat-inap'
     | '/rekap/rawat-jalan'
+    | '/rekap/surveilens-rawat-inap'
     | '/tarif/lab'
     | '/tarif/operasi'
     | '/tarif/radiologi'
@@ -508,6 +521,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TarifLabRouteImport
       parentRoute: typeof TarifRoute
     }
+    '/rekap/surveilens-rawat-inap': {
+      id: '/rekap/surveilens-rawat-inap'
+      path: '/surveilens-rawat-inap'
+      fullPath: '/rekap/surveilens-rawat-inap'
+      preLoaderRoute: typeof RekapSurveilensRawatInapRouteImport
+      parentRoute: typeof RekapRoute
+    }
     '/rekap/rawat-jalan': {
       id: '/rekap/rawat-jalan'
       path: '/rawat-jalan'
@@ -644,11 +664,13 @@ const ObatRouteWithChildren = ObatRoute._addFileChildren(ObatRouteChildren)
 interface RekapRouteChildren {
   RekapRawatInapRoute: typeof RekapRawatInapRoute
   RekapRawatJalanRoute: typeof RekapRawatJalanRoute
+  RekapSurveilensRawatInapRoute: typeof RekapSurveilensRawatInapRoute
 }
 
 const RekapRouteChildren: RekapRouteChildren = {
   RekapRawatInapRoute: RekapRawatInapRoute,
   RekapRawatJalanRoute: RekapRawatJalanRoute,
+  RekapSurveilensRawatInapRoute: RekapSurveilensRawatInapRoute,
 }
 
 const RekapRouteWithChildren = RekapRoute._addFileChildren(RekapRouteChildren)

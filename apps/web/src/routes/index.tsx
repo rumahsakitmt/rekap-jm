@@ -11,6 +11,7 @@ import {
   ClockAlert,
   Siren,
   ScanLine,
+  Activity,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -27,6 +28,11 @@ const links = [
           Icon: Footprints,
         },
         { to: "/rekap/rawat-inap", label: "Rawat Inap", Icon: Bed },
+        {
+          to: "/rekap/surveilens-rawat-inap",
+          label: "Surveilens Rawat Inap",
+          Icon: Activity,
+        },
       ],
     },
     {
